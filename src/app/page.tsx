@@ -1,3 +1,10 @@
+import Link from "next/link";
+
+import { getStravaConnectionStatus } from "@/server/strava/oauth";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const phases: {
   title: string;
   phase: string;
@@ -35,12 +42,14 @@ const phases: {
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const stravaStatus = await getStravaConnectionStatus();
+
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 px-6 py-16">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="mb-14">
+        <div className="mb-10">
           <h1 className="text-5xl font-bold tracking-tight text-white mb-3">
             FarSygil
           </h1>
@@ -51,6 +60,25 @@ export default function HomePage() {
             Foundation ready. Features coming in Phase 1+.
           </p>
         </div>
+
+        {/* Strava connection card */}
+        <Link
+          href="/connect"
+          className="block mb-8 rounded-xl border border-zinc-800 bg-zinc-900/50 px-6 py-5 hover:border-zinc-700 hover:bg-zinc-900 transition-colors"
+        >
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-lg font-semibold text-white">Strava</h2>
+            <StravaBadge
+              connected={stravaStatus.connected}
+              expired={stravaStatus.expired}
+            />
+          </div>
+          <p className="text-sm text-zinc-400">
+            {stravaStatus.connected
+              ? `Athlete ${stravaStatus.athleteId} — manage connection.`
+              : "Connect your Strava account to enable activity import."}
+          </p>
+        </Link>
 
         {/* Phase cards */}
         <div className="grid gap-4">
@@ -78,5 +106,33 @@ export default function HomePage() {
         </p>
       </div>
     </main>
+  );
+}
+
+function StravaBadge({
+  connected,
+  expired,
+}: {
+  connected: boolean;
+  expired: boolean;
+}) {
+  if (!connected) {
+    return (
+      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+        Not connected
+      </span>
+    );
+  }
+  if (expired) {
+    return (
+      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-300 border border-amber-900">
+        Token expired
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-900">
+      Connected
+    </span>
   );
 }
