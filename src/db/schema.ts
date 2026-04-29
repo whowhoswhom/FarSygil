@@ -69,52 +69,83 @@ export const activities = sqliteTable(
 
 // ---------------------------------------------------------------------------
 // Raw JSON from Strava API (preserved for reprocessing)
+// payload_type distinguishes the three fetch shapes stored per activity:
+//   "summary_activity"  — lightweight list-endpoint payload
+//   "detailed_activity" — full detail-endpoint payload
+//   "streams"           — time-series streams payload
 // ---------------------------------------------------------------------------
-export const activityRawJson = sqliteTable("activity_raw_json", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  stravaId: integer("strava_id").notNull().unique(),
-  rawJson: text("raw_json").notNull(), // JSON string
-  fetchedAt: text("fetched_at")
-    .notNull()
-    .default(sql`(datetime('now'))`),
-});
+export const activityRawJson = sqliteTable(
+  "activity_raw_json",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    stravaId: integer("strava_id").notNull(),
+    payloadType: text("payload_type").notNull(), // "summary_activity" | "detailed_activity" | "streams"
+    rawJson: text("raw_json").notNull(), // JSON string
+    fetchedAt: text("fetched_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => ({
+    stravaPayloadIdx: uniqueIndex("activity_raw_json_strava_payload_idx").on(
+      t.stravaId,
+      t.payloadType,
+    ),
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Activity splits (km or mile splits)
 // ---------------------------------------------------------------------------
-export const activitySplits = sqliteTable("activity_splits", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  activityId: integer("activity_id")
-    .notNull()
-    .references(() => activities.id, { onDelete: "cascade" }),
-  splitIndex: integer("split_index").notNull(), // 1-based
-  distanceMeters: real("distance_meters"),
-  elapsedTimeSeconds: integer("elapsed_time_seconds"),
-  movingTimeSeconds: integer("moving_time_seconds"),
-  elevationDifference: real("elevation_difference"),
-  averageSpeed: real("average_speed"),
-  averageHeartrate: real("average_heartrate"),
-  averageGradeAdjustedSpeed: real("average_grade_adjusted_speed"),
-  paceZone: integer("pace_zone"),
-});
+export const activitySplits = sqliteTable(
+  "activity_splits",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    splitIndex: integer("split_index").notNull(), // 1-based
+    distanceMeters: real("distance_meters"),
+    elapsedTimeSeconds: integer("elapsed_time_seconds"),
+    movingTimeSeconds: integer("moving_time_seconds"),
+    elevationDifference: real("elevation_difference"),
+    averageSpeed: real("average_speed"),
+    averageHeartrate: real("average_heartrate"),
+    averageGradeAdjustedSpeed: real("average_grade_adjusted_speed"),
+    paceZone: integer("pace_zone"),
+  },
+  (t) => ({
+    activitySplitIdx: uniqueIndex("activity_splits_activity_split_idx").on(
+      t.activityId,
+      t.splitIndex,
+    ),
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Activity streams (GPS, HR, cadence, etc. time-series)
 // ---------------------------------------------------------------------------
-export const activityStreams = sqliteTable("activity_streams", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  activityId: integer("activity_id")
-    .notNull()
-    .references(() => activities.id, { onDelete: "cascade" }),
-  streamType: text("stream_type").notNull(), // "heartrate" | "cadence" | "latlng" | etc.
-  data: text("data").notNull(), // JSON array
-  seriesType: text("series_type"), // "distance" | "time"
-  originalSize: integer("original_size"),
-  resolution: text("resolution"), // "low" | "medium" | "high"
-  fetchedAt: text("fetched_at")
-    .notNull()
-    .default(sql`(datetime('now'))`),
-});
+export const activityStreams = sqliteTable(
+  "activity_streams",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    streamType: text("stream_type").notNull(), // "heartrate" | "cadence" | "latlng" | etc.
+    data: text("data").notNull(), // JSON array
+    seriesType: text("series_type"), // "distance" | "time"
+    originalSize: integer("original_size"),
+    resolution: text("resolution"), // "low" | "medium" | "high"
+    fetchedAt: text("fetched_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (t) => ({
+    activityStreamTypeIdx: uniqueIndex(
+      "activity_streams_activity_stream_type_idx",
+    ).on(t.activityId, t.streamType),
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Health metrics from Apple Health (daily aggregates)

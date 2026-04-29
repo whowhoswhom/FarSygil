@@ -8,7 +8,7 @@
 
 | Layer | Technology | Rationale |
 |---|---|---|
-| Framework | Next.js 14 (App Router) | Full-stack React, API routes, server components |
+| Framework | Next.js 15 (App Router) | Full-stack React, API routes, server components |
 | Language | TypeScript | Type safety, better DX |
 | Styling | Tailwind CSS | Utility-first, fast iteration |
 | Database | SQLite (better-sqlite3) | Local-first, zero infra, single file |

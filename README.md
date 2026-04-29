@@ -12,7 +12,7 @@ All data stays on your machine. No cloud. No subscriptions. No third-party data 
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 15 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | Database | SQLite via better-sqlite3 |
@@ -84,6 +84,17 @@ To generate and run database migrations:
 pnpm db:generate
 pnpm db:migrate
 ```
+
+### Verify the build
+
+```bash
+pnpm install
+pnpm build
+pnpm lint
+pnpm db:generate
+```
+
+All four commands should complete without errors on a clean checkout.
 
 ---
 
