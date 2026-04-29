@@ -1,0 +1,53 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Environment secrets — never commit these
+.env
+.env.local
+.env.*.local
+
+# Local data — stays on your machine only
+data/
+exports/
+
+# SQLite database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# Apple Health exports
+apple-health-export.zip
+export.xml
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js build output
+.next/
+out/
+
+# Production build
+dist/
+
+# Testing coverage
+coverage/
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# OS / editor
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V500
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+
+# Drizzle migrations (optional — commit if you want migration history)
+# drizzle/
