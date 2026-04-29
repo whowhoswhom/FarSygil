@@ -1,2 +1,114 @@
 # FarSygil
-FarSygil is a local-first running intelligence dashboard that connects Strava and Apple Health data into one private command center. It stores long-term activity, fitness, recovery, and health trends, then uses that data to generate training insights, race projections, workout recommendations, and risk signals.
+
+**Local-first running command center.**
+
+FarSygil is a personal, local-first running intelligence dashboard that connects Strava and Apple Health data into one private command center. It stores long-term activity, fitness, recovery, and health trends locally in SQLite, then uses that data to generate training insights, race projections, workout recommendations, and risk signals.
+
+All data stays on your machine. No cloud. No subscriptions. No third-party data sharing.
+
+---
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Database | SQLite via better-sqlite3 |
+| ORM | Drizzle ORM |
+| Package manager | pnpm |
+| UI components | shadcn/ui-ready structure |
+
+---
+
+## Local-first purpose
+
+FarSygil is intentionally a **single-user localhost application**. It will never be deployed to the public internet. Your health and training data never leaves your machine.
+
+- No Supabase
+- No Postgres
+- No Docker
+- No Prisma
+- No public auth
+- No Stripe
+- No cloud deployment
+
+---
+
+## Setup
+
+### Prerequisites
+
+- Node.js ≥ 18
+- pnpm (`npm install -g pnpm`)
+
+### Install
+
+```bash
+pnpm install
+```
+
+### Environment variables
+
+Copy `.env.example` to `.env.local` and fill in the values:
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Description | Phase |
+|---|---|---|
+| `STRAVA_CLIENT_ID` | Strava API application client ID | Phase 1 |
+| `STRAVA_CLIENT_SECRET` | Strava API application client secret | Phase 1 |
+| `STRAVA_REDIRECT_URI` | OAuth callback URL (default: `http://localhost:3000/api/strava/callback`) | Phase 1 |
+| `CLAUDE_API_KEY` | Anthropic Claude API key | Phase 4 only |
+
+To obtain Strava API credentials, visit: https://www.strava.com/settings/api
+
+### Run development server
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Database
+
+The SQLite database is created automatically at `./data/running.db` on first run. The `data/` directory is excluded from version control.
+
+To generate and run database migrations:
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+```
+
+---
+
+## Phase roadmap
+
+| Phase | Focus | Status |
+|---|---|---|
+| **Phase 1** | Foundation + Strava OAuth + activity ingestion | 🔧 In progress |
+| **Phase 2** | Apple Health import + dashboard | ⏳ Planned |
+| **Phase 3** | Training analytics (load, fitness, fatigue) | ⏳ Planned |
+| **Phase 4** | Grounded AI chat (Claude, local data only) | ⏳ Planned |
+
+---
+
+## Privacy warning
+
+> ⚠️ **This application is designed for personal use only.**
+>
+> FarSygil stores your health and training data locally in a SQLite database. Do not expose this application to the public internet. Do not commit your `.env.local` file, database files (`*.db`, `*.sqlite`), or Apple Health exports to version control.
+>
+> The `data/` and `exports/` directories are excluded from Git by `.gitignore`.
+
+---
+
+## Documentation
+
+Detailed project documentation lives in [`docs/brain/`](./docs/brain/). Start with [`00_PROJECT-BRAIN.md`](./docs/brain/00_PROJECT-BRAIN.md).
+
