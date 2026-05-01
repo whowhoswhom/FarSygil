@@ -1,4 +1,4 @@
-# 12 — Testing and Validation
+# 12 - Testing and Validation
 
 > See also: [[00_PROJECT-BRAIN]] · [[04_STRAVA-INGESTION]] · [[05_APPLE-HEALTH-INGESTION]]
 
@@ -26,7 +26,7 @@ Sample data lives in `tests/fixtures/`:
 | `tests/fixtures/strava/` | Sample Strava API JSON responses |
 | `tests/fixtures/apple-health/` | Sample Apple Health XML snippets |
 
-Fixtures must use **anonymised fake data** — never real athlete data or real health records.
+Fixtures must use anonymised fake data - never real athlete data or real health records.
 
 ---
 
@@ -34,7 +34,7 @@ Fixtures must use **anonymised fake data** — never real athlete data or real h
 
 | Tool | Purpose |
 |---|---|
-| Vitest (planned) | Unit and integration tests |
+| Vitest | Unit and integration tests |
 | SQLite in-memory DB | Isolated database tests |
 
 ---
@@ -42,10 +42,15 @@ Fixtures must use **anonymised fake data** — never real athlete data or real h
 ## Key things to test
 
 ### Phase 1
-- [ ] Strava OAuth token exchange and storage
+- [x] Strava OAuth token exchange and storage
 - [ ] Activity upsert (new and update)
 - [ ] Split parsing from raw JSON
 - [ ] Token refresh logic
+
+Current Phase 1 coverage:
+- `tests/strava/oauth.test.ts` verifies the authorize redirect URL, `state` handling, callback token exchange, single-row token upsert, missing-code handling, missing-scope handling, invalid-state handling, exchange failure, storage failure, and connection-status reads.
+- Strava API responses in tests are mocked and loaded from `tests/fixtures/strava/`.
+- The in-memory test database is created from the committed Drizzle migration so the test schema stays aligned with `src/db/schema.ts`.
 
 ### Phase 2
 - [ ] Apple Health XML parsing
@@ -63,4 +68,4 @@ Fixtures must use **anonymised fake data** — never real athlete data or real h
 
 - All sync functions must be testable in isolation (no live Strava API calls in tests).
 - Use fixture JSON files instead of live API calls.
-- Tests must not write to the production database — use in-memory or temp file databases.
+- Tests must not write to the production database - use in-memory or temp file databases.

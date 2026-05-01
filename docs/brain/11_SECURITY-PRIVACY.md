@@ -1,4 +1,4 @@
-# 11 — Security and Privacy
+# 11 - Security and Privacy
 
 > See also: [[00_PROJECT-BRAIN]] · [[09_GROUNDED-AI-CHAT]]
 
@@ -17,10 +17,10 @@ FarSygil is a single-user localhost application. Security is primarily about:
 
 | Secret | Location | Committed? |
 |---|---|---|
-| `STRAVA_CLIENT_ID` | `.env.local` | ❌ Never |
-| `STRAVA_CLIENT_SECRET` | `.env.local` | ❌ Never |
-| `CLAUDE_API_KEY` | `.env.local` | ❌ Never |
-| Strava access/refresh tokens | SQLite `strava_tokens` | ❌ Never |
+| `STRAVA_CLIENT_ID` | `.env.local` | No, never |
+| `STRAVA_CLIENT_SECRET` | `.env.local` | No, never |
+| `CLAUDE_API_KEY` | `.env.local` | No, never |
+| Strava access/refresh tokens | SQLite `strava_tokens` | No, never |
 
 `.env.local` is excluded from Git via `.gitignore`.
 The `data/` directory (containing the SQLite file) is excluded from Git.
@@ -29,15 +29,21 @@ The `data/` directory (containing the SQLite file) is excluded from Git.
 
 ## Token storage
 
-Strava OAuth tokens are stored in the SQLite database. Since this is a local app, no additional encryption layer is required for Phase 1. If the app is ever shared or used on a shared machine, consider encrypting the token fields.
+Strava OAuth tokens are stored in the SQLite database by the server-side callback route. Since this is a local app, no additional encryption layer is required for Phase 1. If the app is ever shared or used on a shared machine, consider encrypting the token fields.
+
+The OAuth callback must never expose access or refresh tokens to client-side code or query strings. Tokens are exchanged server-side and written directly to SQLite.
+
+The OAuth `state` value is stored only in an httpOnly, same-site cookie during the connect flow and is cleared after the callback returns.
+
+The connection-status API route must never return token values. It may return only safe metadata such as athlete id, accepted scope, expiry timestamp, and whether the stored token is expired.
 
 ---
 
 ## Strava token scopes
 
 Request only the minimum required scopes:
-- `read` — basic athlete data
-- `activity:read_all` — access to all activities (including private)
+- `read` - basic athlete data
+- `activity:read_all` - access to all activities (including private)
 
 Do not request `write` scope unless a future phase requires it.
 
@@ -48,7 +54,7 @@ Do not request `write` scope unless a future phase requires it.
 - All data lives in `./data/running.db` on the local machine.
 - No data is sent to external services except:
   - Strava API (to fetch your own data)
-  - Claude API (Phase 4 only, for grounded chat queries — only structured query results, not raw exports)
+  - Claude API (Phase 4 only, for grounded chat queries - only structured query results, not raw exports)
 - Apple Health data is parsed locally and stored in SQLite. The raw export files are never sent anywhere.
 
 ---

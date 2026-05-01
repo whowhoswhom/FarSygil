@@ -1,4 +1,4 @@
-# 05 — Apple Health Ingestion
+# 05 - Apple Health Ingestion
 
 > See also: [[00_PROJECT-BRAIN]] · [[03_DATA-SOURCES]] · [[06_DATABASE-SCHEMA]]
 
@@ -6,7 +6,7 @@
 
 ## Status
 
-**Phase 2 — planned.** Import not yet implemented.
+**Phase 2 - planned.** Import not yet implemented.
 
 ---
 
@@ -15,12 +15,12 @@
 Apple Health data is exported from the iOS Health app:
 
 1. Open **Health** app on iPhone.
-2. Tap profile icon → **Export All Health Data**.
-3. Save the ZIP file (`apple_health_export.zip`) and transfer to the Mac.
+2. Tap profile icon -> **Export All Health Data**.
+3. Save the ZIP file (`apple_health_export.zip`) and transfer it to the computer that runs FarSygil.
 4. Place the file in `exports/` (this directory is excluded from Git).
 5. Use the FarSygil import tool to parse and ingest the data.
 
-The ZIP contains `export.xml` — a large XML file with all health records.
+The ZIP contains `export.xml` - a large XML file with all health records.
 
 ---
 
@@ -48,7 +48,7 @@ The import script should:
 1. Accept a path to the ZIP or extracted `export.xml`.
 2. Parse the XML using a streaming parser (file can be several GB).
 3. Filter records to relevant types only.
-4. Aggregate daily values where appropriate (e.g. sum steps, average resting HR per day).
+4. Aggregate daily values where appropriate (for example, sum steps and average resting HR per day).
 5. Upsert into `health_metrics` (unique constraint on `date` + `metric_type`).
 6. Log the import in `health_raw_imports` and `data_import_logs`.
 
@@ -56,7 +56,7 @@ The import script should:
 
 ## Storage rules
 
-- Never store the raw XML in the database — it can be many GB.
+- Never store the raw XML in the database - it can be many GB.
 - Store aggregated daily metrics in `health_metrics`.
 - Log import metadata in `health_raw_imports`.
 - Apple Health export files must never be committed to Git.

@@ -1,4 +1,4 @@
-# 07 — Dashboard UI
+# 07 - Dashboard UI
 
 > See also: [[00_PROJECT-BRAIN]] · [[03_DATA-SOURCES]] · [[08_TRAINING-ANALYTICS]]
 
@@ -6,14 +6,14 @@
 
 ## Status
 
-**Phase 2 — planned.** Dashboard not yet implemented.
+**Phase 2 - planned.** Dashboard not yet implemented.
 
 ---
 
 ## Design principles
 
 - Dark theme by default (zinc/slate colour palette)
-- No fake charts — only render charts when real data exists
+- No fake charts - only render charts when real data exists
 - Missing values display as `--`
 - Mobile-friendly but optimised for desktop (localhost app)
 - shadcn/ui component primitives
@@ -22,36 +22,36 @@
 
 ## Planned pages
 
-### `/` — Home
-Current: Phase card overview.
-Phase 2: Redirect to `/dashboard` once data is available.
+### `/` - Home
+Current: phase card overview plus a `Connect Strava` CTA, a persistent local Strava connection-status panel, and a callback-status banner after OAuth redirects.
+Phase 2: redirect to `/dashboard` once data is available.
 
-### `/dashboard` — Main dashboard
+### `/dashboard` - Main dashboard
 - Recent activities list (last 10 runs)
 - Weekly mileage bar chart (real data only)
 - 90-day resting HR trend (from Apple Health)
 - Current training load summary (ATL / CTL / TSB)
 
-### `/activities` — Activity list
+### `/activities` - Activity list
 - Sortable, filterable table of all activities
 - Columns: date, name, distance, pace, HR, elevation, source
 
-### `/activities/[id]` — Activity detail
+### `/activities/[id]` - Activity detail
 - Full activity data: splits table, HR graph, GPS map
 - Raw Strava data accessible via toggle
 
-### `/health` — Health metrics
+### `/health` - Health metrics
 - Resting HR over time
 - HRV trend
 - Sleep duration trend
 - Steps per day
 
-### `/analytics` — Training analytics (Phase 3)
+### `/analytics` - Training analytics (Phase 3)
 - CTL / ATL / TSB over time
 - Race predictor
 - Weekly training load
 
-### `/settings` — Settings
+### `/settings` - Settings
 - Strava connection status
 - Sync controls
 - Database stats
@@ -61,6 +61,6 @@ Phase 2: Redirect to `/dashboard` once data is available.
 ## Data rules for UI
 
 1. Never render a chart with zero data points.
-2. Show a "No data yet" message instead of an empty chart.
+2. Show a `No data yet` message instead of an empty chart.
 3. Show `--` in any cell where the value is `null` or `undefined`.
 4. Do not show estimated or projected values without a clear label.
