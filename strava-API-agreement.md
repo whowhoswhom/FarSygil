@@ -1,4 +1,4 @@
-API Agreement
+API Agreement. 
 Effective Date: October 9, 2025
 
 The Strava API Agreement (“Agreement”) is made and entered into by and between Strava, Inc., or, if you are in the European Economic Area (“EEA”), Strava Ireland Limited (“Strava”, we, us) and you. “You” means you individually or the entity that you represent. If you are entering into this Agreement for an entity, you represent and warrant to us that you have the legal authority to bind that entity to this Agreement. Here are a few highlights:
