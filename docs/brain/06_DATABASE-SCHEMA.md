@@ -17,10 +17,12 @@ The schema is defined in `src/db/schema.ts` using Drizzle ORM.
 ### `strava_tokens`
 Stores the Strava OAuth tokens for the single user.
 
+FarSygil keeps exactly one local Strava token row. Reconnecting a different Strava athlete replaces the previous row rather than storing multiple active connections.
+
 | Column | Type | Notes |
 |---|---|---|
 | id | INTEGER PK | |
-| athlete_id | INTEGER UNIQUE | Strava athlete ID |
+| athlete_id | INTEGER UNIQUE | Strava athlete ID for the current local connection |
 | access_token | TEXT | Short-lived (6h) |
 | refresh_token | TEXT | Used to refresh access token |
 | expires_at | INTEGER | Unix timestamp |

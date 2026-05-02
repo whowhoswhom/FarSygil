@@ -23,13 +23,14 @@
 ## Planned pages
 
 ### `/` - Home
-Current: phase card overview plus a `Connect Strava` CTA, a persistent local Strava connection card linking to `/connect`, and a callback-status banner after OAuth redirects.
+Current: phase card overview plus a `Connect Strava` CTA, a persistent local Strava connection card linking to `/connect`, a footer note that distinguishes local storage from user-initiated Strava traffic, and a callback-status banner after OAuth redirects. The banner is announced as a live region so one-off OAuth results are exposed to screen readers.
 Phase 2: redirect to `/dashboard` once data is available.
 
 ### `/connect` - Strava connection
 - Start or repeat the Strava OAuth flow
 - View persisted local connection metadata
 - Use the home-page callback banner for one-off OAuth success or failure messages
+- Callback status includes local config errors as well as Strava-returned OAuth outcomes
 
 ### `/dashboard` - Main dashboard
 - Recent activities list (last 10 runs)

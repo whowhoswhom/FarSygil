@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import Database from "better-sqlite3";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -23,6 +23,7 @@ const TEST_CONFIG: StravaOAuthConfig = {
 const tokenFixture = JSON.parse(
   readFixture("token-exchange-success.json"),
 ) as StravaTokenExchangeResponse;
+const COMMITTED_MIGRATIONS = readCommittedMigrations();
 
 describe("Strava OAuth", () => {
   afterEach(() => {
@@ -137,6 +138,83 @@ describe("Strava OAuth", () => {
       expect(updatedRows).toHaveLength(1);
       expect(updatedRows[0]?.accessToken).toBe("access-token-002");
       expect(updatedRows[0]?.refreshToken).toBe("refresh-token-002");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("replaces the previous token row when a different Strava athlete connects", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const replacementFixture: StravaTokenExchangeResponse = {
+      ...tokenFixture,
+      access_token: "access-token-003",
+      refresh_token: "refresh-token-003",
+      expires_at: tokenFixture.expires_at + 7200,
+      athlete: {
+        id: 525252,
+      },
+    };
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(tokenFixture), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(replacementFixture), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }),
+      );
+
+    try {
+      await handleStravaCallback({
+        requestUrl:
+          "http://localhost:3000/api/strava/callback?code=test-code-1&scope=read,activity:read_all&state=state-123",
+        config: TEST_CONFIG,
+        database,
+        expectedState: "state-123",
+        fetchImplementation: fetchMock,
+      });
+
+      const replacementStatus = await handleStravaCallback({
+        requestUrl:
+          "http://localhost:3000/api/strava/callback?code=test-code-2&scope=read,activity:read_all&state=state-123",
+        config: TEST_CONFIG,
+        database,
+        expectedState: "state-123",
+        fetchImplementation: fetchMock,
+      });
+
+      expect(replacementStatus).toBe("connected");
+
+      const rows = await database.select().from(testSchema.stravaTokens);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        athleteId: replacementFixture.athlete.id,
+        accessToken: replacementFixture.access_token,
+        refreshToken: replacementFixture.refresh_token,
+        expiresAt: replacementFixture.expires_at,
+        scope: "read,activity:read_all",
+      });
+
+      const currentStatus = await getStravaConnectionStatus(
+        database,
+        replacementFixture.expires_at - 1,
+      );
+      expect(currentStatus).toMatchObject({
+        connected: true,
+        athleteId: replacementFixture.athlete.id,
+        scope: "read,activity:read_all",
+        expiresAt: replacementFixture.expires_at,
+        expired: false,
+      });
     } finally {
       sqlite.close();
     }
@@ -334,7 +412,7 @@ function createTestDatabase(): {
   sqlite: Database.Database;
 } {
   const sqlite = new Database(":memory:");
-  sqlite.exec(readMigration());
+  sqlite.exec(COMMITTED_MIGRATIONS);
 
   return {
     database: drizzle(sqlite, {
@@ -351,9 +429,19 @@ function readFixture(fileName: string): string {
   );
 }
 
-function readMigration(): string {
-  return readFileSync(
-    new URL("../../drizzle/0000_sweet_gambit.sql", import.meta.url),
-    "utf8",
-  );
+function readCommittedMigrations(): string {
+  const migrationsDirectory = new URL("../../drizzle/", import.meta.url);
+  const migrationFileNames = readdirSync(migrationsDirectory)
+    .filter((fileName) => fileName.endsWith(".sql"))
+    .sort();
+
+  if (migrationFileNames.length === 0) {
+    throw new Error("No committed Drizzle SQL migrations were found in drizzle/.");
+  }
+
+  return migrationFileNames
+    .map((fileName) =>
+      readFileSync(new URL(fileName, migrationsDirectory), "utf8"),
+    )
+    .join("\n");
 }

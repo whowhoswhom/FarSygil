@@ -10,6 +10,8 @@ const STRAVA_STATUS_MESSAGES: Record<string, string> = {
     "Strava authorization must include read and activity:read_all scopes.",
   invalid_state:
     "Strava authorization could not be verified. Start the connection flow again.",
+  config_error:
+    "Strava app configuration is missing or invalid. Check your local settings and try again.",
   exchange_failed:
     "Strava returned an error while exchanging the authorization code for tokens.",
   storage_failed:
@@ -31,6 +33,9 @@ export function StravaStatusBanner() {
 
   return (
     <div
+      role={isSuccess ? "status" : "alert"}
+      aria-live={isSuccess ? "polite" : "assertive"}
+      aria-atomic="true"
       className={[
         "mb-8 rounded-2xl border px-4 py-3 text-sm",
         isSuccess

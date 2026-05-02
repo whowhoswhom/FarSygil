@@ -6,15 +6,25 @@ import {
   buildHomeRedirectUrl,
   getStravaOAuthConfig,
   handleStravaCallback,
+  type StravaCallbackStatus,
+  type StravaOAuthConfig,
 } from "@/server/strava/oauth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest): Promise<Response> {
+  const config = getCallbackConfigOrNull();
+
+  if (!config) {
+    return createCallbackRedirectResponse(request, "config_error");
+  }
+
+  // Expected OAuth failures are translated to StravaCallbackStatus inside
+  // handleStravaCallback; this route only maps local config lookup failures.
   const status = await handleStravaCallback({
     requestUrl: request.url,
-    config: getStravaOAuthConfig(),
+    config,
     database: db,
     expectedState: request.cookies.get(STRAVA_OAUTH_STATE_COOKIE)?.value ?? null,
     errorLogger: (message) => {
@@ -22,10 +32,26 @@ export async function GET(request: NextRequest): Promise<Response> {
     },
   });
 
-  const response = NextResponse.redirect(
-    buildHomeRedirectUrl(request.url, status),
-    { status: 302 },
-  );
+  return createCallbackRedirectResponse(request, status);
+}
+
+function getCallbackConfigOrNull(): StravaOAuthConfig | null {
+  try {
+    return getStravaOAuthConfig();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[strava-oauth] callback configuration failed:", message);
+    return null;
+  }
+}
+
+function createCallbackRedirectResponse(
+  request: NextRequest,
+  status: StravaCallbackStatus,
+): NextResponse {
+  const response = NextResponse.redirect(buildHomeRedirectUrl(request.url, status), {
+    status: 302,
+  });
 
   response.cookies.set({
     name: STRAVA_OAUTH_STATE_COOKIE,

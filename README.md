@@ -4,7 +4,7 @@
 
 FarSygil is a personal, local-first running intelligence dashboard that connects Strava and Apple Health data into one private command center. It stores long-term activity, fitness, recovery, and health trends locally in SQLite, then uses that data to generate training insights, race projections, workout recommendations, and risk signals.
 
-All data stays on your machine. No cloud. No subscriptions. No third-party data sharing.
+Your long-term data stays on your machine. FarSygil only talks to source services you explicitly use, starting with Strava OAuth and sync. No cloud deployment. No subscriptions. No hidden third-party analytics.
 
 ---
 
@@ -24,7 +24,7 @@ All data stays on your machine. No cloud. No subscriptions. No third-party data 
 
 ## Local-first purpose
 
-FarSygil is intentionally a **single-user localhost application**. It will never be deployed to the public internet. Your health and training data never leaves your machine.
+FarSygil is intentionally a **single-user localhost application**. It will never be deployed to the public internet. Your stored health and training data stays on your machine, while the app only contacts external services you explicitly connect, such as Strava.
 
 - No Supabase
 - No Postgres
