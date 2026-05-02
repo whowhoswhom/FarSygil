@@ -11,9 +11,10 @@
 ## Current implementation
 
 - `GET /api/strava/connect` generates an OAuth `state`, stores it in an httpOnly cookie, and redirects the browser to Strava's authorization page.
-- `GET /api/strava/callback` validates the returned `state`, requires `read,activity:read_all`, exchanges the authorization code for tokens, upserts one row in `strava_tokens`, and redirects back to `/` with a callback status.
+- `GET /api/strava/callback` validates the returned `state`, requires `read,activity:read_all`, exchanges the authorization code for tokens, upserts one row in `strava_tokens`, and redirects back to `/?strava=<status>`.
 - `GET /api/strava/status` returns safe local connection metadata from SQLite: connection state, athlete id, accepted scope, expiry timestamp, and whether the token is expired.
-- Callback failures are distinguished as denied access, missing code, missing scope, invalid state, token-exchange failure, and local-storage failure.
+- `/connect` is a Phase 1 management page for starting OAuth and viewing the persisted local connection metadata.
+- Callback failures are distinguished as denied access, missing code, missing scope, invalid state, token-exchange failure, and local-storage failure. These OAuth setup errors currently surface through callback status plus server logs; `data_import_logs` begins when activity sync is implemented.
 
 ---
 

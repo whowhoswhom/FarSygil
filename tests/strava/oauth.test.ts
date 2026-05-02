@@ -4,8 +4,8 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as testSchema from "../../src/db/schema";
+import { STRAVA_TOKEN_URL } from "../../src/server/strava/constants";
 import {
-  STRAVA_TOKEN_URL,
   buildStravaAuthorizeUrl,
   getStravaConnectionStatus,
   handleStravaCallback,
@@ -73,7 +73,7 @@ describe("Strava OAuth", () => {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: expect.stringContaining("grant_type=authorization_code"),
+          body: expect.any(URLSearchParams),
         }),
       );
 
@@ -155,6 +155,27 @@ describe("Strava OAuth", () => {
       });
 
       expect(status).toBe("missing_code");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("returns access_denied and skips token exchange when Strava denies the OAuth request", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fetchMock = vi.fn<typeof fetch>();
+
+    try {
+      const status = await handleStravaCallback({
+        requestUrl:
+          "http://localhost:3000/api/strava/callback?error=access_denied&code=ignored-code&scope=read,activity:read_all&state=state-123",
+        config: TEST_CONFIG,
+        database,
+        expectedState: "state-123",
+        fetchImplementation: fetchMock,
+      });
+
+      expect(status).toBe("access_denied");
+      expect(fetchMock).not.toHaveBeenCalled();
     } finally {
       sqlite.close();
     }
@@ -300,6 +321,7 @@ describe("Strava OAuth", () => {
         scope: null,
         expiresAt: null,
         expired: false,
+        updatedAt: null,
       });
     } finally {
       sqlite.close();

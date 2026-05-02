@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { db } from "@/db/client";
 import { StravaStatusBanner } from "@/components/strava-status-banner";
 import { getStravaConnectionStatus } from "@/server/strava/oauth";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const phases: {
@@ -77,21 +79,25 @@ export default async function HomePage() {
           <StravaStatusBanner />
         </Suspense>
 
-        <div className="mb-8 rounded-2xl border border-zinc-800 bg-zinc-900/70 px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Strava status
-          </p>
-          <p className="mt-2 text-lg font-semibold text-white">
-            {stravaStatus.connected ? "Connected" : "Not connected"}
-          </p>
-          <p className="mt-1 text-sm text-zinc-400">
+        <Link
+          href="/connect"
+          className="mb-8 block rounded-xl border border-zinc-800 bg-zinc-900/50 px-6 py-5 transition-colors hover:border-zinc-700 hover:bg-zinc-900"
+        >
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">Strava</h2>
+            <StravaBadge
+              connected={stravaStatus.connected}
+              expired={stravaStatus.expired}
+            />
+          </div>
+          <p className="text-sm text-zinc-400">
             {stravaStatus.connected
               ? stravaStatus.expired
-                ? "Token is stored locally and currently expired. It will refresh on the next Strava API call."
-                : "Token is stored locally in SQLite and ready for activity sync."
-              : "No local Strava token is stored yet."}
+                ? `Athlete ${stravaStatus.athleteId}. Token is stored locally and currently expired.`
+                : `Athlete ${stravaStatus.athleteId}. Token is stored locally in SQLite and ready for activity sync.`
+              : "Connect your Strava account to enable activity import."}
           </p>
-        </div>
+        </Link>
 
         <div className="grid gap-4">
           {phases.map((item) => (
@@ -117,5 +123,35 @@ export default async function HomePage() {
         </p>
       </div>
     </main>
+  );
+}
+
+function StravaBadge({
+  connected,
+  expired,
+}: {
+  connected: boolean;
+  expired: boolean;
+}) {
+  if (!connected) {
+    return (
+      <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-400">
+        Not connected
+      </span>
+    );
+  }
+
+  if (expired) {
+    return (
+      <span className="rounded-full border border-amber-900 bg-amber-950/60 px-2 py-0.5 text-xs font-medium text-amber-300">
+        Token expired
+      </span>
+    );
+  }
+
+  return (
+    <span className="rounded-full border border-emerald-900 bg-emerald-950/60 px-2 py-0.5 text-xs font-medium text-emerald-300">
+      Connected
+    </span>
   );
 }

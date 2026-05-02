@@ -48,7 +48,7 @@ Fixtures must use anonymised fake data - never real athlete data or real health 
 - [ ] Token refresh logic
 
 Current Phase 1 coverage:
-- `tests/strava/oauth.test.ts` verifies the authorize redirect URL, `state` handling, callback token exchange, single-row token upsert, missing-code handling, missing-scope handling, invalid-state handling, exchange failure, storage failure, and connection-status reads.
+- `tests/strava/oauth.test.ts` verifies the authorize redirect URL, `state` handling, access-denied short-circuiting before token exchange even when `code` and valid scopes are present, callback token exchange, single-row token upsert, missing-code handling, missing-scope handling, invalid-state handling, exchange failure, storage failure, and connection-status reads.
 - Strava API responses in tests are mocked and loaded from `tests/fixtures/strava/`.
 - The in-memory test database is created from the committed Drizzle migration so the test schema stays aligned with `src/db/schema.ts`.
 

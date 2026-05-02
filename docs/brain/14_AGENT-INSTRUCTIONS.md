@@ -36,6 +36,16 @@
 3. Check the relevant ingestion or schema brain file for data rules.
 4. Write tests using fixtures from `tests/fixtures/` - never live API calls.
 
+## After implementing a change
+
+1. Update every affected brain file in the same change set.
+2. Always hand back a self-contained Claude review prompt for the current implementation change set, including:
+   - files touched
+   - why they changed
+   - commands run and pass/fail results
+   - the relevant brain files to cross-check
+   - either the full diff or a tight diff summary with key hunks
+
 ---
 
 ## Database changes

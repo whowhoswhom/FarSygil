@@ -1,14 +1,15 @@
+import crypto from "node:crypto";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { desc, sql } from "drizzle-orm";
 import * as schema from "@/db/schema";
 import { stravaTokens } from "@/db/schema";
 import { env } from "@/lib/env";
-
-export const STRAVA_AUTHORIZE_URL = "https://www.strava.com/oauth/authorize";
-export const STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token";
-export const STRAVA_REQUIRED_SCOPES = ["read", "activity:read_all"] as const;
-export const STRAVA_SCOPE = STRAVA_REQUIRED_SCOPES.join(",");
-export const STRAVA_STATE_COOKIE = "strava_oauth_state";
+import {
+  STRAVA_AUTHORIZE_URL,
+  STRAVA_OAUTH_SCOPE,
+  STRAVA_REQUIRED_SCOPES,
+  STRAVA_TOKEN_URL,
+} from "@/server/strava/constants";
 
 export type StravaCallbackStatus =
   | "connected"
@@ -33,7 +34,9 @@ export interface StravaTokenExchangeResponse {
   expires_in: number;
   athlete: {
     id: number;
+    [key: string]: unknown;
   };
+  scope?: string;
 }
 
 export interface StravaConnectionStatus {
@@ -42,11 +45,26 @@ export interface StravaConnectionStatus {
   scope: string | null;
   expiresAt: number | null;
   expired: boolean;
+  updatedAt: string | null;
 }
 
 export type FarSygilDatabase = BetterSQLite3Database<typeof schema>;
 
 type FetchImplementation = typeof fetch;
+
+export class StravaOAuthError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "StravaOAuthError";
+  }
+}
+
+export function generateOAuthState(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
 
 export function getStravaOAuthConfig(): StravaOAuthConfig {
   const appEnv = env();
@@ -60,7 +78,7 @@ export function getStravaOAuthConfig(): StravaOAuthConfig {
 
 export function buildStravaAuthorizeUrl(
   config: StravaOAuthConfig,
-  state?: string,
+  state: string,
 ): string {
   const url = new URL(STRAVA_AUTHORIZE_URL);
 
@@ -68,11 +86,9 @@ export function buildStravaAuthorizeUrl(
   url.searchParams.set("redirect_uri", config.redirectUri);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("approval_prompt", "auto");
-  url.searchParams.set("scope", STRAVA_SCOPE);
+  url.searchParams.set("scope", STRAVA_OAUTH_SCOPE);
 
-  if (state) {
-    url.searchParams.set("state", state);
-  }
+  url.searchParams.set("state", state);
 
   return url.toString();
 }
@@ -82,27 +98,56 @@ export async function exchangeCodeForToken(
   config: StravaOAuthConfig,
   fetchImplementation: FetchImplementation = fetch,
 ): Promise<StravaTokenExchangeResponse> {
-  const body = new URLSearchParams({
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
-    code,
-    grant_type: "authorization_code",
-  });
+  let response: Response;
 
-  const response = await fetchImplementation(STRAVA_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: body.toString(),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Strava token exchange failed with status ${response.status}.`);
+  try {
+    response = await fetchImplementation(STRAVA_TOKEN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        code,
+        grant_type: "authorization_code",
+      }),
+      cache: "no-store",
+    });
+  } catch (error) {
+    throw new StravaOAuthError(
+      "Network error contacting Strava token endpoint",
+      error,
+    );
   }
 
-  return parseStravaTokenExchangeResponse((await response.json()) as unknown);
+  if (!response.ok) {
+    const status = response.status;
+    let body = "";
+
+    try {
+      body = await response.text();
+    } catch {
+      body = "";
+    }
+
+    throw new StravaOAuthError(
+      `Strava token exchange failed (HTTP ${status})${body ? `: ${body.slice(0, 200)}` : ""}`,
+    );
+  }
+
+  let payload: unknown;
+
+  try {
+    payload = await response.json();
+  } catch (error) {
+    throw new StravaOAuthError(
+      "Invalid JSON from Strava token endpoint",
+      error,
+    );
+  }
+
+  return parseStravaTokenExchangeResponse(payload);
 }
 
 export async function upsertStravaToken(
@@ -110,25 +155,29 @@ export async function upsertStravaToken(
   token: StravaTokenExchangeResponse,
   acceptedScope: string | null,
 ): Promise<void> {
-  await database
-    .insert(stravaTokens)
-    .values({
-      athleteId: token.athlete.id,
-      accessToken: token.access_token,
-      refreshToken: token.refresh_token,
-      expiresAt: token.expires_at,
-      scope: acceptedScope,
-    })
-    .onConflictDoUpdate({
-      target: stravaTokens.athleteId,
-      set: {
+  try {
+    await database
+      .insert(stravaTokens)
+      .values({
+        athleteId: token.athlete.id,
         accessToken: token.access_token,
         refreshToken: token.refresh_token,
         expiresAt: token.expires_at,
         scope: acceptedScope,
-        updatedAt: sql`(datetime('now'))`,
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: stravaTokens.athleteId,
+        set: {
+          accessToken: token.access_token,
+          refreshToken: token.refresh_token,
+          expiresAt: token.expires_at,
+          scope: acceptedScope,
+          updatedAt: sql`(datetime('now'))`,
+        },
+      });
+  } catch (error) {
+    throw new StravaOAuthError("Failed to persist Strava tokens", error);
+  }
 }
 
 export async function getStravaConnectionStatus(
@@ -140,6 +189,7 @@ export async function getStravaConnectionStatus(
       athleteId: stravaTokens.athleteId,
       scope: stravaTokens.scope,
       expiresAt: stravaTokens.expiresAt,
+      updatedAt: stravaTokens.updatedAt,
     })
     .from(stravaTokens)
     .orderBy(desc(stravaTokens.updatedAt))
@@ -152,6 +202,7 @@ export async function getStravaConnectionStatus(
       scope: null,
       expiresAt: null,
       expired: false,
+      updatedAt: null,
     };
   }
 
@@ -161,6 +212,7 @@ export async function getStravaConnectionStatus(
     scope: token.scope ?? null,
     expiresAt: token.expiresAt,
     expired: token.expiresAt <= nowUnix,
+    updatedAt: token.updatedAt,
   };
 }
 
@@ -182,11 +234,11 @@ export async function handleStravaCallback(options: {
   } = options;
   const request = new URL(requestUrl);
   const code = request.searchParams.get("code");
-  const error = request.searchParams.get("error");
+  const callbackError = request.searchParams.get("error");
   const acceptedScope = normalizeScope(request.searchParams.get("scope"));
   const returnedState = request.searchParams.get("state");
 
-  if (error === "access_denied") {
+  if (callbackError === "access_denied") {
     return "access_denied";
   }
 
@@ -204,21 +256,20 @@ export async function handleStravaCallback(options: {
 
   try {
     const token = await exchangeCodeForToken(code, config, fetchImplementation);
+    await upsertStravaToken(database, token, acceptedScope);
+    return "connected";
+  } catch (callbackFailure) {
+    const message = getErrorMessage(callbackFailure);
 
-    try {
-      await upsertStravaToken(database, token, acceptedScope);
-    } catch (error) {
-      errorLogger?.(
-        `Strava token storage failed: ${getErrorMessage(error)}`,
-      );
+    if (
+      callbackFailure instanceof StravaOAuthError &&
+      callbackFailure.message === "Failed to persist Strava tokens"
+    ) {
+      errorLogger?.(`Strava token storage failed: ${message}`);
       return "storage_failed";
     }
 
-    return "connected";
-  } catch (error) {
-    errorLogger?.(
-      `Strava token exchange failed: ${getErrorMessage(error)}`,
-    );
+    errorLogger?.(`Strava token exchange failed: ${message}`);
     return "exchange_failed";
   }
 }
@@ -263,7 +314,9 @@ function parseStravaTokenExchangeResponse(
   payload: unknown,
 ): StravaTokenExchangeResponse {
   if (!isStravaTokenExchangeResponse(payload)) {
-    throw new Error("Strava token exchange returned an invalid payload.");
+    throw new StravaOAuthError(
+      "Strava token response missing required fields (access_token, refresh_token, expires_at, athlete.id)",
+    );
   }
 
   return payload;

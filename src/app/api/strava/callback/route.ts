@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
+import { STRAVA_OAUTH_STATE_COOKIE } from "@/server/strava/constants";
 import {
-  STRAVA_STATE_COOKIE,
   buildHomeRedirectUrl,
   getStravaOAuthConfig,
   handleStravaCallback,
@@ -16,16 +16,23 @@ export async function GET(request: NextRequest): Promise<Response> {
     requestUrl: request.url,
     config: getStravaOAuthConfig(),
     database: db,
-    expectedState: request.cookies.get(STRAVA_STATE_COOKIE)?.value ?? null,
+    expectedState: request.cookies.get(STRAVA_OAUTH_STATE_COOKIE)?.value ?? null,
     errorLogger: (message) => {
-      console.error(message);
+      console.error("[strava-oauth] callback failed:", message);
     },
   });
 
-  const response = NextResponse.redirect(buildHomeRedirectUrl(request.url, status));
+  const response = NextResponse.redirect(
+    buildHomeRedirectUrl(request.url, status),
+    { status: 302 },
+  );
+
   response.cookies.set({
-    name: STRAVA_STATE_COOKIE,
+    name: STRAVA_OAUTH_STATE_COOKIE,
     value: "",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
   });
