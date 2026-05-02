@@ -26,6 +26,7 @@
 | **No demo data** | Never seed the database with fake activities or metrics |
 | **No secrets in code** | Never hardcode API keys, tokens, or credentials |
 | **No cloud dependencies** | All data must remain local |
+| **Be precise about local-first** | Do not claim zero network traffic when the app intentionally talks to Strava or another user-enabled provider; distinguish local storage from source API traffic |
 
 ---
 
@@ -40,6 +41,7 @@
 
 1. Update every affected brain file in the same change set.
 2. Always hand back a self-contained Claude review prompt for the current implementation change set, including:
+   - a prompt identifier line at the very top in the form `#<number>` so Claude and Codex are visibly reviewing the same prompt revision
    - files touched
    - why they changed
    - commands run and pass/fail results

@@ -10,11 +10,11 @@
 
 ## Current implementation
 
-- `GET /api/strava/connect` generates an OAuth `state`, stores it in an httpOnly cookie, and redirects the browser to Strava's authorization page.
-- `GET /api/strava/callback` validates the returned `state`, requires `read,activity:read_all`, exchanges the authorization code for tokens, upserts one row in `strava_tokens`, and redirects back to `/?strava=<status>`.
+- `GET /api/strava/connect` generates an OAuth `state`, stores it in an httpOnly cookie, and redirects the browser to Strava's authorization page. It currently returns a `500` JSON error instead of redirecting if required local Strava env vars are missing before the OAuth flow starts.
+- `GET /api/strava/callback` validates the returned `state`, requires `read,activity:read_all`, exchanges the authorization code for tokens, keeps exactly one local row in `strava_tokens`, and redirects back to `/?strava=<status>`.
 - `GET /api/strava/status` returns safe local connection metadata from SQLite: connection state, athlete id, accepted scope, expiry timestamp, and whether the token is expired.
 - `/connect` is a Phase 1 management page for starting OAuth and viewing the persisted local connection metadata.
-- Callback failures are distinguished as denied access, missing code, missing scope, invalid state, token-exchange failure, and local-storage failure. These OAuth setup errors currently surface through callback status plus server logs; `data_import_logs` begins when activity sync is implemented.
+- Callback failures are distinguished as denied access, missing code, missing scope, invalid state, local callback configuration error, token-exchange failure, and local-storage failure. These OAuth setup errors currently surface through callback status plus server logs; `data_import_logs` begins when activity sync is implemented.
 
 ---
 
@@ -30,6 +30,7 @@ FarSygil uses the Strava OAuth 2.0 Authorization Code flow:
 6. App validates the returned `state` and accepted scopes.
 7. App exchanges the code for an access token and refresh token via `POST https://www.strava.com/oauth/token`.
 8. Tokens are stored in `strava_tokens` in the local SQLite database (see [[11_SECURITY-PRIVACY]]).
+9. If a different Strava athlete reconnects later, FarSygil replaces the old local token row instead of keeping multiple Strava connections.
 
 ### Required environment variables
 

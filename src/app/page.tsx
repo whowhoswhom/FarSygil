@@ -119,7 +119,8 @@ export default async function HomePage() {
         </div>
 
         <p className="mt-14 text-center text-xs text-zinc-600">
-          All data is stored locally. Nothing leaves your machine.
+          Data is stored locally. FarSygil only talks to Strava when you
+          connect or sync your own account.
         </p>
       </div>
     </main>

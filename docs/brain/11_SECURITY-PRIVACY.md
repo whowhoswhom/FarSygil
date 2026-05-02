@@ -34,6 +34,7 @@ Strava OAuth tokens are stored in the SQLite database by the server-side callbac
 The OAuth callback must never expose access or refresh tokens to client-side code or query strings. Tokens are exchanged server-side and written directly to SQLite.
 
 The OAuth `state` value is stored only in an httpOnly, same-site cookie during the connect flow and is cleared after the callback returns.
+The connect route test suite must verify the real redirect response sets the expected `httpOnly`, `sameSite`, `path`, and `maxAge` cookie attributes on that state cookie, that the `Secure` flag stays off in local dev/test HTTP flows, and that production HTTPS flows set it.
 
 The connection-status API route must never return token values. It may return only safe metadata such as athlete id, accepted scope, expiry timestamp, and whether the stored token is expired.
 
@@ -56,6 +57,7 @@ Do not request `write` scope unless a future phase requires it.
   - Strava API (to fetch your own data)
   - Claude API (Phase 4 only, for grounded chat queries - only structured query results, not raw exports)
 - Apple Health data is parsed locally and stored in SQLite. The raw export files are never sent anywhere.
+- User-facing privacy copy must distinguish between local storage and the direct Strava requests required for OAuth or sync. Do not claim zero network traffic once a source integration is active.
 
 ---
 

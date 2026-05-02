@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import { desc, sql } from "drizzle-orm";
+import { desc, ne, sql } from "drizzle-orm";
 import * as schema from "@/db/schema";
 import { stravaTokens } from "@/db/schema";
 import { env } from "@/lib/env";
@@ -17,6 +17,7 @@ export type StravaCallbackStatus =
   | "missing_code"
   | "missing_scope"
   | "invalid_state"
+  | "config_error"
   | "exchange_failed"
   | "storage_failed";
 
@@ -156,25 +157,33 @@ export async function upsertStravaToken(
   acceptedScope: string | null,
 ): Promise<void> {
   try {
-    await database
-      .insert(stravaTokens)
-      .values({
-        athleteId: token.athlete.id,
-        accessToken: token.access_token,
-        refreshToken: token.refresh_token,
-        expiresAt: token.expires_at,
-        scope: acceptedScope,
-      })
-      .onConflictDoUpdate({
-        target: stravaTokens.athleteId,
-        set: {
+    await database.transaction(async (transaction) => {
+      // FarSygil models Strava as one local connection, so a different athlete
+      // replacing the current account should evict any stale token row first.
+      await transaction
+        .delete(stravaTokens)
+        .where(ne(stravaTokens.athleteId, token.athlete.id));
+
+      await transaction
+        .insert(stravaTokens)
+        .values({
+          athleteId: token.athlete.id,
           accessToken: token.access_token,
           refreshToken: token.refresh_token,
           expiresAt: token.expires_at,
           scope: acceptedScope,
-          updatedAt: sql`(datetime('now'))`,
-        },
-      });
+        })
+        .onConflictDoUpdate({
+          target: stravaTokens.athleteId,
+          set: {
+            accessToken: token.access_token,
+            refreshToken: token.refresh_token,
+            expiresAt: token.expires_at,
+            scope: acceptedScope,
+            updatedAt: sql`(datetime('now'))`,
+          },
+        });
+    });
   } catch (error) {
     throw new StravaOAuthError("Failed to persist Strava tokens", error);
   }
