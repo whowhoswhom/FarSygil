@@ -1,30 +1,15 @@
 import Link from "next/link";
-
+import { db } from "@/db/client";
 import { getStravaConnectionStatus } from "@/server/strava/oauth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ERROR_MESSAGES: Record<string, string> = {
-  missing_code: "Strava did not return an authorization code.",
-  invalid_state: "OAuth state mismatch — please try connecting again.",
-  token_exchange_failed:
-    "Could not exchange the authorization code for tokens. Check your Strava credentials.",
-  strava_access_denied: "You denied access on Strava.",
-  unexpected_error: "An unexpected error occurred during the Strava OAuth flow.",
-};
-
-function describeReason(reason: string | undefined): string {
-  if (!reason) return "Something went wrong connecting Strava.";
-  if (reason in ERROR_MESSAGES) return ERROR_MESSAGES[reason];
-  if (reason.startsWith("strava_")) {
-    return `Strava reported: ${reason.slice("strava_".length).replace(/_/g, " ")}.`;
-  }
-  return "Something went wrong connecting Strava.";
-}
-
 function formatExpiry(expiresAt: number | null): string {
-  if (!expiresAt) return "--";
+  if (!expiresAt) {
+    return "--";
+  }
+
   try {
     return new Date(expiresAt * 1000).toLocaleString();
   } catch {
@@ -32,26 +17,15 @@ function formatExpiry(expiresAt: number | null): string {
   }
 }
 
-interface ConnectPageProps {
-  searchParams: Promise<{ status?: string; reason?: string }>;
-}
-
-export default async function ConnectPage({ searchParams }: ConnectPageProps) {
-  const params = await searchParams;
-  const status = await getStravaConnectionStatus();
-
-  const showSuccess = params.status === "connected";
-  const showError = params.status === "error";
+export default async function ConnectPage() {
+  const status = await getStravaConnectionStatus(db);
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 px-6 py-16">
-      <div className="max-w-2xl mx-auto">
+    <main className="min-h-screen bg-zinc-950 px-6 py-16 text-zinc-100">
+      <div className="mx-auto max-w-2xl">
         <div className="mb-10">
-          <Link
-            href="/"
-            className="text-sm text-zinc-500 hover:text-zinc-300"
-          >
-            ← Back
+          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
+            {"<- Back"}
           </Link>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">
             Connect Strava
@@ -62,20 +36,8 @@ export default async function ConnectPage({ searchParams }: ConnectPageProps) {
           </p>
         </div>
 
-        {showSuccess && (
-          <div className="mb-6 rounded-lg border border-emerald-900 bg-emerald-950/40 px-4 py-3 text-emerald-200 text-sm">
-            Strava connected successfully.
-          </div>
-        )}
-
-        {showError && (
-          <div className="mb-6 rounded-lg border border-red-900 bg-red-950/40 px-4 py-3 text-red-200 text-sm">
-            {describeReason(params.reason)}
-          </div>
-        )}
-
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-6 py-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">
               Connection status
             </h2>
@@ -107,7 +69,7 @@ export default async function ConnectPage({ searchParams }: ConnectPageProps) {
           <div className="mt-6">
             <a
               href="/api/strava/connect"
-              className="inline-flex items-center justify-center rounded-md bg-orange-600 hover:bg-orange-500 px-4 py-2 text-sm font-medium text-white transition-colors"
+              className="inline-flex items-center justify-center rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-500"
             >
               {status.connected ? "Reconnect Strava" : "Connect Strava"}
             </a>
@@ -132,20 +94,22 @@ function StatusBadge({
 }) {
   if (!connected) {
     return (
-      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+      <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-400">
         Disconnected
       </span>
     );
   }
+
   if (expired) {
     return (
-      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-300 border border-amber-900">
+      <span className="rounded-full border border-amber-900 bg-amber-950/60 px-2 py-0.5 text-xs font-medium text-amber-300">
         Token expired
       </span>
     );
   }
+
   return (
-    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-900">
+    <span className="rounded-full border border-emerald-900 bg-emerald-950/60 px-2 py-0.5 text-xs font-medium text-emerald-300">
       Connected
     </span>
   );

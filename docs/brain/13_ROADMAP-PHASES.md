@@ -1,4 +1,4 @@
-# 13 — Roadmap and Phases
+# 13 - Roadmap and Phases
 
 > See also: [[00_PROJECT-BRAIN]] · [[01_PRODUCT-VISION]]
 
@@ -8,14 +8,14 @@
 
 | Phase | Name | Status |
 |---|---|---|
-| **Phase 1** | Foundation | 🔧 In progress |
-| **Phase 2** | Apple Health + Dashboard | ⏳ Planned |
-| **Phase 3** | Training Analytics | ⏳ Planned |
-| **Phase 4** | Grounded AI Chat | ⏳ Planned |
+| **Phase 1** | Foundation | In progress |
+| **Phase 2** | Apple Health + Dashboard | Planned |
+| **Phase 3** | Training Analytics | Planned |
+| **Phase 4** | Grounded AI Chat | Planned |
 
 ---
 
-## Phase 1 — Foundation
+## Phase 1 - Foundation
 
 **Goal:** Working local app with Strava OAuth, activity ingestion, and basic UI.
 
@@ -24,14 +24,14 @@ Deliverables:
 - [x] SQLite schema with Drizzle ORM
 - [x] Project brain documentation
 - [x] Starter dark UI with phase cards
-- [ ] Strava OAuth flow (`/api/strava/callback`)
+- [x] Strava OAuth and connection-status surface (`/api/strava/connect`, `/api/strava/callback`, `/api/strava/status`)
 - [ ] Activity sync (initial + incremental)
 - [ ] Activity list page (`/activities`)
 - [ ] Sync log viewer
 
 ---
 
-## Phase 2 — Apple Health + Dashboard
+## Phase 2 - Apple Health + Dashboard
 
 **Goal:** Import Apple Health data and show a useful dashboard.
 
@@ -45,7 +45,7 @@ Deliverables:
 
 ---
 
-## Phase 3 — Training Analytics
+## Phase 3 - Training Analytics
 
 **Goal:** Compute and display deterministic training analytics.
 
@@ -59,7 +59,7 @@ Deliverables:
 
 ---
 
-## Phase 4 — Grounded AI Chat
+## Phase 4 - Grounded AI Chat
 
 **Goal:** Natural language Q&A grounded in local data.
 

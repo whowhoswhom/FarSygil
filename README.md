@@ -40,7 +40,7 @@ FarSygil is intentionally a **single-user localhost application**. It will never
 
 ### Prerequisites
 
-- Node.js ≥ 18
+- Node.js >= 20.19
 - pnpm (`npm install -g pnpm`)
 
 ### Install
@@ -73,6 +73,7 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+The home page includes a `Connect Strava` entry point plus a persistent local connection-status panel.
 
 ### Database
 
@@ -89,12 +90,13 @@ pnpm db:migrate
 
 ```bash
 pnpm install
+pnpm exec vitest run
 pnpm build
 pnpm lint
 pnpm db:generate
 ```
 
-All four commands should complete without errors on a clean checkout.
+All five commands should complete without errors on a clean checkout.
 
 ---
 
@@ -102,16 +104,16 @@ All four commands should complete without errors on a clean checkout.
 
 | Phase | Focus | Status |
 |---|---|---|
-| **Phase 1** | Foundation + Strava OAuth + activity ingestion | 🔧 In progress |
-| **Phase 2** | Apple Health import + dashboard | ⏳ Planned |
-| **Phase 3** | Training analytics (load, fitness, fatigue) | ⏳ Planned |
-| **Phase 4** | Grounded AI chat (Claude, local data only) | ⏳ Planned |
+| **Phase 1** | Foundation + Strava OAuth + activity ingestion | In progress |
+| **Phase 2** | Apple Health import + dashboard | Planned |
+| **Phase 3** | Training analytics (load, fitness, fatigue) | Planned |
+| **Phase 4** | Grounded AI chat (Claude, local data only) | Planned |
 
 ---
 
 ## Privacy warning
 
-> ⚠️ **This application is designed for personal use only.**
+> **This application is designed for personal use only.**
 >
 > FarSygil stores your health and training data locally in a SQLite database. Do not expose this application to the public internet. Do not commit your `.env.local` file, database files (`*.db`, `*.sqlite`), or Apple Health exports to version control.
 >
@@ -122,4 +124,3 @@ All four commands should complete without errors on a clean checkout.
 ## Documentation
 
 Detailed project documentation lives in [`docs/brain/`](./docs/brain/). Start with [`00_PROJECT-BRAIN.md`](./docs/brain/00_PROJECT-BRAIN.md).
-
