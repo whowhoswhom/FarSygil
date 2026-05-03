@@ -19,6 +19,8 @@
 
 **Goal:** Working local app with Strava OAuth, activity ingestion, and basic UI.
 
+Current progress: Strava OAuth, local token storage, connection-status UI/API, and the current hardening/test pass are complete. Activity sync is the next major remaining Phase 1 deliverable.
+
 Deliverables:
 - [x] Project structure, package.json, tsconfig, Next.js config
 - [x] SQLite schema with Drizzle ORM
