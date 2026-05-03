@@ -109,6 +109,8 @@ All five commands should complete without errors on a clean checkout.
 | **Phase 3** | Training analytics (load, fitness, fatigue) | Planned |
 | **Phase 4** | Grounded AI chat (Claude, local data only) | Planned |
 
+Current progress: the Strava OAuth slice, local token storage, connection-status surface, and the current hardening/test pass are complete. Activity sync is the next major Phase 1 step.
+
 ---
 
 ## Privacy warning

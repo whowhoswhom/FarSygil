@@ -1,4 +1,4 @@
-# 00 — Project Brain
+# 00 - Project Brain
 
 > **Agents: read this file first before taking any action in this repository.**
 
@@ -14,7 +14,9 @@ This document is the canonical entry point for the entire project. All other bra
 
 ## Current Phase
 
-**Phase 1 — Foundation**
+**Phase 1 - Foundation**
+
+Current progress: Strava OAuth, local token storage, the connection-status surface, and the current Phase 1 hardening/tests are in place. The next major Phase 1 milestone is activity sync.
 
 See [[13_ROADMAP-PHASES|Roadmap]] for full phase breakdown.
 
@@ -30,7 +32,7 @@ See [[13_ROADMAP-PHASES|Roadmap]] for full phase breakdown.
 | Physiology data (resting HR, HRV, sleep, steps, weight) | **Apple Health** |
 
 - The app must **never invent data**.
-- If data is missing, display `--` or `"Data not available"` — never fabricate values.
+- If data is missing, display `--` or `"Data not available"` - never fabricate values.
 - Do not blend invented data with real data.
 
 ### AI chat
