@@ -51,6 +51,10 @@ Current Phase 1 coverage:
 - `tests/strava/oauth.test.ts` verifies the authorize redirect URL, `state` handling, access-denied short-circuiting before token exchange even when `code` and valid scopes are present, callback token exchange, replacement of a stale token row when a different athlete reconnects, single-row token upsert, missing-code handling, missing-scope handling, invalid-state handling, exchange failure, storage failure, and connection-status reads.
 - `tests/strava/connect-route.test.ts` verifies that the real `/api/strava/connect` redirect response carries the expected Strava authorize URL parameters and the expected OAuth state-cookie attributes.
 - `tests/strava/callback-route.test.ts` verifies that callback-route configuration failures still redirect to `/?strava=config_error` and clear the OAuth state cookie, and that unexpected callback-helper throws are not relabeled as config errors.
+- `tests/activities/format.test.ts` verifies imperial distance/elevation formatting, run pace formatting, the global `sufferScore / 250` effort scale, and the rule that indoor rides do not synthesize distance metrics.
+- `tests/activities/filters.test.ts` verifies `/activities` filter URL parsing/serialization plus archive filtering by sport, search, and minimum distance.
+- `tests/activities/aggregates.test.ts` verifies archive total aggregation for count, distance, moving time, and elevation.
+- `tests/activities/polyline.test.ts` verifies polyline decoding and SVG path normalization for route previews.
 - Strava API responses in tests are mocked and loaded from `tests/fixtures/strava/`.
 - The in-memory test database is created by applying every committed Drizzle SQL migration in filename order so the test schema stays aligned with `src/db/schema.ts` as new migrations are added.
 

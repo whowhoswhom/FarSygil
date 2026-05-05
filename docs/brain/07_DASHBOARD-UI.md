@@ -6,41 +6,47 @@
 
 ## Status
 
-**Phase 2 - planned.** Dashboard not yet implemented.
+**Phase 1 / Phase 2 split.** The `/activities` Archive page is now implemented in Phase 1. The broader dashboard remains Phase 2 work.
 
 ---
 
 ## Design principles
 
-- Dark theme by default (zinc/slate colour palette)
+- Dark theme by default with a green-led accent system
 - No fake charts - only render charts when real data exists
 - Missing values display as `--`
 - Mobile-friendly but optimised for desktop (localhost app)
-- shadcn/ui component primitives
+- Large rounded slab surfaces beat dense widget grids
 
 ---
 
 ## Planned pages
 
 ### `/` - Home
-Current: phase card overview plus a `Connect Strava` CTA, a persistent local Strava connection card linking to `/connect`, a footer note that distinguishes local storage from user-initiated Strava traffic, and a callback-status banner after OAuth redirects. The banner is announced as a live region so one-off OAuth results are exposed to screen readers.
+Current: a green-led landing surface with a `Connect Strava` CTA, an `Open Archive` entry point, a persistent local Strava connection card linking to `/connect`, a footer note that distinguishes local storage from user-initiated Strava traffic, and a callback-status banner after OAuth redirects. The banner is announced as a live region so one-off OAuth results are exposed to screen readers.
 Phase 2: redirect to `/dashboard` once data is available.
 
 ### `/connect` - Strava connection
 - Start or repeat the Strava OAuth flow
 - View persisted local connection metadata
+- Jump into `/activities` once local activity rows exist
 - Use the home-page callback banner for one-off OAuth success or failure messages
 - Callback status includes local config errors as well as Strava-returned OAuth outcomes
+
+### `/activities` - Archive
+- Implemented in Phase 1 as a dark, slab-based archive rather than a simple table
+- Hero surface for the latest visible activity
+- Floating filter rail with URL-synced sport, range, search, sort, and minimum-distance filters
+- Recent band with two major slabs, then an Archive band of smaller slabs
+- Real route previews when GPS data exists; indoor/no-GPS activities render an honest fallback state
+- Imperial units are now the default UI language (`mi`, `ft`, `/mi`, `mph`)
+- No fake charts, no fake calories, and no estimated indoor-bike distance
 
 ### `/dashboard` - Main dashboard
 - Recent activities list (last 10 runs)
 - Weekly mileage bar chart (real data only)
 - 90-day resting HR trend (from Apple Health)
 - Current training load summary (ATL / CTL / TSB)
-
-### `/activities` - Activity list
-- Sortable, filterable table of all activities
-- Columns: date, name, distance, pace, HR, elevation, source
 
 ### `/activities/[id]` - Activity detail
 - Full activity data: splits table, HR graph, GPS map

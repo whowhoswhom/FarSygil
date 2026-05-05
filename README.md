@@ -73,7 +73,7 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
-The home page includes a `Connect Strava` entry point plus a persistent local connection-status panel.
+The home page includes a `Connect Strava` entry point, an `Open Archive` link, and a persistent local connection-status panel.
 
 ### Database
 
@@ -109,7 +109,7 @@ All five commands should complete without errors on a clean checkout.
 | **Phase 3** | Training analytics (load, fitness, fatigue) | Planned |
 | **Phase 4** | Grounded AI chat (Claude, local data only) | Planned |
 
-Current progress: the Strava OAuth slice, local token storage, connection-status surface, and the current hardening/test pass are complete. Activity sync is the next major Phase 1 step.
+Current progress: the Strava OAuth slice, local token storage, connection-status surface, and the first `/activities` Archive page are complete. Activity sync and the sync log viewer are the next major Phase 1 steps.
 
 ---
 
