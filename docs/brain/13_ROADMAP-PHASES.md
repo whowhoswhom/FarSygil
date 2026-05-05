@@ -19,7 +19,7 @@
 
 **Goal:** Working local app with Strava OAuth, activity ingestion, and basic UI.
 
-Current progress: Strava OAuth, local token storage, connection-status UI/API, and the current hardening/test pass are complete. Activity sync is the next major remaining Phase 1 deliverable.
+Current progress: Strava OAuth, local token storage, connection-status UI/API, and the `/activities` Archive page are complete. Activity sync and the sync log viewer are the remaining major Phase 1 deliverables.
 
 Deliverables:
 - [x] Project structure, package.json, tsconfig, Next.js config
@@ -28,7 +28,7 @@ Deliverables:
 - [x] Starter dark UI with phase cards
 - [x] Strava OAuth and connection-status surface (`/api/strava/connect`, `/api/strava/callback`, `/api/strava/status`)
 - [ ] Activity sync (initial + incremental)
-- [ ] Activity list page (`/activities`)
+- [x] Activity list page (`/activities`)
 - [ ] Sync log viewer
 
 ---

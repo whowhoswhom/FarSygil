@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { desc } from "drizzle-orm";
 import { db } from "@/db/client";
+import { activities } from "@/db/schema";
 import { getStravaConnectionStatus } from "@/server/strava/oauth";
 
 export const runtime = "nodejs";
@@ -19,24 +21,32 @@ function formatExpiry(expiresAt: number | null): string {
 
 export default async function ConnectPage() {
   const status = await getStravaConnectionStatus(db);
+  const [latestActivity] = await db
+    .select({
+      name: activities.name,
+      startDate: activities.startDate,
+    })
+    .from(activities)
+    .orderBy(desc(activities.startDate))
+    .limit(1);
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-16 text-zinc-100">
+    <main className="page-shell min-h-screen px-6 py-16 text-[var(--ink-1)] md:px-8">
       <div className="mx-auto max-w-2xl">
         <div className="mb-10">
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
+          <Link href="/" className="text-sm text-[var(--ink-3)] hover:text-[var(--ink-1)]">
             {"<- Back"}
           </Link>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-white">
             Connect Strava
           </h1>
-          <p className="mt-2 text-zinc-400">
+          <p className="mt-2 text-[var(--ink-2)]">
             Authorize FarSygil to read your activity data. Tokens are stored
-            locally in <code className="text-zinc-300">data/running.db</code>.
+            locally in <code className="text-white">data/running.db</code>.
           </p>
         </div>
 
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-6 py-6">
+        <section className="rounded-[28px] border border-white/8 bg-white/[0.03] px-6 py-6 backdrop-blur-md">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">
               Connection status
@@ -45,41 +55,59 @@ export default async function ConnectPage() {
           </div>
 
           <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
-            <dt className="text-zinc-500">Athlete ID</dt>
-            <dd className="text-zinc-200">
-              {status.athleteId ?? <span className="text-zinc-500">--</span>}
+            <dt className="text-[var(--ink-3)]">Athlete ID</dt>
+            <dd className="text-[var(--ink-1)]">
+              {status.athleteId ?? <span className="text-[var(--ink-3)]">--</span>}
             </dd>
 
-            <dt className="text-zinc-500">Scope</dt>
-            <dd className="text-zinc-200">
-              {status.scope ?? <span className="text-zinc-500">--</span>}
+            <dt className="text-[var(--ink-3)]">Scope</dt>
+            <dd className="text-[var(--ink-1)]">
+              {status.scope ?? <span className="text-[var(--ink-3)]">--</span>}
             </dd>
 
-            <dt className="text-zinc-500">Token expires</dt>
-            <dd className="text-zinc-200">
+            <dt className="text-[var(--ink-3)]">Token expires</dt>
+            <dd className="text-[var(--ink-1)]">
               {status.connected ? formatExpiry(status.expiresAt) : "--"}
             </dd>
 
-            <dt className="text-zinc-500">Last updated</dt>
-            <dd className="text-zinc-200">
-              {status.updatedAt ?? <span className="text-zinc-500">--</span>}
+            <dt className="text-[var(--ink-3)]">Last updated</dt>
+            <dd className="text-[var(--ink-1)]">
+              {status.updatedAt ?? <span className="text-[var(--ink-3)]">--</span>}
             </dd>
           </dl>
 
-          <div className="mt-6">
+          <div className="mt-6 flex flex-wrap gap-3">
             <a
               href="/api/strava/connect"
-              className="inline-flex items-center justify-center rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-500"
+              className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium"
             >
               {status.connected ? "Reconnect Strava" : "Connect Strava"}
             </a>
+            <Link
+              href="/activities"
+              className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium"
+            >
+              Open Archive
+            </Link>
           </div>
         </section>
 
-        <p className="mt-8 text-xs text-zinc-600">
-          Activity sync is not implemented yet. This page only handles OAuth
-          and token storage.
-        </p>
+        <div className="mt-8 rounded-[24px] border border-white/6 bg-black/10 px-5 py-5">
+          <p className="section-kicker mb-2">Current phase</p>
+          <p className="text-sm text-[var(--ink-2)]">
+            OAuth and local token storage are live. The archive can already read
+            any activities present in the local database.
+          </p>
+          {latestActivity ? (
+            <p className="mt-3 text-sm text-[var(--ink-3)]">
+              Latest archived activity:{" "}
+              <span className="text-[var(--ink-1)]">{latestActivity.name ?? "Untitled effort"}</span>
+              {latestActivity.startDate
+                ? ` · ${new Date(latestActivity.startDate).toLocaleDateString()}`
+                : ""}
+            </p>
+          ) : null}
+        </div>
       </div>
     </main>
   );
@@ -94,7 +122,7 @@ function StatusBadge({
 }) {
   if (!connected) {
     return (
-      <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-400">
+      <span className="rounded-full border border-white/8 bg-white/[0.03] px-2 py-0.5 text-xs font-medium text-[var(--ink-2)]">
         Disconnected
       </span>
     );
@@ -102,14 +130,14 @@ function StatusBadge({
 
   if (expired) {
     return (
-      <span className="rounded-full border border-amber-900 bg-amber-950/60 px-2 py-0.5 text-xs font-medium text-amber-300">
+      <span className="rounded-full border border-[var(--danger-soft)] bg-[rgba(229,102,74,0.12)] px-2 py-0.5 text-xs font-medium text-[var(--danger-ink)]">
         Token expired
       </span>
     );
   }
 
   return (
-    <span className="rounded-full border border-emerald-900 bg-emerald-950/60 px-2 py-0.5 text-xs font-medium text-emerald-300">
+    <span className="rounded-full border border-[rgba(168,226,108,0.22)] bg-[rgba(123,194,65,0.12)] px-2 py-0.5 text-xs font-medium text-[var(--accent-bright)]">
       Connected
     </span>
   );
