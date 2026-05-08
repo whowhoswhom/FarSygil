@@ -6,6 +6,7 @@ interface RoutePreviewProps {
   className?: string;
   compact?: boolean;
   animate?: boolean;
+  framed?: boolean;
 }
 
 export function RoutePreview({
@@ -14,14 +15,18 @@ export function RoutePreview({
   className = "",
   compact = false,
   animate = false,
+  framed = true,
 }: RoutePreviewProps) {
   const gradientId = `route-gradient-${activityId}`;
   const glowId = `route-glow-${activityId}`;
+  const frameClass = framed
+    ? "rounded-[22px] border border-white/6 bg-black/10"
+    : "rounded-[inherit] border-0 bg-transparent";
 
   if (!pathData) {
     return (
       <div
-        className={`relative overflow-hidden rounded-[22px] border border-white/6 bg-black/10 ${className}`.trim()}
+        className={`relative overflow-hidden ${frameClass} ${className}`.trim()}
       >
         <IndoorArtwork compact={compact} />
         <div className="absolute bottom-4 left-4 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-white/55 backdrop-blur-md">
@@ -33,7 +38,7 @@ export function RoutePreview({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[22px] border border-white/6 bg-black/10 ${className}`.trim()}
+      className={`relative overflow-hidden ${frameClass} ${className}`.trim()}
     >
       <svg
         viewBox="0 0 200 200"

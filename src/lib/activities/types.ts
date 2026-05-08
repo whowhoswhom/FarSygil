@@ -53,4 +53,7 @@ export interface ArchiveTotals {
   totalDistanceMeters: number;
   totalMovingTimeSeconds: number;
   totalElevationGain: number;
+  distanceEntryCount: number;
+  movingTimeEntryCount: number;
+  elevationEntryCount: number;
 }

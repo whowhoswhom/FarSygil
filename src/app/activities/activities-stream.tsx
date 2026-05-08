@@ -10,11 +10,11 @@ import {
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FilterHud } from "@/app/activities/filter-hud";
-import { ArchiveStrip } from "@/components/activities/archive-strip";
 import { BandHeader } from "@/components/activities/band-header";
 import { HeroTile } from "@/components/activities/hero-tile";
 import { MajorTile } from "@/components/activities/major-tile";
 import { MinorTile } from "@/components/activities/minor-tile";
+import { SyncedTotalsStrip } from "@/components/activities/synced-totals-strip";
 import { computeArchiveTotals } from "@/lib/activities/aggregates";
 import {
   applyActivityFilters,
@@ -51,6 +51,13 @@ export function ActivitiesStream({
   const deferredSearch = useDeferredValue(searchDraft);
   const maxDistanceMiles = useMemo(
     () => getMaxDistanceMiles(activities),
+    [activities],
+  );
+  const fullArchiveTotals = useMemo(
+    () =>
+      computeArchiveTotals(
+        activities.filter((activity) => activity.source === "strava"),
+      ),
     [activities],
   );
   const replaceFilters = useCallback(
@@ -102,13 +109,6 @@ export function ActivitiesStream({
   const recentActivities = heroActivity ? visibleActivities.slice(1, 3) : [];
   const archiveActivities = heroActivity ? visibleActivities.slice(3) : [];
   const revealedActivities = archiveActivities.slice(0, archiveCount);
-  const archiveTotals = useMemo(
-    () =>
-      computeArchiveTotals(
-        visibleActivities.filter((activity) => activity.source === "strava"),
-      ),
-    [visibleActivities],
-  );
 
   if (activities.length === 0) {
     return (
@@ -120,8 +120,7 @@ export function ActivitiesStream({
           </h1>
           <p className="mx-auto max-w-2xl text-base text-[var(--ink-2)]">
             Connect Strava and sync activities into the local database, then the
-            Archive will render them as large navigable slabs instead of an empty
-            dashboard shell.
+            Archive can read them as a real archive instead of an empty shell.
           </p>
         </div>
       </main>
@@ -138,7 +137,7 @@ export function ActivitiesStream({
 
   return (
     <main className="page-shell min-h-screen px-4 pb-20 pt-6 text-[var(--ink-1)] md:px-8 lg:px-10">
-      <HeroTile activity={heroActivity ?? activities[0]!} />
+      {heroActivity ? <HeroTile activity={heroActivity} /> : null}
 
       <FilterHud
         filters={filters}
@@ -156,7 +155,7 @@ export function ActivitiesStream({
           <section className="mb-16">
             <BandHeader
               label="Recent"
-              caption="After the hero, the archive relaxes into two substantial follow-up slabs."
+              caption="Two substantial follow-up slabs keep the archive loud without turning back into a grid of equals."
             />
             <div className="grid grid-cols-12 gap-6">
               {recentActivities.map((activity) => (
@@ -166,7 +165,7 @@ export function ActivitiesStream({
           </section>
         ) : null}
 
-        <ArchiveStrip totals={archiveTotals} />
+        <SyncedTotalsStrip totals={fullArchiveTotals} />
 
         {revealedActivities.length > 0 ? (
           <section>
@@ -208,9 +207,8 @@ export function ActivitiesStream({
         )}
 
         <footer className="mt-20 border-t border-white/6 pt-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--ink-3)]">
-            <span>Stored locally · synced from Strava</span>
-            <span>Archive v2</span>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--ink-3)]">
+            Stored locally · synced from Strava
           </div>
         </footer>
       </div>

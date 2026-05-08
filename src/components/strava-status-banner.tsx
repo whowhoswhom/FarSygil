@@ -37,10 +37,10 @@ export function StravaStatusBanner() {
       aria-live={isSuccess ? "polite" : "assertive"}
       aria-atomic="true"
       className={[
-        "mb-8 rounded-2xl border px-4 py-3 text-sm",
+        "mb-6 rounded-[22px] border px-4 py-3 text-sm backdrop-blur-md",
         isSuccess
-          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-100"
-          : "border-amber-500/30 bg-amber-500/10 text-amber-100",
+          ? "border-[rgba(168,226,108,0.22)] bg-[rgba(123,194,65,0.12)] text-[var(--ink-1)]"
+          : "border-[var(--danger-soft)] bg-[rgba(229,102,74,0.12)] text-[var(--danger-ink)]",
       ].join(" ")}
     >
       {message}

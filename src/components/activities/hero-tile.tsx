@@ -27,7 +27,8 @@ export function HeroTile({ activity }: { activity: ArchiveActivity }) {
             activityId={activity.id}
             pathData={activity.routePathData}
             animate
-            className="h-full w-full rounded-[28px] border-0 bg-transparent"
+            framed={false}
+            className="h-full w-full rounded-[28px]"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/35 to-[rgba(5,7,5,0.94)]" />
@@ -43,17 +44,19 @@ export function HeroTile({ activity }: { activity: ArchiveActivity }) {
           </div>
           <div className="max-w-5xl">
             <p className="mb-4 max-w-2xl text-sm text-[var(--ink-2)] md:text-base">
-              The archive opens on your latest real effort, surfaced as a full
-              slab instead of a dashboard widget.
+              The archive opens on your latest real effort.
             </p>
             <h1
-              className="mb-8 max-w-5xl text-[3rem] font-semibold leading-[0.86] tracking-[-0.065em] text-white md:text-[5rem] xl:text-[7.5rem]"
+              className="ink-safe mb-8 max-w-5xl text-[3rem] font-semibold leading-[0.86] tracking-[-0.065em] text-white md:text-[5rem] xl:text-[6.75rem]"
               style={{ fontFamily: "var(--font-geist-sans)" }}
             >
               {activity.name ?? "Untitled effort"}
             </h1>
             <div className="mb-10 flex flex-wrap items-end gap-3">
-              <span className="hero-metric tabular-nums text-[4.5rem] md:text-[8rem] xl:text-[12rem]">
+              <span
+                className="hero-metric tabular-nums"
+                style={{ fontSize: "clamp(96px, 12vw, 192px)" }}
+              >
                 {primaryMetric.value}
               </span>
               {primaryMetric.unit ? (

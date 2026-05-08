@@ -267,6 +267,7 @@ select {
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
     monospace;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 .archive-rise {
@@ -320,9 +321,14 @@ select:focus-visible {
 }
 
 .hero-metric {
+  display: inline-block;
   line-height: 0.84;
   letter-spacing: -0.07em;
   font-weight: 600;
+  padding-right: 0.08em;
+  padding-bottom: 0.1em;
+  margin-right: -0.08em;
+  margin-bottom: -0.1em;
   background: linear-gradient(
     180deg,
     var(--ink-1) 0%,
@@ -331,4 +337,11 @@ select:focus-visible {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.ink-safe {
+  padding-right: 0.08em;
+  padding-bottom: 0.1em;
+  margin-right: -0.08em;
+  margin-bottom: -0.1em;
 }

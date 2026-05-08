@@ -62,6 +62,30 @@ describe("archive totals", () => {
       totalDistanceMeters: 15000,
       totalMovingTimeSeconds: 3600,
       totalElevationGain: 150,
+      distanceEntryCount: 2,
+      movingTimeEntryCount: 2,
+      elevationEntryCount: 2,
+    });
+  });
+
+  it("tracks usable rows per metric instead of inventing totals", () => {
+    expect(
+      computeArchiveTotals([
+        {
+          ...activities[0],
+          sportType: "WeightTraining",
+          distanceMeters: 0,
+          totalElevationGain: null,
+        },
+      ]),
+    ).toEqual({
+      count: 1,
+      totalDistanceMeters: 0,
+      totalMovingTimeSeconds: 1500,
+      totalElevationGain: 0,
+      distanceEntryCount: 0,
+      movingTimeEntryCount: 1,
+      elevationEntryCount: 0,
     });
   });
 });

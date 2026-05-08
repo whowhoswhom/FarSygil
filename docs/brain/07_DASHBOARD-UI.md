@@ -23,7 +23,7 @@
 ## Planned pages
 
 ### `/` - Home
-Current: a green-led landing surface with a `Connect Strava` CTA, an `Open Archive` entry point, a persistent local Strava connection card linking to `/connect`, a footer note that distinguishes local storage from user-initiated Strava traffic, and a callback-status banner after OAuth redirects. The banner is announced as a live region so one-off OAuth results are exposed to screen readers.
+Current: a green-led front door with one full-bleed hero slab, two primary actions (`Connect Strava` and `Open Archive`), one persistent connection-status row linking to `/connect`, a footer note that distinguishes local storage from user-initiated Strava traffic, and a callback-status banner after OAuth redirects. The banner is announced as a live region so one-off OAuth results are exposed to screen readers.
 Phase 2: redirect to `/dashboard` once data is available.
 
 ### `/connect` - Strava connection
@@ -37,9 +37,10 @@ Phase 2: redirect to `/dashboard` once data is available.
 - Implemented in Phase 1 as a dark, slab-based archive rather than a simple table
 - Hero surface for the latest visible activity
 - Floating filter rail with URL-synced sport, range, search, sort, and minimum-distance filters
-- Recent band with two major slabs, then an Archive band of smaller slabs
+- Recent band with two major slabs, then a Synced totals strip, then an Archive band of smaller slabs
 - Real route previews when GPS data exists; indoor/no-GPS activities render an honest fallback state
 - Imperial units are now the default UI language (`mi`, `ft`, `/mi`, `mph`)
+- Synced totals reflect the full local archive, not the active filter slice
 - No fake charts, no fake calories, and no estimated indoor-bike distance
 
 ### `/dashboard` - Main dashboard

@@ -6,7 +6,7 @@
 
 ## Purpose
 
-FarSygil is a personal, local-first running command center. It aggregates data from [[04_STRAVA-INGESTION|Strava]] and [[05_APPLE-HEALTH-INGESTION|Apple Health]], stores everything locally in [[06_DATABASE-SCHEMA|SQLite]], and provides a private dashboard for training analytics and insights.
+FarSygil is a personal, local-first running archive and command center. It aggregates data from [[04_STRAVA-INGESTION|Strava]] and [[05_APPLE-HEALTH-INGESTION|Apple Health]], stores everything locally in [[06_DATABASE-SCHEMA|SQLite]], and provides a private product surface for browsing real efforts before later analytics layers arrive.
 
 This document is the canonical entry point for the entire project. All other brain files extend it.
 
