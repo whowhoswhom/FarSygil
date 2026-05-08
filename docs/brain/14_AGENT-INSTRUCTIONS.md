@@ -27,6 +27,7 @@
 | **No secrets in code** | Never hardcode API keys, tokens, or credentials |
 | **No cloud dependencies** | All data must remain local |
 | **Be precise about local-first** | Do not claim zero network traffic when the app intentionally talks to Strava or another user-enabled provider; distinguish local storage from source API traffic |
+| **Keep copy calm and factual** | Product surfaces should read like a private training archive, not hype-driven SaaS marketing |
 
 ---
 

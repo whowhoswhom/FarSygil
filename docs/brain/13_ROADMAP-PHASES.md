@@ -25,7 +25,7 @@ Deliverables:
 - [x] Project structure, package.json, tsconfig, Next.js config
 - [x] SQLite schema with Drizzle ORM
 - [x] Project brain documentation
-- [x] Starter dark UI with phase cards
+- [x] Green-led home / connect / archive shell
 - [x] Strava OAuth and connection-status surface (`/api/strava/connect`, `/api/strava/callback`, `/api/strava/status`)
 - [ ] Activity sync (initial + incremental)
 - [x] Activity list page (`/activities`)

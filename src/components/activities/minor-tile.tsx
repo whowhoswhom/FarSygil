@@ -16,7 +16,7 @@ export function MinorTile({ activity }: { activity: ArchiveActivity }) {
   return (
     <LiquidSurface
       radius={24}
-      className="archive-rise relative col-span-12 min-h-[280px] p-5 md:col-span-6 xl:col-span-4"
+      className="archive-rise relative col-span-12 min-h-[300px] p-5 md:col-span-6 xl:col-span-4"
     >
       <EffortGlow activity={activity} edge="bottom" />
       <div className="mb-5 flex items-start justify-between gap-4">
@@ -29,14 +29,14 @@ export function MinorTile({ activity }: { activity: ArchiveActivity }) {
         activityId={activity.id}
         pathData={activity.routePathData}
         compact
-        className="mb-5 h-[150px] w-full"
+        className="mb-5 h-[144px] w-full"
       />
-      <div className="space-y-3">
+      <div className="space-y-4">
         <h3 className="line-clamp-2 text-[1.55rem] font-semibold leading-[0.95] tracking-[-0.045em] text-white">
           {activity.name ?? "Untitled effort"}
         </h3>
         <div className="flex items-end gap-2">
-          <span className="tabular-nums text-[2.6rem] font-semibold tracking-[-0.07em] text-white">
+          <span className="ink-safe tabular-nums text-[2.6rem] font-semibold tracking-[-0.07em] text-white">
             {primaryMetric.value}
           </span>
           {primaryMetric.unit ? (

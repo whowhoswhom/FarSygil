@@ -4,9 +4,27 @@ import type {
   ArchiveTotals,
 } from "@/lib/activities/types";
 
-const RUN_LIKE_SPORTS = new Set(["Hike", "Run", "TrailRun", "VirtualRun", "Walk"]);
-const RIDE_LIKE_SPORTS = new Set(["Ride", "VirtualRide", "GravelRide", "EBikeRide"]);
+const RUN_LIKE_SPORTS = new Set([
+  "Hike",
+  "Run",
+  "TrailRun",
+  "VirtualRun",
+  "Walk",
+]);
+const RIDE_LIKE_SPORTS = new Set([
+  "Ride",
+  "VirtualRide",
+  "GravelRide",
+  "EBikeRide",
+  "MountainBikeRide",
+]);
 const EFFORT_BASED_SPORTS = new Set([
+  "WeightTraining",
+  "Workout",
+  "Yoga",
+  "StairStepper",
+]);
+const DISTANCE_OMITTED_SPORTS = new Set([
   "WeightTraining",
   "Workout",
   "Yoga",
@@ -15,29 +33,46 @@ const EFFORT_BASED_SPORTS = new Set([
 
 const METERS_PER_MILE = 1609.344;
 const METERS_PER_FOOT = 0.3048;
+const EM_DASH = "—";
 
 export function canonicalSport(sportType: string | null): string {
-  if (sportType === "Workout") {
-    return "WeightTraining";
-  }
-
   return sportType ?? "Other";
 }
 
 export function sportLabel(sportType: string | null): string {
   switch (canonicalSport(sportType)) {
+    case "Run":
+      return "Run";
     case "TrailRun":
       return "Trail run";
     case "VirtualRun":
       return "Indoor run";
+    case "Ride":
+      return "Ride";
     case "VirtualRide":
       return "Indoor ride";
+    case "MountainBikeRide":
+      return "MTB";
+    case "GravelRide":
+      return "Gravel ride";
+    case "EBikeRide":
+      return "E-bike ride";
+    case "Walk":
+      return "Walk";
+    case "Hike":
+      return "Hike";
+    case "Swim":
+      return "Swim";
     case "WeightTraining":
       return "Strength";
+    case "Workout":
+      return "Workout";
     case "StairStepper":
       return "Stairs";
+    case "Yoga":
+      return "Yoga";
     default:
-      return canonicalSport(sportType);
+      return "Other";
   }
 }
 
@@ -53,6 +88,16 @@ export function isEffortBased(sportType: string | null): boolean {
   return EFFORT_BASED_SPORTS.has(canonicalSport(sportType));
 }
 
+export function hasDisplayDistance(activity: ArchiveActivity): boolean {
+  const sportType = canonicalSport(activity.sportType);
+
+  if (DISTANCE_OMITTED_SPORTS.has(sportType)) {
+    return false;
+  }
+
+  return typeof activity.distanceMeters === "number" && activity.distanceMeters > 0;
+}
+
 export function isIndoorActivity(activity: ArchiveActivity): boolean {
   if (activity.routePathData) {
     return false;
@@ -64,17 +109,17 @@ export function isIndoorActivity(activity: ArchiveActivity): boolean {
     sportType === "VirtualRun" ||
     sportType === "VirtualRide" ||
     sportType === "WeightTraining" ||
+    sportType === "Workout" ||
     sportType === "StairStepper" ||
     sportType === "Yoga" ||
     sportType === "Swim" ||
-    (sportType === "Ride" &&
-      (!activity.distanceMeters || activity.distanceMeters <= 0))
+    (sportType === "Ride" && !hasDisplayDistance(activity))
   );
 }
 
 export function formatDistanceMiles(meters: number | null): string {
   if (!meters || meters <= 0) {
-    return "—";
+    return EM_DASH;
   }
 
   const miles = meters / METERS_PER_MILE;
@@ -83,7 +128,7 @@ export function formatDistanceMiles(meters: number | null): string {
 
 export function formatDistanceValueMiles(meters: number | null): string {
   if (!meters || meters <= 0) {
-    return "—";
+    return EM_DASH;
   }
 
   const miles = meters / METERS_PER_MILE;
@@ -92,7 +137,7 @@ export function formatDistanceValueMiles(meters: number | null): string {
 
 export function formatElevationFeet(meters: number | null): string {
   if (meters == null) {
-    return "—";
+    return EM_DASH;
   }
 
   return `${Math.round(meters / METERS_PER_FOOT).toLocaleString()} ft`;
@@ -100,7 +145,7 @@ export function formatElevationFeet(meters: number | null): string {
 
 export function formatElevationValueFeet(meters: number | null): string {
   if (meters == null) {
-    return "—";
+    return EM_DASH;
   }
 
   return `${Math.round(meters / METERS_PER_FOOT).toLocaleString()}`;
@@ -108,7 +153,7 @@ export function formatElevationValueFeet(meters: number | null): string {
 
 export function formatDuration(seconds: number | null): string {
   if (!seconds || seconds <= 0) {
-    return "—";
+    return EM_DASH;
   }
 
   const rounded = Math.round(seconds);
@@ -125,7 +170,7 @@ export function formatDuration(seconds: number | null): string {
 
 export function formatDurationShort(seconds: number | null): string {
   if (!seconds || seconds <= 0) {
-    return "—";
+    return EM_DASH;
   }
 
   const rounded = Math.round(seconds);
@@ -139,20 +184,24 @@ export function formatDurationShort(seconds: number | null): string {
   return `${minutes}m`;
 }
 
-export function formatHours(seconds: number): string {
-  if (seconds <= 0) {
-    return "0h";
+export function formatHours(seconds: number | null): string {
+  if (seconds == null || seconds < 0) {
+    return EM_DASH;
+  }
+
+  if (seconds === 0) {
+    return "0.0h";
   }
 
   return `${(seconds / 3600).toFixed(1)}h`;
 }
 
 export function formatHeartrate(value: number | null): string {
-  return value == null ? "—" : `${Math.round(value)}`;
+  return value == null ? EM_DASH : `${Math.round(value)}`;
 }
 
 export function formatPower(value: number | null): string {
-  return value == null || value <= 0 ? "—" : `${Math.round(value)}`;
+  return value == null || value <= 0 ? EM_DASH : `${Math.round(value)}`;
 }
 
 export function effortIntensity(activity: ArchiveActivity): number {
@@ -179,16 +228,11 @@ export function paceUnit(activity: ArchiveActivity): string {
 }
 
 export function formatPaceOrSpeed(activity: ArchiveActivity): string {
-  if (
-    !activity.distanceMeters ||
-    activity.distanceMeters <= 0 ||
-    !activity.movingTimeSeconds ||
-    activity.movingTimeSeconds <= 0
-  ) {
-    return "—";
+  if (!hasDisplayDistance(activity) || !activity.movingTimeSeconds || activity.movingTimeSeconds <= 0) {
+    return EM_DASH;
   }
 
-  const miles = activity.distanceMeters / METERS_PER_MILE;
+  const miles = (activity.distanceMeters ?? 0) / METERS_PER_MILE;
 
   if (isRunLike(activity.sportType)) {
     const secondsPerMile = activity.movingTimeSeconds / miles;
@@ -246,26 +290,24 @@ export function formatArchiveCount(count: number): string {
 export function formatTotalsLine(totals: ArchiveTotals): string {
   return [
     formatArchiveCount(totals.count),
-    formatDistanceMiles(totals.totalDistanceMeters),
-    formatElevationFeet(totals.totalElevationGain),
+    totals.distanceEntryCount > 0
+      ? formatDistanceMiles(totals.totalDistanceMeters)
+      : EM_DASH,
+    totals.elevationEntryCount > 0
+      ? formatElevationFeet(totals.totalElevationGain)
+      : EM_DASH,
   ].join(" · ");
 }
 
 export function primaryMetricFor(activity: ArchiveActivity): ArchiveMetric {
-  if (isEffortBased(activity.sportType)) {
+  if (isEffortBased(activity.sportType) || !hasDisplayDistance(activity)) {
     return {
       label: "Duration",
       value: formatDurationShort(activity.movingTimeSeconds),
-      unit: activity.movingTimeSeconds && activity.movingTimeSeconds >= 3600
-        ? "hr"
-        : "min",
-    };
-  }
-
-  if (!activity.distanceMeters || activity.distanceMeters <= 0) {
-    return {
-      label: "Duration",
-      value: formatDurationShort(activity.movingTimeSeconds),
+      unit:
+        activity.movingTimeSeconds && activity.movingTimeSeconds >= 3600
+          ? "hr"
+          : "min",
     };
   }
 
@@ -296,10 +338,7 @@ export function metricsFor(activity: ArchiveActivity): ArchiveMetric[] {
     ];
   }
 
-  if (
-    isRideLike(activity.sportType) &&
-    (!activity.distanceMeters || activity.distanceMeters <= 0)
-  ) {
+  if (!hasDisplayDistance(activity)) {
     return [
       {
         label: "Duration",
@@ -311,9 +350,17 @@ export function metricsFor(activity: ArchiveActivity): ArchiveMetric[] {
         unit: activity.averageHeartrate == null ? undefined : "bpm",
       },
       {
-        label: "Power",
-        value: formatPower(activity.averageWatts),
-        unit: activity.averageWatts == null ? undefined : "W",
+        label: isRideLike(activity.sportType) ? "Power" : "Max HR",
+        value: isRideLike(activity.sportType)
+          ? formatPower(activity.averageWatts)
+          : formatHeartrate(activity.maxHeartrate),
+        unit: isRideLike(activity.sportType)
+          ? activity.averageWatts == null
+            ? undefined
+            : "W"
+          : activity.maxHeartrate == null
+            ? undefined
+            : "bpm",
       },
     ];
   }
@@ -322,7 +369,7 @@ export function metricsFor(activity: ArchiveActivity): ArchiveMetric[] {
     {
       label: "Distance",
       value: formatDistanceValueMiles(activity.distanceMeters),
-      unit: activity.distanceMeters == null ? undefined : "mi",
+      unit: "mi",
     },
     {
       label: isRunLike(activity.sportType) ? "Moving" : paceLabel(activity),
@@ -330,7 +377,7 @@ export function metricsFor(activity: ArchiveActivity): ArchiveMetric[] {
         ? formatDurationShort(activity.movingTimeSeconds)
         : formatPaceOrSpeed(activity),
       unit:
-        isRunLike(activity.sportType) || formatPaceOrSpeed(activity) === "—"
+        isRunLike(activity.sportType) || formatPaceOrSpeed(activity) === EM_DASH
           ? undefined
           : paceUnit(activity),
     },
@@ -341,7 +388,7 @@ export function metricsFor(activity: ArchiveActivity): ArchiveMetric[] {
         : formatElevationValueFeet(activity.totalElevationGain),
       unit:
         isRunLike(activity.sportType) || activity.totalElevationGain == null
-          ? isRunLike(activity.sportType) && formatPaceOrSpeed(activity) !== "—"
+          ? isRunLike(activity.sportType) && formatPaceOrSpeed(activity) !== EM_DASH
             ? paceUnit(activity)
             : undefined
           : "ft",
@@ -350,9 +397,7 @@ export function metricsFor(activity: ArchiveActivity): ArchiveMetric[] {
 }
 
 export function heroRailMetricsFor(activity: ArchiveActivity): ArchiveMetric[] {
-  const baseMetrics = metricsFor(activity);
-
-  const rail = [...baseMetrics];
+  const rail = [...metricsFor(activity)];
 
   if (
     activity.averageHeartrate != null &&
