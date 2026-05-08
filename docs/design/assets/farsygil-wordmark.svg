@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" role="img" aria-label="FarSygil">
+  <defs>
+    <linearGradient id="fs-wm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f4f7f0"></stop>
+      <stop offset="100%" stop-color="#a8e26c"></stop>
+    </linearGradient>
+  </defs>
+  <text x="0" y="92" font-family="Geist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, sans-serif" font-size="96" font-weight="600" letter-spacing="-4.8" fill="url(#fs-wm)">FarSygil</text>
+</svg>

@@ -1,0 +1,420 @@
+/* =============================================================
+   FarSygil Design System — colors_and_type.css
+   Canonical CSS variables for color, type, spacing, radii,
+   shadows, motion, and semantic element styles.
+   ============================================================= */
+
+/* ---- Fonts ------------------------------------------------- */
+@font-face {
+  font-family: "Geist";
+  src: url("./fonts/Geist-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("./fonts/GeistMono-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---- Field (background layers) ------------------------- */
+  --fs-field-deep: #050705;
+  --fs-field-mid: #0d120d;
+  --fs-field-lift: #151b14;
+  --fs-background: var(--fs-field-deep);
+
+  /* ---- Ink (text) ---------------------------------------- */
+  --fs-ink-1: #f4f7f0;
+  --fs-ink-2: rgba(232, 239, 229, 0.76);
+  --fs-ink-3: rgba(210, 221, 205, 0.42);
+  --fs-foreground: var(--fs-ink-1);
+
+  /* ---- Accent (one disciplined green) -------------------- */
+  --fs-accent-core: #7bc241;
+  --fs-accent-bright: #a8e26c;
+  --fs-accent-deep: #3f7220;
+  --fs-accent-glow: rgba(168, 226, 108, 0.35);
+  --fs-accent-wash-a: rgba(123, 194, 65, 0.18);
+  --fs-accent-wash-b: rgba(63, 114, 32, 0.16);
+  --fs-accent-ink: #071005; /* text on accent fill */
+
+  /* ---- Glass / surfaces ---------------------------------- */
+  --fs-glass-bg: rgba(17, 23, 18, 0.58);
+  --fs-glass-bg-strong: rgba(17, 23, 18, 0.72);
+  --fs-glass-bg-rail: rgba(12, 18, 13, 0.7);
+  --fs-glass-border: rgba(255, 255, 255, 0.08);
+  --fs-glass-border-strong: rgba(255, 255, 255, 0.14);
+  --fs-glass-border-accent: rgba(168, 226, 108, 0.24);
+  --fs-glass-fill-soft: rgba(255, 255, 255, 0.03);
+  --fs-glass-fill-mid: rgba(255, 255, 255, 0.05);
+  --fs-glass-fill-strong: rgba(255, 255, 255, 0.08);
+  --fs-glass-inset-top: rgba(255, 255, 255, 0.12);
+  --fs-glass-inset-top-hero: rgba(255, 255, 255, 0.14);
+  --fs-glass-inset-bottom: rgba(255, 255, 255, 0.03);
+
+  /* ---- Status (one warning role only) -------------------- */
+  --fs-danger-soft: rgba(229, 102, 74, 0.18);
+  --fs-danger-soft-fill: rgba(229, 102, 74, 0.12);
+  --fs-danger-ink: #f1b8ab;
+
+  /* ---- Shadows ------------------------------------------- */
+  --fs-shadow-slab: 0 40px 80px -48px rgba(0, 0, 0, 0.9);
+  --fs-shadow-hero:
+    0 56px 120px -72px rgba(0, 0, 0, 0.95),
+    0 28px 52px -36px rgba(0, 0, 0, 0.55);
+  --fs-shadow-pill: 0 8px 20px -16px rgba(0, 0, 0, 0.9);
+  --fs-shadow-accent: 0 18px 36px -24px var(--fs-accent-glow);
+  --fs-shadow-accent-strong: 0 24px 42px -24px var(--fs-accent-glow);
+  --fs-shadow-sport: 0 0 20px -12px var(--fs-accent-glow);
+
+  /* ---- Radii --------------------------------------------- */
+  --fs-radius-hero: 34px;
+  --fs-radius-xl: 30px;
+  --fs-radius-lg: 28px;
+  --fs-radius-md: 24px;
+  --fs-radius-sm: 22px;
+  --fs-radius-xs: 18px;
+  --fs-radius-pill: 9999px;
+
+  /* ---- Spacing (4px base unit) --------------------------- */
+  --fs-space-1: 4px;
+  --fs-space-2: 8px;
+  --fs-space-3: 12px;
+  --fs-space-4: 16px;
+  --fs-space-5: 20px;
+  --fs-space-6: 24px;
+  --fs-space-8: 32px;
+  --fs-space-10: 40px;
+  --fs-space-14: 56px;
+  --fs-space-16: 64px;
+  --fs-space-20: 80px;
+
+  /* ---- Layout -------------------------------------------- */
+  --fs-max-archive: 1480px;
+  --fs-max-page: 1152px;
+  --fs-max-narrow: 672px;
+
+  /* ---- Type families ------------------------------------- */
+  --fs-font-sans: "Geist", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --fs-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---- Type scale (semantic) ----------------------------- */
+  --fs-text-hero: 192px;       /* hero metric */
+  --fs-text-display-l: 80px;
+  --fs-text-display-m: 48px;
+  --fs-text-title-l: 32px;
+  --fs-text-title-m: 25px;
+  --fs-text-body-l: 18px;
+  --fs-text-body: 16px;
+  --fs-text-body-s: 14px;
+  --fs-text-caption: 12px;
+  --fs-text-kicker: 11px;
+  --fs-text-mono-metric: 22px;
+
+  /* ---- Tracking ------------------------------------------ */
+  --fs-track-hero: -0.07em;
+  --fs-track-display: -0.065em;
+  --fs-track-title: -0.05em;
+  --fs-track-tile: -0.045em;
+  --fs-track-metric: -0.04em;
+  --fs-track-kicker: 0.22em;
+  --fs-track-kicker-strong: 0.26em;
+  --fs-track-pill: 0.18em;
+
+  /* ---- Motion -------------------------------------------- */
+  --fs-ease-rise: cubic-bezier(0.16, 1, 0.3, 1);
+  --fs-ease-draw: cubic-bezier(0.22, 1, 0.36, 1);
+  --fs-dur-hover: 220ms;
+  --fs-dur-color: 180ms;
+  --fs-dur-rise: 620ms;
+  --fs-dur-draw: 1500ms;
+}
+
+/* ============================================================
+   Base elements (semantic styles)
+   Use these directly when scoping; or as references when
+   building Tailwind utilities.
+   ============================================================ */
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--fs-background);
+  color: var(--fs-foreground);
+  font-family: var(--fs-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(168, 226, 108, 0.28);
+  color: var(--fs-accent-ink);
+}
+
+h1 {
+  font: 600 var(--fs-text-display-l) / 0.86 var(--fs-font-sans);
+  letter-spacing: var(--fs-track-display);
+  color: var(--fs-ink-1);
+}
+
+h2 {
+  font: 600 var(--fs-text-display-m) / 0.92 var(--fs-font-sans);
+  letter-spacing: var(--fs-track-title);
+  color: var(--fs-ink-1);
+}
+
+h3 {
+  font: 600 var(--fs-text-title-l) / 1 var(--fs-font-sans);
+  letter-spacing: var(--fs-track-title);
+  color: var(--fs-ink-1);
+}
+
+h4 {
+  font: 600 var(--fs-text-title-m) / 1 var(--fs-font-sans);
+  letter-spacing: var(--fs-track-tile);
+  color: var(--fs-ink-1);
+}
+
+p {
+  font: 400 var(--fs-text-body) / 1.55 var(--fs-font-sans);
+  color: var(--fs-ink-2);
+}
+
+small {
+  font-size: var(--fs-text-body-s);
+  color: var(--fs-ink-2);
+}
+
+code,
+.fs-mono {
+  font-family: var(--fs-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.fs-tabular {
+  font-family: var(--fs-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.fs-kicker {
+  font: 600 var(--fs-text-kicker) / 1 var(--fs-font-sans);
+  letter-spacing: var(--fs-track-kicker);
+  text-transform: uppercase;
+  color: var(--fs-ink-3);
+}
+
+.fs-hero-metric {
+  font: 600 var(--fs-text-hero) / 0.84 var(--fs-font-sans);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--fs-track-hero);
+  background: linear-gradient(180deg, var(--fs-ink-1) 0%, var(--fs-accent-bright) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============================================================
+   Surface system (mirror of globals.css from src/)
+   ============================================================ */
+
+.fs-surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--fs-radius-lg);
+  border: 1px solid var(--fs-glass-border);
+  background:
+    linear-gradient(145deg,
+      rgba(255, 255, 255, 0.065) 0%,
+      rgba(255, 255, 255, 0.018) 36%,
+      rgba(255, 255, 255, 0.006) 100%),
+    var(--fs-glass-bg);
+  box-shadow:
+    inset 0 1px 0 var(--fs-glass-inset-top),
+    inset 0 -1px 0 var(--fs-glass-inset-bottom),
+    var(--fs-shadow-slab);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  transition:
+    border-color var(--fs-dur-hover) ease,
+    transform var(--fs-dur-hover) ease;
+}
+
+.fs-surface[data-depth="hero"] {
+  border-radius: var(--fs-radius-hero);
+  background:
+    linear-gradient(145deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.022) 32%,
+      rgba(255, 255, 255, 0.008) 100%),
+    var(--fs-glass-bg-strong);
+  box-shadow:
+    inset 0 1px 0 var(--fs-glass-inset-top-hero),
+    inset 0 -1px 0 var(--fs-glass-inset-bottom),
+    var(--fs-shadow-hero);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+
+.fs-surface[data-depth="rail"] {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.07) 0%,
+      rgba(255, 255, 255, 0.026) 100%),
+    var(--fs-glass-bg-rail);
+  backdrop-filter: blur(28px) saturate(165%);
+  -webkit-backdrop-filter: blur(28px) saturate(165%);
+}
+
+.fs-surface:hover {
+  border-color: var(--fs-glass-border-strong);
+  transform: translateY(-2px);
+}
+
+/* ---- Pills ------------------------------------------------- */
+.fs-pill {
+  border: 1px solid var(--fs-glass-border-strong);
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.04));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    var(--fs-shadow-pill);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border-radius: var(--fs-radius-pill);
+}
+
+/* ---- Buttons ---------------------------------------------- */
+.fs-btn-accent {
+  color: var(--fs-accent-ink);
+  background: linear-gradient(180deg, var(--fs-accent-bright), var(--fs-accent-core));
+  border-radius: var(--fs-radius-pill);
+  box-shadow:
+    0 0 0 1px rgba(168, 226, 108, 0.28),
+    var(--fs-shadow-accent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  transition:
+    transform var(--fs-dur-hover) ease,
+    box-shadow var(--fs-dur-hover) ease;
+}
+.fs-btn-accent:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(168, 226, 108, 0.36),
+    var(--fs-shadow-accent-strong),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52);
+}
+
+.fs-btn-ghost {
+  color: var(--fs-ink-2);
+  border: 1px solid var(--fs-glass-border);
+  background: var(--fs-glass-fill-soft);
+  border-radius: var(--fs-radius-pill);
+  transition:
+    color var(--fs-dur-color) ease,
+    border-color var(--fs-dur-color) ease,
+    background-color var(--fs-dur-color) ease;
+}
+.fs-btn-ghost:hover {
+  color: var(--fs-ink-1);
+  border-color: var(--fs-glass-border-strong);
+  background: var(--fs-glass-fill-mid);
+}
+
+/* ---- Status pills ----------------------------------------- */
+.fs-status-connected {
+  color: var(--fs-accent-bright);
+  background: rgba(123, 194, 65, 0.12);
+  border: 1px solid rgba(168, 226, 108, 0.22);
+}
+.fs-status-expired {
+  color: var(--fs-danger-ink);
+  background: var(--fs-danger-soft-fill);
+  border: 1px solid var(--fs-danger-soft);
+}
+.fs-status-neutral {
+  color: var(--fs-ink-2);
+  background: var(--fs-glass-fill-soft);
+  border: 1px solid var(--fs-glass-border);
+}
+
+/* ---- Focus ------------------------------------------------ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.fs-focusable:focus-visible {
+  outline: 2px solid rgba(168, 226, 108, 0.7);
+  outline-offset: 3px;
+}
+
+/* ---- Animations ------------------------------------------- */
+@keyframes fs-archive-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fs-route-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.fs-archive-rise {
+  animation: fs-archive-rise var(--fs-dur-rise) var(--fs-ease-rise) both;
+}
+.fs-route-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: fs-route-draw var(--fs-dur-draw) var(--fs-ease-draw) 180ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-archive-rise,
+  .fs-route-draw {
+    animation: none !important;
+  }
+  .fs-surface,
+  .fs-surface:hover {
+    transform: none !important;
+  }
+}
+
+/* ---- Page shell background recipe ------------------------- */
+.fs-page-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background:
+    radial-gradient(80% 50% at 82% -10%, var(--fs-accent-wash-a) 0%, transparent 62%),
+    radial-gradient(58% 36% at 6% 100%, var(--fs-accent-wash-b) 0%, transparent 62%),
+    linear-gradient(180deg, var(--fs-field-deep) 0%, #030403 100%);
+  color: var(--fs-foreground);
+}
+.fs-page-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 180px 180px;
+  opacity: 0.04;
+  mask-image: radial-gradient(circle at center, black 0%, transparent 82%);
+  z-index: -2;
+}
+.fs-page-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(140% 90% at 0% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 45%),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.28));
+  z-index: -1;
+}
