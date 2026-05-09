@@ -20,7 +20,9 @@ import {
   applyActivityFilters,
   buildFilterSearchParams,
   getMaxDistanceMiles,
+  getMaxPowerWatts,
   getSportOptions,
+  getThresholdMode,
   parseActivityFilters,
 } from "@/lib/activities/filters";
 import { formatArchiveCount, sportLabel } from "@/lib/activities/format";
@@ -48,10 +50,17 @@ export function ActivitiesStream({
     [searchParams, sportOptions],
   );
   const [searchDraft, setSearchDraft] = useState(filters.search);
+  const [distanceDraft, setDistanceDraft] = useState(filters.minDistanceMiles);
+  const [powerDraft, setPowerDraft] = useState(filters.minPowerWatts);
   const deferredSearch = useDeferredValue(searchDraft);
   const maxDistanceMiles = useMemo(
     () => getMaxDistanceMiles(activities),
     [activities],
+  );
+  const maxPowerWatts = useMemo(() => getMaxPowerWatts(activities), [activities]);
+  const thresholdMode = useMemo(
+    () => getThresholdMode(filters.sport),
+    [filters.sport],
   );
   const fullArchiveTotals = useMemo(
     () =>
@@ -79,6 +88,14 @@ export function ActivitiesStream({
   }, [filters.search]);
 
   useEffect(() => {
+    setDistanceDraft(filters.minDistanceMiles);
+  }, [filters.minDistanceMiles]);
+
+  useEffect(() => {
+    setPowerDraft(filters.minPowerWatts);
+  }, [filters.minPowerWatts]);
+
+  useEffect(() => {
     if (deferredSearch === filters.search) {
       return;
     }
@@ -90,6 +107,30 @@ export function ActivitiesStream({
     return () => window.clearTimeout(timeout);
   }, [deferredSearch, filters, replaceFilters]);
 
+  useEffect(() => {
+    if (thresholdMode !== "distance" || distanceDraft === filters.minDistanceMiles) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      replaceFilters({ ...filters, minDistanceMiles: distanceDraft });
+    }, 120);
+
+    return () => window.clearTimeout(timeout);
+  }, [distanceDraft, filters, replaceFilters, thresholdMode]);
+
+  useEffect(() => {
+    if (thresholdMode !== "power" || powerDraft === filters.minPowerWatts) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      replaceFilters({ ...filters, minPowerWatts: powerDraft });
+    }, 120);
+
+    return () => window.clearTimeout(timeout);
+  }, [filters, powerDraft, replaceFilters, thresholdMode]);
+
   const visibleActivities = useMemo(
     () => applyActivityFilters(activities, { ...filters, search: deferredSearch }),
     [activities, deferredSearch, filters],
@@ -100,6 +141,7 @@ export function ActivitiesStream({
   }, [
     deferredSearch,
     filters.minDistanceMiles,
+    filters.minPowerWatts,
     filters.range,
     filters.sort,
     filters.sport,
@@ -142,10 +184,16 @@ export function ActivitiesStream({
       <FilterHud
         filters={filters}
         searchDraft={searchDraft}
+        distanceDraft={distanceDraft}
+        powerDraft={powerDraft}
         onSearchDraftChange={setSearchDraft}
+        onDistanceDraftChange={setDistanceDraft}
+        onPowerDraftChange={setPowerDraft}
         onPatchFilters={patchFilters}
         sportOptions={sportOptions}
         maxDistanceMiles={maxDistanceMiles}
+        maxPowerWatts={maxPowerWatts}
+        thresholdMode={thresholdMode}
         visibleCount={visibleActivities.length}
         totalCount={activities.length}
       />

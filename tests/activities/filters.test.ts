@@ -3,6 +3,7 @@ import {
   applyActivityFilters,
   buildFilterSearchParams,
   DEFAULT_FILTERS,
+  getSportOptions,
   parseActivityFilters,
 } from "../../src/lib/activities/filters";
 import type { ArchiveActivity } from "../../src/lib/activities/types";
@@ -72,6 +73,7 @@ describe("activity filters", () => {
       range: "90d",
       sort: "distance",
       minDistanceMiles: 4,
+      minPowerWatts: 0,
       search: "morning",
     });
     expect(buildFilterSearchParams(parsed).toString()).toBe(params.toString());
@@ -92,10 +94,63 @@ describe("activity filters", () => {
       range: "all",
       sort: "recent",
       minDistanceMiles: 4,
+      minPowerWatts: 0,
       search: "morning",
     });
 
     expect(visible).toHaveLength(1);
     expect(visible[0]?.id).toBe(1);
+  });
+
+  it("collapses Workout into Strength and removes Stairs from sport options", () => {
+    const options = getSportOptions([
+      ...activities,
+      {
+        ...activities[1],
+        id: 3,
+        sportType: "Workout",
+      },
+      {
+        ...activities[1],
+        id: 4,
+        sportType: "StairStepper",
+      },
+    ]);
+
+    expect(options).toContain("WeightTraining");
+    expect(options).not.toContain("Workout");
+    expect(options).not.toContain("StairStepper");
+  });
+
+  it("uses min power when Ride is the selected sport", () => {
+    const visible = applyActivityFilters(
+      [
+        {
+          ...activities[0],
+          id: 10,
+          sportType: "Ride",
+          distanceMeters: 0,
+          averageWatts: 180,
+        },
+        {
+          ...activities[0],
+          id: 11,
+          sportType: "Ride",
+          distanceMeters: 0,
+          averageWatts: 240,
+        },
+      ],
+      {
+        sport: "Ride",
+        range: "all",
+        sort: "recent",
+        minDistanceMiles: 0,
+        minPowerWatts: 200,
+        search: "",
+      },
+    );
+
+    expect(visible).toHaveLength(1);
+    expect(visible[0]?.id).toBe(11);
   });
 });

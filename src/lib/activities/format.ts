@@ -36,6 +36,10 @@ const METERS_PER_FOOT = 0.3048;
 const EM_DASH = "—";
 
 export function canonicalSport(sportType: string | null): string {
+  if (sportType === "Workout") {
+    return "WeightTraining";
+  }
+
   return sportType ?? "Other";
 }
 

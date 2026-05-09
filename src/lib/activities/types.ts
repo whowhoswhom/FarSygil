@@ -45,6 +45,7 @@ export interface ActivityFilters {
   range: ActivityRange;
   sort: ActivitySort;
   minDistanceMiles: number;
+  minPowerWatts: number;
   search: string;
 }
 
