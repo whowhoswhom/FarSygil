@@ -3,6 +3,7 @@ import {
   canonicalSport,
   effortIntensity,
   formatMonthLabel,
+  isRideLike,
 } from "@/lib/activities/format";
 import type {
   ActivityFilters,
@@ -33,8 +34,11 @@ export const DEFAULT_FILTERS: ActivityFilters = {
   range: "all",
   sort: "recent",
   minDistanceMiles: 0,
+  minPowerWatts: 0,
   search: "",
 };
+
+export type ThresholdMode = "distance" | "power" | "none";
 
 export interface ArchiveMonthGroup {
   key: string;
@@ -45,7 +49,11 @@ export interface ArchiveMonthGroup {
 
 export function getSportOptions(activities: ArchiveActivity[]): string[] {
   return Array.from(
-    new Set(activities.map((activity) => canonicalSport(activity.sportType))),
+    new Set(
+      activities
+        .map((activity) => canonicalSport(activity.sportType))
+        .filter((sport) => sport !== "StairStepper"),
+    ),
   ).sort((left, right) => left.localeCompare(right));
 }
 
@@ -58,6 +66,33 @@ export function getMaxDistanceMiles(activities: ArchiveActivity[]): number {
   return Math.ceil(maxDistanceMeters / 1609.344);
 }
 
+export function getMaxPowerWatts(activities: ArchiveActivity[]): number {
+  const maxPower = Math.max(
+    0,
+    ...activities
+      .filter((activity) => isRideLike(activity.sportType))
+      .map((activity) => activity.averageWatts ?? 0),
+  );
+
+  return Math.ceil(maxPower);
+}
+
+export function getThresholdMode(sport: string): ThresholdMode {
+  if (sport === "all") {
+    return "distance";
+  }
+
+  if (sport === "WeightTraining" || sport === "Yoga" || sport === "StairStepper") {
+    return "none";
+  }
+
+  if (isRideLike(sport)) {
+    return "power";
+  }
+
+  return "distance";
+}
+
 export function parseActivityFilters(
   searchParams: URLSearchParams,
   sportOptions: string[],
@@ -66,6 +101,7 @@ export function parseActivityFilters(
   const sort = searchParams.get("sort");
   const sport = searchParams.get("sport");
   const minDistanceMiles = Number(searchParams.get("minDistanceMiles") ?? "0");
+  const minPowerWatts = Number(searchParams.get("minPowerWatts") ?? "0");
   const search = searchParams.get("search")?.trim() ?? "";
 
   return {
@@ -82,6 +118,9 @@ export function parseActivityFilters(
     minDistanceMiles: Number.isFinite(minDistanceMiles)
       ? Math.max(0, minDistanceMiles)
       : DEFAULT_FILTERS.minDistanceMiles,
+    minPowerWatts: Number.isFinite(minPowerWatts)
+      ? Math.max(0, minPowerWatts)
+      : DEFAULT_FILTERS.minPowerWatts,
     search,
   };
 }
@@ -105,6 +144,10 @@ export function buildFilterSearchParams(
 
   if (filters.minDistanceMiles > DEFAULT_FILTERS.minDistanceMiles) {
     searchParams.set("minDistanceMiles", String(filters.minDistanceMiles));
+  }
+
+  if (filters.minPowerWatts > DEFAULT_FILTERS.minPowerWatts) {
+    searchParams.set("minPowerWatts", String(filters.minPowerWatts));
   }
 
   if (filters.search) {
@@ -135,6 +178,8 @@ export function applyActivityFilters(
     const activitySport = canonicalSport(activity.sportType);
     const timestamp = getActivityTimestamp(activity.startDate);
     const miles = (activity.distanceMeters ?? 0) / 1609.344;
+    const averageWatts = activity.averageWatts ?? 0;
+    const thresholdMode = getThresholdMode(filters.sport);
 
     if (filters.sport !== "all" && activitySport !== filters.sport) {
       return false;
@@ -144,7 +189,11 @@ export function applyActivityFilters(
       return false;
     }
 
-    if (miles < filters.minDistanceMiles) {
+    if (thresholdMode === "distance" && miles < filters.minDistanceMiles) {
+      return false;
+    }
+
+    if (thresholdMode === "power" && averageWatts < filters.minPowerWatts) {
       return false;
     }
 
