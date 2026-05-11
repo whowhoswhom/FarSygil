@@ -23,7 +23,7 @@ Each log row includes:
 
 Current Phase 1 behavior:
 - `POST /api/strava/sync` writes `sync_start`, `sync_complete`, and `sync_error` rows for Strava summary-activity imports
-- there is still no dedicated sync log viewer UI; logs are persisted but not yet surfaced in the app
+- `/connect` now surfaces recent local Strava sync-log rows and exposes a manual `Sync now` control
 
 ---
 

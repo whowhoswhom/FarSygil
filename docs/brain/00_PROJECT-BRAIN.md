@@ -14,9 +14,9 @@ This document is the canonical entry point for the entire project. All other bra
 
 ## Current Phase
 
-**Phase 1 - Foundation**
+**Phase 1 - Foundation complete**
 
-Current progress: Strava OAuth, local token storage, refresh-aware Strava token access, summary activity sync, the connection-status surface, and the first `/activities` Archive page are in place. The remaining major Phase 1 gap is the sync log viewer.
+Current progress: Strava OAuth, local token storage, refresh-aware Strava token access, summary activity sync, the connection-status surface, the `/activities` Archive page, and the sync log viewer are all in place. The next major product work begins in Phase 2.
 
 See [[13_ROADMAP-PHASES|Roadmap]] for full phase breakdown.
 

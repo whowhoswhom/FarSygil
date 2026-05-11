@@ -29,6 +29,8 @@ Phase 2: redirect to `/dashboard` once data is available.
 ### `/connect` - Strava connection
 - Start or repeat the Strava OAuth flow
 - View persisted local connection metadata
+- Trigger a local summary-activity sync via `POST /api/strava/sync`
+- Review the recent local sync log without leaving the page
 - Jump into `/activities` once local activity rows exist
 - Use the home-page callback banner for one-off OAuth success or failure messages
 - Callback status includes local config errors as well as Strava-returned OAuth outcomes

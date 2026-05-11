@@ -6,7 +6,7 @@
 
 ## Status
 
-**Phase 1 - in progress.** OAuth connect, callback token storage, connection-status reads, an on-demand token-refresh helper, and the first summary activity sync path are implemented.
+**Phase 1 - implemented for current scope.** OAuth connect, callback token storage, connection-status reads, an on-demand token-refresh helper, the first summary activity sync path, and a local sync log viewer are implemented.
 
 ## Current implementation
 
@@ -15,7 +15,7 @@
 - `GET /api/strava/status` returns safe local connection metadata from SQLite: connection state, athlete id, accepted scope, expiry timestamp, and whether the token is expired.
 - `getValidStravaAccessToken()` in `src/server/strava/oauth.ts` returns a usable access token for future Strava API calls, silently refreshing the stored token row when the remaining lifetime drops below a configurable leeway (default 5 minutes, `STRAVA_REFRESH_LEEWAY_SECONDS`). Callers can pass `leewaySeconds: 0` to opt back into "refresh only after hard expiry"; negative values are clamped to zero.
 - `POST /api/strava/sync` now performs the first real activity sync. It uses `getValidStravaAccessToken()` with a wider sync-specific leeway, fetches paginated Strava summary activities, upserts normalized rows into `activities`, stores summary payloads in `activity_raw_json`, and records start/complete/error events in `data_import_logs`.
-- `/connect` is a Phase 1 management page for starting OAuth and viewing the persisted local connection metadata.
+- `/connect` is a Phase 1 management page for starting OAuth, viewing persisted local connection metadata, triggering summary sync, and reviewing recent sync-log rows from the local database.
 - Callback failures are distinguished as denied access, missing code, missing scope, invalid state, local callback configuration error, token-exchange failure, and local-storage failure. These OAuth setup errors currently surface through callback status plus server logs.
 
 ---
