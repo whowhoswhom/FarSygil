@@ -7,6 +7,7 @@ import { env } from "@/lib/env";
 import {
   STRAVA_AUTHORIZE_URL,
   STRAVA_OAUTH_SCOPE,
+  STRAVA_REFRESH_LEEWAY_SECONDS,
   STRAVA_REQUIRED_SCOPES,
   STRAVA_TOKEN_URL,
 } from "@/server/strava/constants";
@@ -47,6 +48,23 @@ export interface StravaConnectionStatus {
   expiresAt: number | null;
   expired: boolean;
   updatedAt: string | null;
+}
+
+export interface StoredStravaTokenRecord {
+  athleteId: number;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+  scope: string | null;
+  updatedAt: string;
+}
+
+export interface ValidStravaAccessToken {
+  accessToken: string;
+  athleteId: number;
+  scope: string | null;
+  expiresAt: number;
+  refreshed: boolean;
 }
 
 export type FarSygilDatabase = BetterSQLite3Database<typeof schema>;
@@ -99,6 +117,105 @@ export async function exchangeCodeForToken(
   config: StravaOAuthConfig,
   fetchImplementation: FetchImplementation = fetch,
 ): Promise<StravaTokenExchangeResponse> {
+  return requestStravaToken(
+    new URLSearchParams({
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      code,
+      grant_type: "authorization_code",
+    }),
+    "token exchange",
+    fetchImplementation,
+  );
+}
+
+export async function refreshStravaAccessToken(
+  refreshToken: string,
+  config: StravaOAuthConfig,
+  fetchImplementation: FetchImplementation = fetch,
+): Promise<StravaTokenExchangeResponse> {
+  return requestStravaToken(
+    new URLSearchParams({
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    }),
+    "token refresh",
+    fetchImplementation,
+  );
+}
+
+export async function getValidStravaAccessToken(options: {
+  database: FarSygilDatabase;
+  config: StravaOAuthConfig;
+  fetchImplementation?: FetchImplementation;
+  nowUnix?: number;
+  /**
+   * Safety margin in seconds. When the stored token has less than this much
+   * remaining lifetime, it is treated as already expired and refreshed before
+   * being returned. Negative values are clamped to 0. Defaults to
+   * `STRAVA_REFRESH_LEEWAY_SECONDS` (5 minutes).
+   */
+  leewaySeconds?: number;
+  errorLogger?: (message: string) => void;
+}): Promise<ValidStravaAccessToken> {
+  const {
+    database,
+    config,
+    fetchImplementation = fetch,
+    nowUnix = Math.floor(Date.now() / 1000),
+    leewaySeconds = STRAVA_REFRESH_LEEWAY_SECONDS,
+    errorLogger,
+  } = options;
+  const safeLeewaySeconds = Math.max(0, leewaySeconds);
+  const token = await getStoredStravaToken(database);
+
+  if (!token) {
+    throw new StravaOAuthError("No stored Strava token found");
+  }
+
+  if (token.expiresAt - nowUnix > safeLeewaySeconds) {
+    return {
+      accessToken: token.accessToken,
+      athleteId: token.athleteId,
+      scope: token.scope,
+      expiresAt: token.expiresAt,
+      refreshed: false,
+    };
+  }
+
+  try {
+    const refreshedToken = await refreshStravaAccessToken(
+      token.refreshToken,
+      config,
+      fetchImplementation,
+    );
+
+    await upsertStravaToken(database, refreshedToken, token.scope);
+
+    return {
+      accessToken: refreshedToken.access_token,
+      athleteId: refreshedToken.athlete.id,
+      scope: token.scope,
+      expiresAt: refreshedToken.expires_at,
+      refreshed: true,
+    };
+  } catch (error) {
+    const message = getErrorMessage(error);
+    errorLogger?.(`Strava token refresh failed: ${message}`);
+    throw new StravaOAuthError(
+      `Failed to refresh stored Strava token: ${message}`,
+      error,
+    );
+  }
+}
+
+async function requestStravaToken(
+  body: URLSearchParams,
+  operationName: string,
+  fetchImplementation: FetchImplementation,
+): Promise<StravaTokenExchangeResponse> {
   let response: Response;
 
   try {
@@ -107,17 +224,12 @@ export async function exchangeCodeForToken(
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        client_id: config.clientId,
-        client_secret: config.clientSecret,
-        code,
-        grant_type: "authorization_code",
-      }),
+      body,
       cache: "no-store",
     });
   } catch (error) {
     throw new StravaOAuthError(
-      "Network error contacting Strava token endpoint",
+      `Network error contacting Strava token endpoint during ${operationName}`,
       error,
     );
   }
@@ -133,8 +245,8 @@ export async function exchangeCodeForToken(
     }
 
     throw new StravaOAuthError(
-      `Strava token exchange failed (HTTP ${status})${body ? `: ${body.slice(0, 200)}` : ""}`,
-    );
+      `Strava ${operationName} failed (HTTP ${status})${body ? `: ${body.slice(0, 200)}` : ""}`,
+      );
   }
 
   let payload: unknown;
@@ -143,7 +255,7 @@ export async function exchangeCodeForToken(
     payload = await response.json();
   } catch (error) {
     throw new StravaOAuthError(
-      "Invalid JSON from Strava token endpoint",
+      `Invalid JSON from Strava token endpoint during ${operationName}`,
       error,
     );
   }
@@ -193,16 +305,7 @@ export async function getStravaConnectionStatus(
   database: FarSygilDatabase,
   nowUnix: number = Math.floor(Date.now() / 1000),
 ): Promise<StravaConnectionStatus> {
-  const [token] = await database
-    .select({
-      athleteId: stravaTokens.athleteId,
-      scope: stravaTokens.scope,
-      expiresAt: stravaTokens.expiresAt,
-      updatedAt: stravaTokens.updatedAt,
-    })
-    .from(stravaTokens)
-    .orderBy(desc(stravaTokens.updatedAt))
-    .limit(1);
+  const token = await getStoredStravaToken(database);
 
   if (!token) {
     return {
@@ -218,7 +321,7 @@ export async function getStravaConnectionStatus(
   return {
     connected: true,
     athleteId: token.athleteId,
-    scope: token.scope ?? null,
+    scope: token.scope,
     expiresAt: token.expiresAt,
     expired: token.expiresAt <= nowUnix,
     updatedAt: token.updatedAt,
@@ -309,6 +412,36 @@ function hasRequiredScopes(scope: string): boolean {
 function normalizeScope(scope: string | null): string | null {
   const trimmed = scope?.trim() ?? "";
   return trimmed.length > 0 ? trimmed : null;
+}
+
+async function getStoredStravaToken(
+  database: FarSygilDatabase,
+): Promise<StoredStravaTokenRecord | null> {
+  const [token] = await database
+    .select({
+      athleteId: stravaTokens.athleteId,
+      accessToken: stravaTokens.accessToken,
+      refreshToken: stravaTokens.refreshToken,
+      scope: stravaTokens.scope,
+      expiresAt: stravaTokens.expiresAt,
+      updatedAt: stravaTokens.updatedAt,
+    })
+    .from(stravaTokens)
+    .orderBy(desc(stravaTokens.updatedAt))
+    .limit(1);
+
+  if (!token) {
+    return null;
+  }
+
+  return {
+    athleteId: token.athleteId,
+    accessToken: token.accessToken,
+    refreshToken: token.refreshToken,
+    scope: token.scope ?? null,
+    expiresAt: token.expiresAt,
+    updatedAt: token.updatedAt,
+  };
 }
 
 function getErrorMessage(error: unknown): string {

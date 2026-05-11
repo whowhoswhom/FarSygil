@@ -6,13 +6,14 @@
 
 ## Status
 
-**Phase 1 - in progress.** OAuth connect, callback token storage, and connection-status reads are implemented. Activity sync is still pending.
+**Phase 1 - in progress.** OAuth connect, callback token storage, connection-status reads, and an on-demand token-refresh helper are implemented. Activity sync is still pending.
 
 ## Current implementation
 
 - `GET /api/strava/connect` generates an OAuth `state`, stores it in an httpOnly cookie, and redirects the browser to Strava's authorization page. It currently returns a `500` JSON error instead of redirecting if required local Strava env vars are missing before the OAuth flow starts.
 - `GET /api/strava/callback` validates the returned `state`, requires `read,activity:read_all`, exchanges the authorization code for tokens, keeps exactly one local row in `strava_tokens`, and redirects back to `/?strava=<status>`.
 - `GET /api/strava/status` returns safe local connection metadata from SQLite: connection state, athlete id, accepted scope, expiry timestamp, and whether the token is expired.
+- `getValidStravaAccessToken()` in `src/server/strava/oauth.ts` returns a usable access token for future Strava API calls, silently refreshing the stored token row when the remaining lifetime drops below a configurable leeway (default 5 minutes, `STRAVA_REFRESH_LEEWAY_SECONDS`). Callers can pass `leewaySeconds: 0` to opt back into "refresh only after hard expiry"; negative values are clamped to zero.
 - `/connect` is a Phase 1 management page for starting OAuth and viewing the persisted local connection metadata.
 - Callback failures are distinguished as denied access, missing code, missing scope, invalid state, local callback configuration error, token-exchange failure, and local-storage failure. These OAuth setup errors currently surface through callback status plus server logs; `data_import_logs` begins when activity sync is implemented.
 
@@ -46,10 +47,10 @@ Obtain credentials at: https://www.strava.com/settings/api
 
 ## Token refresh
 
-Strava access tokens expire after 6 hours. The sync process must:
+Strava access tokens expire after 6 hours. FarSygil now has a server-side helper that refreshes a stored token on demand before a Strava API call. The helper applies a small safety margin (default 5 minutes, `STRAVA_REFRESH_LEEWAY_SECONDS`) so long-running callers never pick up a token that expires mid-request; callers that want the old "refresh strictly after expiry" behavior can pass `leewaySeconds: 0`. The sync process should use that helper so it:
 
-1. Check `strava_tokens.expires_at` before each API call.
-2. If expired, call `POST https://www.strava.com/oauth/token` with `grant_type=refresh_token`.
+1. Check `strava_tokens.expires_at` against `now + leewaySeconds` before each API call.
+2. If the remaining lifetime is within leeway (or already past), call `POST https://www.strava.com/oauth/token` with `grant_type=refresh_token`.
 3. Update `strava_tokens` with the new `access_token`, `refresh_token`, and `expires_at`.
 
 ---

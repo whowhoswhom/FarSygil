@@ -45,10 +45,10 @@ Fixtures must use anonymised fake data - never real athlete data or real health 
 - [x] Strava OAuth token exchange and storage
 - [ ] Activity upsert (new and update)
 - [ ] Split parsing from raw JSON
-- [ ] Token refresh logic
+- [x] Token refresh logic
 
 Current Phase 1 coverage:
-- `tests/strava/oauth.test.ts` verifies the authorize redirect URL, `state` handling, access-denied short-circuiting before token exchange even when `code` and valid scopes are present, callback token exchange, replacement of a stale token row when a different athlete reconnects, single-row token upsert, missing-code handling, missing-scope handling, invalid-state handling, exchange failure, storage failure, and connection-status reads.
+- `tests/strava/oauth.test.ts` verifies the authorize redirect URL, `state` handling, access-denied short-circuiting before token exchange even when `code` and valid scopes are present, callback token exchange, replacement of a stale token row when a different athlete reconnects, single-row token upsert, missing-code handling, missing-scope handling, invalid-state handling, exchange failure, storage failure, connection-status reads, valid-token reuse, expired-token refresh, refresh-failure handling, missing-stored-token handling, default leeway-window refresh, opt-out via `leewaySeconds: 0`, opt-in via a larger custom leeway, and negative-leeway clamping.
 - `tests/strava/connect-route.test.ts` verifies that the real `/api/strava/connect` redirect response carries the expected Strava authorize URL parameters and the expected OAuth state-cookie attributes.
 - `tests/strava/callback-route.test.ts` verifies that callback-route configuration failures still redirect to `/?strava=config_error` and clear the OAuth state cookie, and that unexpected callback-helper throws are not relabeled as config errors.
 - `tests/activities/format.test.ts` verifies imperial distance/elevation formatting, run pace formatting, the global `sufferScore / 250` effort scale, and the rule that indoor rides do not synthesize distance metrics.
