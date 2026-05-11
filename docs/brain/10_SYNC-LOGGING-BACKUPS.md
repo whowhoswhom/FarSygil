@@ -21,6 +21,10 @@ Each log row includes:
 - `errors_count`: number of errors encountered
 - `started_at` / `completed_at`: timestamps
 
+Current Phase 1 behavior:
+- `POST /api/strava/sync` writes `sync_start`, `sync_complete`, and `sync_error` rows for Strava summary-activity imports
+- there is still no dedicated sync log viewer UI; logs are persisted but not yet surfaced in the app
+
 ---
 
 ## Database backups

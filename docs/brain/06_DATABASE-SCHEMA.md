@@ -72,9 +72,12 @@ Preserves the raw Strava API JSON for reprocessing.
 | Column | Type | Notes |
 |---|---|---|
 | id | INTEGER PK | |
-| strava_id | INTEGER UNIQUE | |
+| strava_id | INTEGER | Strava activity ID |
+| payload_type | TEXT | `"summary_activity"` \| `"detailed_activity"` \| `"streams"` |
 | raw_json | TEXT | Full JSON string |
 | fetched_at | TEXT | |
+
+Unique constraint: `(strava_id, payload_type)`.
 
 ---
 

@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1003,
+    "name": "Lunch Walk",
+    "sport_type": "Walk",
+    "start_date": "2026-05-07T16:05:00Z",
+    "start_date_local": "2026-05-07T12:05:00Z",
+    "timezone": "(GMT-05:00) America/New_York",
+    "distance": 4217.8,
+    "moving_time": 2450,
+    "elapsed_time": 2591,
+    "total_elevation_gain": 37.8,
+    "average_speed": 1.72,
+    "max_speed": 2.64,
+    "average_heartrate": 112.1,
+    "max_heartrate": 128.0,
+    "average_cadence": null,
+    "average_watts": null,
+    "suffer_score": null,
+    "perceived_exertion": null,
+    "start_latlng": [38.2561, -85.7428],
+    "map": {
+      "summary_polyline": "walk5678"
+    },
+    "gear_id": null
+  }
+]

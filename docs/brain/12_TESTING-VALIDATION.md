@@ -43,7 +43,7 @@ Fixtures must use anonymised fake data - never real athlete data or real health 
 
 ### Phase 1
 - [x] Strava OAuth token exchange and storage
-- [ ] Activity upsert (new and update)
+- [x] Activity upsert (new and update)
 - [ ] Split parsing from raw JSON
 - [x] Token refresh logic
 
@@ -51,6 +51,8 @@ Current Phase 1 coverage:
 - `tests/strava/oauth.test.ts` verifies the authorize redirect URL, `state` handling, access-denied short-circuiting before token exchange even when `code` and valid scopes are present, callback token exchange, replacement of a stale token row when a different athlete reconnects, single-row token upsert, missing-code handling, missing-scope handling, invalid-state handling, exchange failure, storage failure, connection-status reads, valid-token reuse, expired-token refresh, refresh-failure handling, missing-stored-token handling, default leeway-window refresh, opt-out via `leewaySeconds: 0`, opt-in via a larger custom leeway, and negative-leeway clamping.
 - `tests/strava/connect-route.test.ts` verifies that the real `/api/strava/connect` redirect response carries the expected Strava authorize URL parameters and the expected OAuth state-cookie attributes.
 - `tests/strava/callback-route.test.ts` verifies that callback-route configuration failures still redirect to `/?strava=config_error` and clear the OAuth state cookie, and that unexpected callback-helper throws are not relabeled as config errors.
+- `tests/strava/sync.test.ts` verifies paginated summary-activity sync into SQLite, incremental sync using the latest local Strava timestamp, normalized upserts into `activities`, raw summary payload storage in `activity_raw_json`, and sync error logging for missing connections or invalid upstream payloads.
+- `tests/strava/sync-route.test.ts` verifies the real `/api/strava/sync` route's JSON success path, missing-config handling, and `not_connected` error mapping.
 - `tests/activities/format.test.ts` verifies imperial distance/elevation formatting, run pace formatting, the global `sufferScore / 250` effort scale, and the rule that indoor rides do not synthesize distance metrics.
 - `tests/activities/filters.test.ts` verifies `/activities` filter URL parsing/serialization plus archive filtering by sport, search, and minimum distance.
 - `tests/activities/aggregates.test.ts` verifies archive total aggregation for count, distance, moving time, and elevation.
