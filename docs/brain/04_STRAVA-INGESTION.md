@@ -6,7 +6,7 @@
 
 ## Status
 
-**Phase 1 - in progress.** OAuth connect, callback token storage, connection-status reads, and an on-demand token-refresh helper are implemented. Activity sync is still pending.
+**Phase 1 - in progress.** OAuth connect, callback token storage, connection-status reads, an on-demand token-refresh helper, and the first summary activity sync path are implemented.
 
 ## Current implementation
 
@@ -14,8 +14,9 @@
 - `GET /api/strava/callback` validates the returned `state`, requires `read,activity:read_all`, exchanges the authorization code for tokens, keeps exactly one local row in `strava_tokens`, and redirects back to `/?strava=<status>`.
 - `GET /api/strava/status` returns safe local connection metadata from SQLite: connection state, athlete id, accepted scope, expiry timestamp, and whether the token is expired.
 - `getValidStravaAccessToken()` in `src/server/strava/oauth.ts` returns a usable access token for future Strava API calls, silently refreshing the stored token row when the remaining lifetime drops below a configurable leeway (default 5 minutes, `STRAVA_REFRESH_LEEWAY_SECONDS`). Callers can pass `leewaySeconds: 0` to opt back into "refresh only after hard expiry"; negative values are clamped to zero.
+- `POST /api/strava/sync` now performs the first real activity sync. It uses `getValidStravaAccessToken()` with a wider sync-specific leeway, fetches paginated Strava summary activities, upserts normalized rows into `activities`, stores summary payloads in `activity_raw_json`, and records start/complete/error events in `data_import_logs`.
 - `/connect` is a Phase 1 management page for starting OAuth and viewing the persisted local connection metadata.
-- Callback failures are distinguished as denied access, missing code, missing scope, invalid state, local callback configuration error, token-exchange failure, and local-storage failure. These OAuth setup errors currently surface through callback status plus server logs; `data_import_logs` begins when activity sync is implemented.
+- Callback failures are distinguished as denied access, missing code, missing scope, invalid state, local callback configuration error, token-exchange failure, and local-storage failure. These OAuth setup errors currently surface through callback status plus server logs.
 
 ---
 
@@ -47,7 +48,7 @@ Obtain credentials at: https://www.strava.com/settings/api
 
 ## Token refresh
 
-Strava access tokens expire after 6 hours. FarSygil now has a server-side helper that refreshes a stored token on demand before a Strava API call. The helper applies a small safety margin (default 5 minutes, `STRAVA_REFRESH_LEEWAY_SECONDS`) so long-running callers never pick up a token that expires mid-request; callers that want the old "refresh strictly after expiry" behavior can pass `leewaySeconds: 0`. The sync process should use that helper so it:
+Strava access tokens expire after 6 hours. FarSygil now has a server-side helper that refreshes a stored token on demand before a Strava API call. The helper applies a small safety margin (default 5 minutes, `STRAVA_REFRESH_LEEWAY_SECONDS`) so long-running callers never pick up a token that expires mid-request; callers that want the old "refresh strictly after expiry" behavior can pass `leewaySeconds: 0`. The sync path uses a wider `STRAVA_SYNC_REFRESH_LEEWAY_SECONDS` margin so paginated imports do not begin with a token that is about to expire. The sync path uses that helper to:
 
 1. Check `strava_tokens.expires_at` against `now + leewaySeconds` before each API call.
 2. If the remaining lifetime is within leeway (or already past), call `POST https://www.strava.com/oauth/token` with `grant_type=refresh_token`.
@@ -57,9 +58,17 @@ Strava access tokens expire after 6 hours. FarSygil now has a server-side helper
 
 ## Activity sync
 
-### Initial sync
+### Current summary sync
 
-On first connect, fetch all activities from the Strava API using pagination:
+`POST /api/strava/sync` currently fetches Strava's paginated summary-activity endpoint and writes:
+
+- normalized summary rows to `activities`
+- raw summary payloads to `activity_raw_json` with `payload_type = "summary_activity"`
+- sync events to `data_import_logs`
+
+The route repeats pagination until an empty page is returned.
+
+### Initial sync
 
 ```bash
 GET https://www.strava.com/api/v3/athlete/activities?per_page=200&page={n}
@@ -79,7 +88,7 @@ The `after` timestamp should be derived from the most recent `start_date` in the
 
 ### Detailed activity fetch
 
-For each activity, fetch the detailed record:
+Detailed activity fetch is still pending. The next sync passes should, for each activity, fetch the detailed record:
 
 ```bash
 GET https://www.strava.com/api/v3/activities/{id}
@@ -89,11 +98,11 @@ Store the raw JSON in `activity_raw_json`.
 
 ### Splits
 
-Parse `splits_metric` from the detailed activity response and store in `activity_splits`.
+Splits are still pending. Parse `splits_metric` from the detailed activity response and store in `activity_splits`.
 
 ### Streams
 
-Optionally fetch time-series streams (HR, cadence, GPS):
+Streams are still pending. Optionally fetch time-series streams (HR, cadence, GPS):
 
 ```bash
 GET https://www.strava.com/api/v3/activities/{id}/streams?keys=heartrate,cadence,latlng,altitude,distance,time&key_by_type=true
