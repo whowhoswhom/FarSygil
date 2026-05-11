@@ -7,6 +7,7 @@ import * as testSchema from "../../src/db/schema";
 import { STRAVA_TOKEN_URL } from "../../src/server/strava/constants";
 import {
   buildStravaAuthorizeUrl,
+  getValidStravaAccessToken,
   getStravaConnectionStatus,
   handleStravaCallback,
   type FarSygilDatabase,
@@ -401,6 +402,351 @@ describe("Strava OAuth", () => {
         expired: false,
         updatedAt: null,
       });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("returns the stored access token when it is still valid", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fetchMock = vi.fn<typeof fetch>();
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: tokenFixture.access_token,
+        refreshToken: tokenFixture.refresh_token,
+        expiresAt: tokenFixture.expires_at,
+        scope: "read,activity:read_all",
+      });
+
+      const token = await getValidStravaAccessToken({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        // Comfortably outside the default leeway window so the helper
+        // reuses the stored token without consulting Strava.
+        nowUnix: tokenFixture.expires_at - 3600,
+      });
+
+      expect(token).toMatchObject({
+        accessToken: tokenFixture.access_token,
+        athleteId: tokenFixture.athlete.id,
+        scope: "read,activity:read_all",
+        expiresAt: tokenFixture.expires_at,
+        refreshed: false,
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("refreshes when the stored token is still valid but within the default leeway window", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const refreshedFixture: StravaTokenExchangeResponse = {
+      ...tokenFixture,
+      access_token: "access-token-leeway-refreshed",
+      refresh_token: "refresh-token-leeway-refreshed",
+      expires_at: tokenFixture.expires_at + 7200,
+    };
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(refreshedFixture), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: "access-token-leeway",
+        refreshToken: "refresh-token-leeway",
+        expiresAt: tokenFixture.expires_at,
+        scope: "read,activity:read_all",
+      });
+
+      const token = await getValidStravaAccessToken({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        // 60s of remaining lifetime — inside the default 300s leeway window.
+        nowUnix: tokenFixture.expires_at - 60,
+      });
+
+      expect(token).toMatchObject({
+        accessToken: refreshedFixture.access_token,
+        refreshed: true,
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const requestInit = fetchMock.mock.calls[0]?.[1];
+      const body = requestInit?.body as URLSearchParams;
+      expect(body.get("grant_type")).toBe("refresh_token");
+      expect(body.get("refresh_token")).toBe("refresh-token-leeway");
+
+      const [updatedRow] = await database.select().from(testSchema.stravaTokens);
+      expect(updatedRow).toMatchObject({
+        accessToken: refreshedFixture.access_token,
+        refreshToken: refreshedFixture.refresh_token,
+        expiresAt: refreshedFixture.expires_at,
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("honors a custom leeway of zero by reusing tokens that have not actually expired", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fetchMock = vi.fn<typeof fetch>();
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: tokenFixture.access_token,
+        refreshToken: tokenFixture.refresh_token,
+        expiresAt: tokenFixture.expires_at,
+        scope: "read,activity:read_all",
+      });
+
+      const token = await getValidStravaAccessToken({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        // 60s of remaining lifetime would be inside the default window, but
+        // a caller that explicitly opts out of leeway gets the old behavior.
+        nowUnix: tokenFixture.expires_at - 60,
+        leewaySeconds: 0,
+      });
+
+      expect(token).toMatchObject({
+        accessToken: tokenFixture.access_token,
+        refreshed: false,
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("honors a larger custom leeway by refreshing a token that would otherwise be reused", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const refreshedFixture: StravaTokenExchangeResponse = {
+      ...tokenFixture,
+      access_token: "access-token-custom-leeway",
+      refresh_token: "refresh-token-custom-leeway",
+      expires_at: tokenFixture.expires_at + 7200,
+    };
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(refreshedFixture), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: "access-token-comfortable",
+        refreshToken: "refresh-token-comfortable",
+        expiresAt: tokenFixture.expires_at,
+        scope: "read,activity:read_all",
+      });
+
+      const token = await getValidStravaAccessToken({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        // 600s of remaining lifetime — outside the default 300s window but
+        // inside a caller-supplied 900s window.
+        nowUnix: tokenFixture.expires_at - 600,
+        leewaySeconds: 900,
+      });
+
+      expect(token).toMatchObject({
+        accessToken: refreshedFixture.access_token,
+        refreshed: true,
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("clamps negative leeway values to zero rather than disabling refresh on expired tokens", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const refreshedFixture: StravaTokenExchangeResponse = {
+      ...tokenFixture,
+      access_token: "access-token-clamped",
+      refresh_token: "refresh-token-clamped",
+      expires_at: tokenFixture.expires_at + 7200,
+    };
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(refreshedFixture), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: "access-token-expired-clamp",
+        refreshToken: "refresh-token-expired-clamp",
+        expiresAt: tokenFixture.expires_at - 10,
+        scope: "read,activity:read_all",
+      });
+
+      const token = await getValidStravaAccessToken({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        nowUnix: tokenFixture.expires_at,
+        // Negative leeway must be treated as zero so already-expired tokens
+        // still trigger a refresh rather than being incorrectly considered
+        // valid forever.
+        leewaySeconds: -120,
+      });
+
+      expect(token.refreshed).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("refreshes and persists the token when the stored access token is expired", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const refreshedFixture: StravaTokenExchangeResponse = {
+      ...tokenFixture,
+      access_token: "access-token-refreshed",
+      refresh_token: "refresh-token-refreshed",
+      expires_at: tokenFixture.expires_at + 7200,
+    };
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(refreshedFixture), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: "access-token-expired",
+        refreshToken: "refresh-token-expired",
+        expiresAt: tokenFixture.expires_at - 10,
+        scope: "read,activity:read_all",
+      });
+
+      const token = await getValidStravaAccessToken({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        nowUnix: tokenFixture.expires_at,
+      });
+
+      expect(token).toMatchObject({
+        accessToken: refreshedFixture.access_token,
+        athleteId: refreshedFixture.athlete.id,
+        scope: "read,activity:read_all",
+        expiresAt: refreshedFixture.expires_at,
+        refreshed: true,
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledWith(
+        STRAVA_TOKEN_URL,
+        expect.objectContaining({
+          method: "POST",
+          body: expect.any(URLSearchParams),
+        }),
+      );
+
+      const requestInit = fetchMock.mock.calls[0]?.[1];
+      expect(requestInit?.body).toBeInstanceOf(URLSearchParams);
+      const body = requestInit?.body as URLSearchParams;
+      expect(body.get("grant_type")).toBe("refresh_token");
+      expect(body.get("refresh_token")).toBe("refresh-token-expired");
+
+      const [updatedRow] = await database.select().from(testSchema.stravaTokens);
+      expect(updatedRow).toMatchObject({
+        athleteId: refreshedFixture.athlete.id,
+        accessToken: refreshedFixture.access_token,
+        refreshToken: refreshedFixture.refresh_token,
+        expiresAt: refreshedFixture.expires_at,
+        scope: "read,activity:read_all",
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("surfaces refresh failures and keeps the stored row unchanged", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ message: "invalid refresh token" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: "access-token-expired",
+        refreshToken: "refresh-token-expired",
+        expiresAt: tokenFixture.expires_at - 10,
+        scope: "read,activity:read_all",
+      });
+
+      const errorLogger = vi.fn();
+
+      await expect(
+        getValidStravaAccessToken({
+          database,
+          config: TEST_CONFIG,
+          fetchImplementation: fetchMock,
+          nowUnix: tokenFixture.expires_at,
+          errorLogger,
+        }),
+      ).rejects.toThrow("Failed to refresh stored Strava token");
+
+      expect(errorLogger).toHaveBeenCalledTimes(1);
+      expect(errorLogger.mock.calls[0]?.[0]).toContain(
+        "Strava token refresh failed",
+      );
+
+      const [storedRow] = await database.select().from(testSchema.stravaTokens);
+      expect(storedRow).toMatchObject({
+        accessToken: "access-token-expired",
+        refreshToken: "refresh-token-expired",
+        expiresAt: tokenFixture.expires_at - 10,
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("throws when no stored token exists for refresh-aware access", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await expect(
+        getValidStravaAccessToken({
+          database,
+          config: TEST_CONFIG,
+        }),
+      ).rejects.toThrow("No stored Strava token found");
     } finally {
       sqlite.close();
     }
