@@ -3,24 +3,27 @@ import { desc } from "drizzle-orm";
 import { db } from "@/db/client";
 import { activities } from "@/db/schema";
 import { getStravaConnectionStatus } from "@/server/strava/oauth";
+import { getRecentStravaSyncLogs } from "@/server/strava/sync-logs";
+import { SyncPanel } from "./sync-panel";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function formatExpiry(expiresAt: number | null): string {
   if (!expiresAt) {
-    return "—";
+    return "--";
   }
 
   try {
     return new Date(expiresAt * 1000).toLocaleString();
   } catch {
-    return "—";
+    return "--";
   }
 }
 
 export default async function ConnectPage() {
   const status = await getStravaConnectionStatus(db);
+  const syncLogs = await getRecentStravaSyncLogs(db);
   const [latestActivity] = await db
     .select({
       name: activities.name,
@@ -33,8 +36,11 @@ export default async function ConnectPage() {
   return (
     <main className="page-shell min-h-screen px-4 py-6 text-[var(--ink-1)] md:px-8 lg:px-10">
       <div className="mx-auto max-w-3xl">
-        <Link href="/" className="mb-6 inline-flex text-sm text-[var(--ink-3)] hover:text-[var(--ink-1)]">
-          ← Back
+        <Link
+          href="/"
+          className="mb-6 inline-flex text-sm text-[var(--ink-3)] hover:text-[var(--ink-1)]"
+        >
+          Back
         </Link>
 
         <section
@@ -57,13 +63,13 @@ export default async function ConnectPage() {
           </p>
 
           <dl className="grid gap-3 md:grid-cols-2">
-            <StatusCell label="Athlete ID" value={status.athleteId ?? "—"} />
-            <StatusCell label="Scope" value={status.scope ?? "—"} />
+            <StatusCell label="Athlete ID" value={status.athleteId ?? "--"} />
+            <StatusCell label="Scope" value={status.scope ?? "--"} />
             <StatusCell
               label="Token expires"
-              value={status.connected ? formatExpiry(status.expiresAt) : "—"}
+              value={status.connected ? formatExpiry(status.expiresAt) : "--"}
             />
-            <StatusCell label="Last updated" value={status.updatedAt ?? "—"} />
+            <StatusCell label="Last updated" value={status.updatedAt ?? "--"} />
           </dl>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -81,11 +87,13 @@ export default async function ConnectPage() {
             </Link>
           </div>
 
+          <SyncPanel connected={status.connected} logs={syncLogs} />
+
           <div className="mt-6 rounded-[22px] border border-white/6 bg-black/10 px-5 py-5">
-            <p className="section-kicker mb-2">Phase context</p>
+            <p className="section-kicker mb-2">Local archive</p>
             <p className="text-sm text-[var(--ink-2)]">
-              OAuth and local token storage are live. The archive can already
-              read any activities present in the local database.
+              OAuth, summary sync, and the archive are all live. Recent sync
+              events stay local in SQLite and surface above.
             </p>
             {latestActivity ? (
               <p className="mt-3 text-sm text-[var(--ink-3)]">
@@ -94,10 +102,15 @@ export default async function ConnectPage() {
                   {latestActivity.name ?? "Untitled effort"}
                 </span>
                 {latestActivity.startDate
-                  ? ` · ${new Date(latestActivity.startDate).toLocaleDateString()}`
+                  ? ` | ${new Date(latestActivity.startDate).toLocaleDateString()}`
                   : ""}
               </p>
-            ) : null}
+            ) : (
+              <p className="mt-3 text-sm text-[var(--ink-3)]">
+                No local activities yet. Run Sync now after connecting Strava
+                to populate the archive.
+              </p>
+            )}
           </div>
         </section>
       </div>
@@ -135,7 +148,13 @@ function StatusBadge({
   );
 }
 
-function StatusCell({ label, value }: { label: string; value: string | number }) {
+function StatusCell({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
   return (
     <div className="rounded-[18px] border border-white/6 bg-black/10 px-4 py-4">
       <p className="section-kicker mb-2">{label}</p>

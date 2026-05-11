@@ -53,6 +53,7 @@ Current Phase 1 coverage:
 - `tests/strava/callback-route.test.ts` verifies that callback-route configuration failures still redirect to `/?strava=config_error` and clear the OAuth state cookie, and that unexpected callback-helper throws are not relabeled as config errors.
 - `tests/strava/sync.test.ts` verifies paginated summary-activity sync into SQLite, incremental sync using the latest local Strava timestamp, normalized upserts into `activities`, raw summary payload storage in `activity_raw_json`, and sync error logging for missing connections or invalid upstream payloads.
 - `tests/strava/sync-route.test.ts` verifies the real `/api/strava/sync` route's JSON success path, missing-config handling, and `not_connected` error mapping.
+- `tests/strava/sync-logs.test.ts` verifies recent Strava sync-log reads from `data_import_logs`, including source filtering, descending order, and explicit limits for the `/connect` viewer surface.
 - `tests/activities/format.test.ts` verifies imperial distance/elevation formatting, run pace formatting, the global `sufferScore / 250` effort scale, and the rule that indoor rides do not synthesize distance metrics.
 - `tests/activities/filters.test.ts` verifies `/activities` filter URL parsing/serialization plus archive filtering by sport, search, and minimum distance.
 - `tests/activities/aggregates.test.ts` verifies archive total aggregation for count, distance, moving time, and elevation.

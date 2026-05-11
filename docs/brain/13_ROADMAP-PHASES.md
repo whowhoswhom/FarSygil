@@ -8,7 +8,7 @@
 
 | Phase | Name | Status |
 |---|---|---|
-| **Phase 1** | Foundation | In progress |
+| **Phase 1** | Foundation | Complete |
 | **Phase 2** | Apple Health + Dashboard | Planned |
 | **Phase 3** | Training Analytics | Planned |
 | **Phase 4** | Grounded AI Chat | Planned |
@@ -19,7 +19,7 @@
 
 **Goal:** Working local app with Strava OAuth, activity ingestion, and basic UI.
 
-Current progress: Strava OAuth, local token storage, refresh-aware token access, summary activity sync, connection-status UI/API, and the `/activities` Archive page are complete. The sync log viewer is the remaining major Phase 1 deliverable.
+Current progress: Strava OAuth, local token storage, refresh-aware token access, summary activity sync, connection-status UI/API, the `/activities` Archive page, and the sync log viewer are complete. Phase 1's planned foundation deliverables are now in place.
 
 Deliverables:
 - [x] Project structure, package.json, tsconfig, Next.js config
@@ -29,7 +29,7 @@ Deliverables:
 - [x] Strava OAuth and connection-status surface (`/api/strava/connect`, `/api/strava/callback`, `/api/strava/status`)
 - [x] Activity sync (initial + incremental summary import via `/api/strava/sync`)
 - [x] Activity list page (`/activities`)
-- [ ] Sync log viewer
+- [x] Sync log viewer
 
 ---
 
