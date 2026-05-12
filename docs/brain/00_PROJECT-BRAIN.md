@@ -69,3 +69,4 @@ AI chat ([[09_GROUNDED-AI-CHAT|Grounded AI Chat]]) is **out of scope until Phase
 | [[13_ROADMAP-PHASES]] | Phase-by-phase roadmap |
 | [[14_AGENT-INSTRUCTIONS]] | Instructions for AI coding agents |
 | [[15_RESEARCH-SOURCES]] | External references and resources |
+| [[16_DASHBOARD-IMPLEMENTATION-PLAN]] | Apple Fitness-inspired dashboard plan |
