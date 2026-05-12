@@ -33,6 +33,7 @@ See [[13_ROADMAP-PHASES|Roadmap]] for full phase breakdown.
 
 - The app must **never invent data**.
 - If data is missing, display `--` or `"Data not available"` - never fabricate values.
+- **Canonical empty-state string:** `Data not available` with no trailing period. Use `--` only for compact inline or table-cell missing values.
 - Do not blend invented data with real data.
 
 ### AI chat

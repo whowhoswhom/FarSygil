@@ -15,6 +15,7 @@
 - Dark theme by default with a green-led accent system
 - No fake charts - only render charts when real data exists
 - Missing values display as `--`
+- Standalone empty states use `Data not available`
 - Mobile-friendly but optimised for desktop (localhost app)
 - Large rounded slab surfaces beat dense widget grids
 
@@ -76,6 +77,6 @@ Phase 2: redirect to `/dashboard` once data is available.
 ## Data rules for UI
 
 1. Never render a chart with zero data points.
-2. Show a `No data yet` message instead of an empty chart.
+2. Show `Data not available` instead of an empty chart.
 3. Show `--` in any cell where the value is `null` or `undefined`.
 4. Do not show estimated or projected values without a clear label.
