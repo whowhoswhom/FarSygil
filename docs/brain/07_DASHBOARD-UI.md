@@ -1,12 +1,12 @@
 # 07 - Dashboard UI
 
-> See also: [[00_PROJECT-BRAIN]] · [[03_DATA-SOURCES]] · [[08_TRAINING-ANALYTICS]]
+> See also: [[00_PROJECT-BRAIN]] | [[03_DATA-SOURCES]] | [[08_TRAINING-ANALYTICS]]
 
 ---
 
 ## Status
 
-**Phase 1 / Phase 2 split.** The `/activities` Archive page is now implemented in Phase 1. The broader dashboard remains Phase 2 work.
+**Phase 1 / Phase 2 split.** The `/activities` Archive page is implemented in Phase 1. `/dashboard` now has Phase 2 scaffolding in place, while real metric wiring remains future work.
 
 ---
 
@@ -16,7 +16,7 @@
 - No fake charts - only render charts when real data exists
 - Missing values display as `--`
 - Standalone empty states use `Data not available`
-- Mobile-friendly but optimised for desktop (localhost app)
+- Mobile-friendly but optimized for desktop (localhost app)
 - Large rounded slab surfaces beat dense widget grids
 
 ---
@@ -47,6 +47,14 @@ Phase 2: redirect to `/dashboard` once data is available.
 - No fake charts, no fake calories, and no estimated indoor-bike distance
 
 ### `/dashboard` - Main dashboard
+Current:
+- Reusable dashboard shell and card primitives are implemented in `src/components/dashboard/`
+- `/dashboard` renders section scaffolding for Running, Health, and Training Load
+- All cards remain honest empty states until later PRs wire real Strava, Apple Health, and derived analytics data
+- Presentational primitives include `DashboardShell`, `DashboardHeader`, `SectionHeader`, `MetricCard`, `LargeMetricCard`, `TrendCard`, `StatusBadge`, `LastSyncedBadge`, `SourceLabel`, `EmptyMetricState`, `TimeRangeToggle`, `MiniBarChart`, and `MiniLineChart`
+- Dashboard metric tokens now exist in `globals.css`: `--metric-move`, `--metric-exercise`, `--metric-distance`, `--metric-time`, `--metric-trend`, `--metric-cardio`, `--metric-recovery`, and `--metric-warning`
+
+Later:
 - Recent activities list (last 10 runs)
 - Weekly mileage bar chart (real data only)
 - 90-day resting HR trend (from Apple Health)
@@ -77,6 +85,6 @@ Phase 2: redirect to `/dashboard` once data is available.
 ## Data rules for UI
 
 1. Never render a chart with zero data points.
-2. Show `Data not available` instead of an empty chart.
+2. Show `Data not available` instead of an empty chart when no real series exists.
 3. Show `--` in any cell where the value is `null` or `undefined`.
 4. Do not show estimated or projected values without a clear label.
