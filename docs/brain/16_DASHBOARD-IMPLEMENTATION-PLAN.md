@@ -175,42 +175,70 @@ No new charting library. SVG is enough until the visualization complexity demand
 
 ## 5. Data requirements
 
-For each card, define source table, authority, fields, unit, and missing-data behavior. All table names match `src/db/schema.ts`.
+For each card, define source table, authority, fields, unit, and missing-data behavior. All table names and column names below match the current Drizzle schema in `src/db/schema.ts`. If the underlying column does not exist yet, that is called out explicitly so no PR ships a card that depends on phantom fields.
 
-| Card | Source table | Authority | Fields | Unit | Missing → |
-|---|---|---|---|---|---|
-| Weekly distance | `activities` | Strava | `distance` (sum where `startDate` in week) | mi (converted from m) | `0.00 mi` if 0 rows, `--` if column null |
-| Weekly time | `activities` | Strava | `movingTime` (sum) | `H:MM` | `0m` if 0 rows |
-| Average pace | `activities` | Strava | `movingTime / distance` (weighted) | `m'ss"/mi` | `--'--"/mi` |
-| Average cadence | `activities` | Strava | `averageCadence` (weighted by time) | spm | `--` |
-| Average HR | `activities` | Strava | `averageHeartrate` (weighted by time) | bpm | `--` |
-| Elevation gain | `activities` | Strava | `totalElevationGain` (sum) | ft (converted from m) | `0 ft` if 0 rows |
-| Calories | `activities` | Strava | `calories` (sum, only when present) | cal | `--` if all null |
-| Power | `activities` | Strava | `averageWatts` (weighted) | W | `--` |
-| Longest run | `activities` | Strava | max `distance` row | mi | `--` |
-| Streak | `activities` | Strava | derived from `startDate` distinct days | days | `0` |
-| Recent run | `activities` | Strava | latest row | — | `Data not available` |
-| VO2 max | `healthMetrics` | Apple Health | `vo2Max` (latest) | ml/kg/min | `--` |
-| Resting HR | `healthMetrics` | Apple Health | `restingHeartrate` (latest) | bpm | `--` |
-| HRV | `healthMetrics` | Apple Health | `hrv` (latest) | ms | `--` |
-| Sleep | `healthMetrics` | Apple Health | `sleepDuration` (latest) | h | `--` |
-| Steps | `healthMetrics` | Apple Health | `steps` (today) | count | `--` |
-| Weight | `healthMetrics` | Apple Health | `weight` (latest) | lb | `--` |
-| TRIMP / TSS | `trainingLoad` | derived | per-day `trimp` | unitless | `--` |
-| CTL | `trainingLoad` | derived | latest `ctl` | unitless | `--` |
-| ATL | `trainingLoad` | derived | latest `atl` | unitless | `--` |
-| TSB | `trainingLoad` | derived | latest `tsb` | unitless | `--` |
-| ACWR | derived from `trainingLoad` | derived | rolling 7d / 28d ratio | unitless | `--` |
+### Strava-derived cards (table: `activities`)
+
+| Card | Authority | Fields | Unit | Missing → |
+|---|---|---|---|---|
+| Weekly distance | Strava | `distanceMeters` (sum where `startDate` in ISO week) | mi (converted from m) | `0.00 mi` if 0 rows, `--` if all values null |
+| Weekly time | Strava | `movingTimeSeconds` (sum) | `H:MM` | `0m` if 0 rows |
+| Average pace | Strava | weighted from `distanceMeters` / `movingTimeSeconds` (or directly from `averageSpeed` weighted by `movingTimeSeconds`) | `m'ss"/mi` | `--'--"/mi` |
+| Average cadence | Strava | `averageCadence` (weighted by `movingTimeSeconds`) | spm | `--` |
+| Average HR | Strava | `averageHeartrate` (weighted by `movingTimeSeconds`) | bpm | `--` |
+| Max HR | Strava | `maxHeartrate` (max over week) | bpm | `--` |
+| Elevation gain | Strava | `totalElevationGain` (sum) | ft (converted from m) | `0 ft` if 0 rows |
+| Power | Strava | `averageWatts` (weighted by `movingTimeSeconds`) | W | `--` |
+| Suffer score | Strava | `sufferScore` (sum or max) | unitless | `--` |
+| Longest run | Strava | row with max `distanceMeters` in window | mi | `--` |
+| Streak | Strava | derived from distinct `date(startDate)` with `distanceMeters > 0` | days | `0` |
+| Recent run | Strava | latest row by `startDate` | — | `Data not available` |
+
+**Not currently represented in schema** — do not ship cards for these until the column exists:
+
+- **Calories** — there is no `calories` column on `activities` in the current schema. Strava returns calories on the detail endpoint, but the value is not normalised into the `activities` row. The card stays gated until either (a) a `calories` column is added or (b) calories are surfaced via `activityRawJson` parsing.
+
+### Apple Health cards (table: `healthMetrics`)
+
+`healthMetrics` is a generic long table: `date`, `metricType`, `value`, `unit`, `source`. There are no direct columns like `vo2Max` or `restingHeartrate` on this table. Each Apple Health card is a query filtered by `metricType`. The `metricType` strings below match the comment in `schema.ts` (`"resting_hr"`, `"hrv"`, `"sleep_hours"`, `"steps"`) and propose four additional types to be wired during the Apple Health importer PR.
+
+| Card | Authority | Query | Unit (from row) | Missing → |
+|---|---|---|---|---|
+| VO2 max | Apple Health | `metricType = "vo2_max"`, latest `date` | ml/kg/min (`unit`) | `--` |
+| Resting HR | Apple Health | `metricType = "resting_hr"`, latest `date` | bpm (`unit`) | `--` |
+| HRV | Apple Health | `metricType = "hrv"`, latest `date` | ms (`unit`) | `--` |
+| Sleep | Apple Health | `metricType = "sleep_hours"`, latest `date` | h (`unit`) | `--` |
+| Steps | Apple Health | `metricType = "steps"`, latest `date` | count (`unit`) | `--` |
+| Weight | Apple Health | `metricType = "weight"`, latest `date` | lb (`unit`) | `--` |
+| Active energy | Apple Health | `metricType = "active_energy"`, latest `date` | cal (`unit`) | `--` |
+| Cardio recovery | Apple Health | `metricType = "cardio_recovery"`, latest `date` | bpm (`unit`) | `--` |
+
+The card's displayed unit comes from the row's `unit` column whenever present; the table column above is only the expected default. Dashboard never converts silently — if the unit differs from expected, the card shows the value with its actual unit and a `SourceLabel` noting the source.
+
+Some of the same physiology values are also pre-aggregated on `dailySummaries` (`restingHeartrate`, `hrv`, `sleepHours`, `steps`). PR E should prefer `dailySummaries` for trend/sparkline series and `healthMetrics` for raw point-in-time reads; this avoids fan-out queries against the long `healthMetrics` table.
+
+### Training-load cards (table: `trainingLoad`)
+
+| Card label | Authority | Schema field | Unit | Missing → |
+|---|---|---|---|---|
+| Daily load | derived | `dailyTrainingStress` (today) | unitless | `--` |
+| ATL (acute) | derived | `acuteLoad` (latest) | unitless | `--` |
+| CTL (chronic) | derived | `chronicLoad` (latest) | unitless | `--` |
+| TSB (form) | derived | `trainingStressBalance` (latest) | unitless | `--` |
+| ACWR | derived | rolling 7d sum / 28d avg of `dailyTrainingStress` | unitless | `--` |
+| Load warning | derived | comparison of `acuteLoad` vs `chronicLoad` | banded | hidden until both values exist |
+
+Dashboard labels use the conventional shorthand (ATL / CTL / TSB / daily load) while reading the canonical column names above. Formulas for `dailyTrainingStress` (a.k.a. TRIMP/TSS) live in [[08_TRAINING-ANALYTICS]] and are not implemented yet — `trainingLoad` rows only exist once that module ships.
 
 ### Derived calculations (not yet implemented)
 
 - Weekly rollups by ISO week from `activities.startDate`.
-- Streak: consecutive days containing >= 1 run with `distance > 0`.
-- Weighted averages: weight each activity by `movingTime` rather than count.
-- TRIMP / CTL / ATL / TSB: formulas in [[08_TRAINING-ANALYTICS]].
-- ACWR: 7-day TRIMP sum / 28-day TRIMP average.
+- Streak: consecutive days containing >= 1 run with `distanceMeters > 0`.
+- Weighted averages: weight each activity by `movingTimeSeconds` rather than row count.
+- `dailyTrainingStress`, `acuteLoad`, `chronicLoad`, `trainingStressBalance`: formulas in [[08_TRAINING-ANALYTICS]].
+- ACWR: 7-day `dailyTrainingStress` sum / 28-day `dailyTrainingStress` average.
 
-All derivations live server-side in `src/server/dashboard/` (to be created in PR C / PR F). None ship in this PR.
+All derivations live server-side in `src/server/dashboard/` (to be created in PR C / PR F). None ship in this PR. This PR makes **no schema changes**.
 
 ---
 
