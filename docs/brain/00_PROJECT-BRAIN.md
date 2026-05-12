@@ -16,7 +16,7 @@ This document is the canonical entry point for the entire project. All other bra
 
 **Phase 1 - Foundation complete**
 
-Current progress: Strava OAuth, local token storage, refresh-aware Strava token access, summary activity sync, the connection-status surface, the `/activities` Archive page, and the sync log viewer are all in place. The next major product work begins in Phase 2.
+Current progress: Strava OAuth, local token storage, refresh-aware Strava token access, summary activity sync, the connection-status surface, the `/activities` Archive page, and the sync log viewer are all in place. Phase 2 dashboard scaffolding is now underway via reusable dashboard primitives and an empty-state `/dashboard` shell, while real metric wiring remains upcoming.
 
 See [[13_ROADMAP-PHASES|Roadmap]] for full phase breakdown.
 
@@ -33,6 +33,7 @@ See [[13_ROADMAP-PHASES|Roadmap]] for full phase breakdown.
 
 - The app must **never invent data**.
 - If data is missing, display `--` or `"Data not available"` - never fabricate values.
+- **Canonical empty-state string:** `Data not available` with no trailing period. Use `--` only for compact inline or table-cell missing values.
 - Do not blend invented data with real data.
 
 ### AI chat
