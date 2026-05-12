@@ -140,7 +140,10 @@ TRIMP/TSS, CTL, ATL, TSB, ACWR, load-warning cards. Formulas defined in [[08_TRA
 - **Error state** — DB read failed. Card renders its label + `Could not load.` and a quiet retry affordance.
 - **Missing-data state** — metric is null on otherwise-present rows. Cell renders `--`. Never renders zero unless zero is a real measurement.
 
-**Canonical empty-state string.** Standalone messages (card body, banner, full-row state) use `Data not available.` with the trailing period. Compact inline / table-cell missing values use `--`. Do not introduce other phrasings.
+- **Use "Data not available." for standalone card empty states.**
+- **Use "--" only for compact inline/table-cell missing values.**
+- **Use real zero values only when zero is a truthful aggregate result, such as zero runs, zero distance, or zero elevation in an empty date range.**
+- **Never use zero as a placeholder for missing source data.**
 
 ---
 
@@ -224,7 +227,7 @@ This applies to weekly distance, weekly time, elevation gain, calories aggregate
 | Suffer score | Strava | `sufferScore` (sum or max) | unitless | `--` |
 | Longest run | Strava | row with max `distanceMeters` in window | mi | `--` |
 | Streak | Strava | derived from distinct `date(startDate)` with `distanceMeters > 0` | days | `0` |
-| Recent run | Strava | latest row by `startDate` | — | `--` |
+| Recent run | Strava | latest row by `startDate` | — | `Data not available.` |
 
 **Not currently represented in schema** — do not ship cards for these until the column exists:
 
@@ -318,7 +321,7 @@ Each phase is intended to ship as one focused PR.
 
 - Adds `src/server/dashboard/` queries for weekly rollups.
 - Wires real Strava-backed metric cards: weekly distance, weekly time, average pace, elevation, recent run, longest run, average cadence, average HR.
-- All cards show `Data not available.` when no rows exist.
+- Cards follow the per-card missing and zero-state behavior defined in Section 5. Aggregate totals may show real zero values when there are no activities in range; standalone card-level empty states show `Data not available.`.
 
 ### PR D — runs list and run detail
 
