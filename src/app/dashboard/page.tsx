@@ -58,7 +58,7 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-2">
               <span className="section-kicker">{placeholder.title}</span>
               <p className="text-xl font-semibold text-[var(--ink-1)]">
-                Data not available
+                Data not available.
               </p>
             </div>
             <p className="text-sm leading-relaxed text-[var(--ink-2)]">
