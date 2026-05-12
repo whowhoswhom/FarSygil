@@ -224,7 +224,7 @@ This applies to weekly distance, weekly time, elevation gain, calories aggregate
 | Suffer score | Strava | `sufferScore` (sum or max) | unitless | `--` |
 | Longest run | Strava | row with max `distanceMeters` in window | mi | `--` |
 | Streak | Strava | derived from distinct `date(startDate)` with `distanceMeters > 0` | days | `0` |
-| Recent run | Strava | latest row by `startDate` | — | `--` |
+| Recent run | Strava | latest row by `startDate` | — | `Data not available.` |
 
 **Not currently represented in schema** — do not ship cards for these until the column exists:
 
@@ -318,7 +318,7 @@ Each phase is intended to ship as one focused PR.
 
 - Adds `src/server/dashboard/` queries for weekly rollups.
 - Wires real Strava-backed metric cards: weekly distance, weekly time, average pace, elevation, recent run, longest run, average cadence, average HR.
-- All cards show `Data not available.` when no rows exist.
+- Cards follow the per-card missing and zero-state behavior defined in Section 5. Aggregate totals may show real zero values when there are no activities in range; standalone card-level empty states show `Data not available.`.
 
 ### PR D — runs list and run detail
 
@@ -348,7 +348,10 @@ These are non-negotiable for every dashboard PR:
 - **Do not seed mock runs.** No fixtures land in user data paths.
 - **Do not show charts with fake data.** If a series is empty, the chart does not render — the card shows `Data not available.`.
 - **Do not claim metrics exist if they are not in SQLite.** New cards require schema-backed data first.
-- **Missing values render `--`** in compact / inline / table-cell positions, or `Data not available.` (with trailing period) in standalone card or banner messages. Never zero-as-placeholder. Never invented numbers.
+- **Use "Data not available." for standalone card empty states.**
+- **Use "--" only for compact inline/table-cell missing values.**
+- **Use real zero values only when zero is a truthful aggregate result, such as zero runs, zero distance, or zero elevation in an empty date range.**
+- **Never use zero as a placeholder for missing source data.**
 - **Every shipped metric exposes source, date, value, and unit.** Source via `SourceLabel`, date via card subhead or `LastSyncedBadge`, unit alongside the value.
 - **Strava is authoritative** for run activity data.
 - **Apple Health is authoritative** for physiology data.
