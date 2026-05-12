@@ -33,13 +33,13 @@ export default function DashboardPage() {
     <main className="page-shell mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 sm:px-10 lg:px-14">
       <header className="flex flex-col gap-3">
         <span className="section-kicker">Dashboard</span>
-        <h1 className="text-4xl font-semibold tracking-tight text-[color:var(--ink-1)] sm:text-5xl">
+        <h1 className="text-4xl font-semibold tracking-tight text-[var(--ink-1)] sm:text-5xl">
           FarSygil
         </h1>
-        <p className="max-w-xl text-base text-[color:var(--ink-2)]">
+        <p className="max-w-xl text-base text-[var(--ink-2)]">
           Local-first running command center. The full dashboard is being built
           in phased PRs. See{" "}
-          <code className="rounded bg-white/5 px-1.5 py-0.5 text-sm text-[color:var(--ink-1)]">
+          <code className="rounded bg-white/5 px-1.5 py-0.5 text-sm text-[var(--ink-1)]">
             docs/brain/16_DASHBOARD-IMPLEMENTATION-PLAN.md
           </code>{" "}
           for the design and rollout plan.
@@ -57,18 +57,18 @@ export default function DashboardPage() {
           >
             <div className="flex flex-col gap-2">
               <span className="section-kicker">{placeholder.title}</span>
-              <p className="text-xl font-semibold text-[color:var(--ink-1)]">
+              <p className="text-xl font-semibold text-[var(--ink-1)]">
                 Data not available.
               </p>
             </div>
-            <p className="text-sm leading-relaxed text-[color:var(--ink-2)]">
+            <p className="text-sm leading-relaxed text-[var(--ink-2)]">
               {placeholder.unlockedBy}
             </p>
           </article>
         ))}
       </section>
 
-      <footer className="flex flex-col gap-2 text-sm text-[color:var(--ink-3)]">
+      <footer className="flex flex-col gap-2 text-sm text-[var(--ink-3)]">
         <p>
           No metrics, charts, or fake numbers are rendered here yet. Cards
           appear as their data sources land in SQLite.
@@ -77,14 +77,14 @@ export default function DashboardPage() {
           Strava status and sync controls live on{" "}
           <Link
             href="/connect"
-            className="underline decoration-dotted underline-offset-4 hover:text-[color:var(--ink-1)]"
+            className="underline decoration-dotted underline-offset-4 hover:text-[var(--ink-1)]"
           >
             /connect
           </Link>
           . Synced runs are browsable on{" "}
           <Link
             href="/activities"
-            className="underline decoration-dotted underline-offset-4 hover:text-[color:var(--ink-1)]"
+            className="underline decoration-dotted underline-offset-4 hover:text-[var(--ink-1)]"
           >
             /activities
           </Link>

@@ -22,7 +22,7 @@ Constraints:
 - No copied SF Symbols, Activity Rings, or other Apple-owned assets.
 - Inspiration only - typography, color, spacing, and information density.
 
-The dashboard must feel like a serious runner's tool, not a generic admin dashboard. It must respect the project rule: **never invent data**. Missing metrics render as `--` or `"Data not available"`.
+The dashboard must feel like a serious runner's tool, not a generic admin dashboard. It must respect the project rule: **never invent data**. Missing metrics render as `--` (compact, inline, table cells) or `Data not available.` (standalone card or banner message, with the trailing period).
 
 ---
 
@@ -136,9 +136,11 @@ TRIMP/TSS, CTL, ATL, TSB, ACWR, load-warning cards. Formulas defined in [[08_TRA
 
 ### States
 
-- **Empty state** — no runs synced yet, no Apple Health imported. Card renders its label + the string `Data not available` + a one-line hint of what unlocks it.
-- **Error state** — DB read failed. Card renders its label + `Could not load` and a quiet retry affordance.
+- **Empty state** — no runs synced yet, no Apple Health imported. Card renders its label + the string `Data not available.` + a one-line hint of what unlocks it.
+- **Error state** — DB read failed. Card renders its label + `Could not load.` and a quiet retry affordance.
 - **Missing-data state** — metric is null on otherwise-present rows. Cell renders `--`. Never renders zero unless zero is a real measurement.
+
+**Canonical empty-state string.** Standalone messages (card body, banner, full-row state) use `Data not available.` with the trailing period. Compact inline / table-cell missing values use `--`. Do not introduce other phrasings.
 
 ---
 
@@ -161,7 +163,7 @@ All new components live under `src/components/dashboard/`. None are implemented 
 | `SourceLabel` | small "Strava" / "Apple Health" tag on each card | enforces data-authority transparency |
 | `TimeRangeToggle` | D / W / M / Y segmented control | used on `/dashboard` and metric detail pages |
 | `ActivitySessionCard` | row-style card for run list | mirrors Apple Fitness session row, no Apple icons |
-| `EmptyMetricState` | label + `Data not available` + unlock hint | the default when data is missing |
+| `EmptyMetricState` | label + `Data not available.` + unlock hint | the default when data is missing |
 
 Existing utilities to reuse (do not duplicate):
 
@@ -177,7 +179,37 @@ No new charting library. SVG is enough until the visualization complexity demand
 
 For each card, define source table, authority, fields, unit, and missing-data behavior. All table names and column names below match the current Drizzle schema in `src/db/schema.ts`. If the underlying column does not exist yet, that is called out explicitly so no PR ships a card that depends on phantom fields.
 
-### Strava-derived cards (table: `activities`)
+### Naming convention
+
+The schema uses two parallel naming styles and this document references both deliberately:
+
+- **SQLite table names** use `snake_case`:
+  - `activities`
+  - `health_metrics`
+  - `daily_summaries`
+  - `training_load`
+  - `data_import_logs`
+- **Drizzle ORM exports** (the TypeScript identifiers imported from `src/db/schema.ts`) use `camelCase`:
+  - `activities`
+  - `healthMetrics`
+  - `dailySummaries`
+  - `trainingLoad`
+  - `dataImportLogs`
+- **Column-level naming** follows the same split. Drizzle TypeScript fields are `camelCase`; the underlying SQLite columns are `snake_case`. Example:
+  - Drizzle field: `distanceMeters`
+  - SQLite column: `distance_meters`
+
+Each section heading below names both forms explicitly so future PRs can quote raw SQL or Drizzle queries without ambiguity.
+
+### Strava-derived cards (SQLite table `activities`, Drizzle export `activities`)
+
+**SQLite aggregate behavior note.** SQLite's `SUM(...)` returns `NULL` over an empty result set, and also returns `NULL` if every matched value is `NULL`. To deliver the missing-data behaviors below correctly, weekly-rollup queries must combine `COALESCE` with explicit row counts (e.g. `COUNT(*)` and `COUNT(distance_meters)`) so the implementation can distinguish:
+
+- no activities in range (show `Data not available.` or a zero with `0 rows` hint, per card)
+- activities exist but the metric column is `NULL` (show `--`)
+- a real zero result (show `0`)
+
+This applies to weekly distance, weekly time, elevation gain, calories aggregates, and any other `SUM(...)`-based card.
 
 | Card | Authority | Fields | Unit | Missing → |
 |---|---|---|---|---|
@@ -192,15 +224,15 @@ For each card, define source table, authority, fields, unit, and missing-data be
 | Suffer score | Strava | `sufferScore` (sum or max) | unitless | `--` |
 | Longest run | Strava | row with max `distanceMeters` in window | mi | `--` |
 | Streak | Strava | derived from distinct `date(startDate)` with `distanceMeters > 0` | days | `0` |
-| Recent run | Strava | latest row by `startDate` | — | `Data not available` |
+| Recent run | Strava | latest row by `startDate` | — | `--` |
 
 **Not currently represented in schema** — do not ship cards for these until the column exists:
 
 - **Calories** — there is no `calories` column on `activities` in the current schema. Strava returns calories on the detail endpoint, but the value is not normalised into the `activities` row. The card stays gated until either (a) a `calories` column is added or (b) calories are surfaced via `activityRawJson` parsing.
 
-### Apple Health cards (table: `healthMetrics`)
+### Apple Health cards (SQLite table `health_metrics`, Drizzle export `healthMetrics`)
 
-`healthMetrics` is a generic long table: `date`, `metricType`, `value`, `unit`, `source`. There are no direct columns like `vo2Max` or `restingHeartrate` on this table. Each Apple Health card is a query filtered by `metricType`. The `metricType` strings below match the comment in `schema.ts` (`"resting_hr"`, `"hrv"`, `"sleep_hours"`, `"steps"`) and propose four additional types to be wired during the Apple Health importer PR.
+`health_metrics` is a generic long table with columns `date`, `metric_type`, `value`, `unit`, `source` (Drizzle fields: `date`, `metricType`, `value`, `unit`, `source`). There are no direct columns like `vo2Max` or `restingHeartrate` on this table. Each Apple Health card is a query filtered by `metricType`. The `metricType` strings below match the comment in `schema.ts` (`"resting_hr"`, `"hrv"`, `"sleep_hours"`, `"steps"`) and propose four additional types to be wired during the Apple Health importer PR.
 
 | Card | Authority | Query | Unit (from row) | Missing → |
 |---|---|---|---|---|
@@ -215,9 +247,9 @@ For each card, define source table, authority, fields, unit, and missing-data be
 
 The card's displayed unit comes from the row's `unit` column whenever present; the table column above is only the expected default. Dashboard never converts silently — if the unit differs from expected, the card shows the value with its actual unit and a `SourceLabel` noting the source.
 
-Some of the same physiology values are also pre-aggregated on `dailySummaries` (`restingHeartrate`, `hrv`, `sleepHours`, `steps`). PR E should prefer `dailySummaries` for trend/sparkline series and `healthMetrics` for raw point-in-time reads; this avoids fan-out queries against the long `healthMetrics` table.
+Some of the same physiology values are also pre-aggregated on the `daily_summaries` table (Drizzle export `dailySummaries`, fields `restingHeartrate`, `hrv`, `sleepHours`, `steps`). PR E should prefer `daily_summaries` for trend/sparkline series and `health_metrics` for raw point-in-time reads; this avoids fan-out queries against the long `health_metrics` table.
 
-### Training-load cards (table: `trainingLoad`)
+### Training-load cards (SQLite table `training_load`, Drizzle export `trainingLoad`)
 
 | Card label | Authority | Schema field | Unit | Missing → |
 |---|---|---|---|---|
@@ -228,7 +260,7 @@ Some of the same physiology values are also pre-aggregated on `dailySummaries` (
 | ACWR | derived | rolling 7d sum / 28d avg of `dailyTrainingStress` | unitless | `--` |
 | Load warning | derived | comparison of `acuteLoad` vs `chronicLoad` | banded | hidden until both values exist |
 
-Dashboard labels use the conventional shorthand (ATL / CTL / TSB / daily load) while reading the canonical column names above. Formulas for `dailyTrainingStress` (a.k.a. TRIMP/TSS) live in [[08_TRAINING-ANALYTICS]] and are not implemented yet — `trainingLoad` rows only exist once that module ships.
+Dashboard labels use the conventional shorthand (ATL / CTL / TSB / daily load) while reading the canonical column names above. Formulas for `dailyTrainingStress` (a.k.a. TRIMP/TSS) live in [[08_TRAINING-ANALYTICS]] and are not implemented yet — `training_load` rows only exist once that module ships.
 
 ### Derived calculations (not yet implemented)
 
@@ -286,7 +318,7 @@ Each phase is intended to ship as one focused PR.
 
 - Adds `src/server/dashboard/` queries for weekly rollups.
 - Wires real Strava-backed metric cards: weekly distance, weekly time, average pace, elevation, recent run, longest run, average cadence, average HR.
-- All cards show `Data not available` when no rows exist.
+- All cards show `Data not available.` when no rows exist.
 
 ### PR D — runs list and run detail
 
@@ -314,9 +346,9 @@ These are non-negotiable for every dashboard PR:
 
 - **Do not fake data.** Every visible number must trace back to a real row in SQLite.
 - **Do not seed mock runs.** No fixtures land in user data paths.
-- **Do not show charts with fake data.** If a series is empty, the chart does not render - the card shows `Data not available`.
+- **Do not show charts with fake data.** If a series is empty, the chart does not render — the card shows `Data not available.`.
 - **Do not claim metrics exist if they are not in SQLite.** New cards require schema-backed data first.
-- **Missing values render `--`** or `Data not available.`, never zero-as-placeholder, never em-dash, never invented numbers.
+- **Missing values render `--`** in compact / inline / table-cell positions, or `Data not available.` (with trailing period) in standalone card or banner messages. Never zero-as-placeholder. Never invented numbers.
 - **Every shipped metric exposes source, date, value, and unit.** Source via `SourceLabel`, date via card subhead or `LastSyncedBadge`, unit alongside the value.
 - **Strava is authoritative** for run activity data.
 - **Apple Health is authoritative** for physiology data.
