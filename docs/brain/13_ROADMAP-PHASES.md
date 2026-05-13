@@ -9,7 +9,7 @@
 | Phase | Name | Status |
 |---|---|---|
 | **Phase 1** | Foundation | Complete |
-| **Phase 2** | Apple Health + Dashboard | Planned |
+| **Phase 2** | Apple Health + Dashboard | In progress |
 | **Phase 3** | Training Analytics | Planned |
 | **Phase 4** | Grounded AI Chat | Planned |
 
@@ -37,10 +37,12 @@ Deliverables:
 
 **Goal:** Import Apple Health data and show a useful dashboard.
 
+Current progress: `/dashboard` now renders real Strava-backed Running cards from the local archive, including weekly rollups, recent-run summary, longest-run summary, cadence / heart-rate cards, and a pace trend. Apple Health import, Health surfaces, and derived load surfaces remain upcoming.
+
 Deliverables:
 - [ ] Apple Health XML parser and importer
 - [ ] Daily metrics aggregation
-- [ ] Main dashboard page (`/dashboard`)
+- [x] Main dashboard page (`/dashboard`)
 - [ ] Activity detail page (`/activities/[id]`)
 - [ ] Health metrics page (`/health`)
 - [ ] Resting HR, HRV, sleep, steps charts (real data only)

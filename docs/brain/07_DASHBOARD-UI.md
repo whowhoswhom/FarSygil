@@ -6,7 +6,7 @@
 
 ## Status
 
-**Phase 1 / Phase 2 split.** The `/activities` Archive page is implemented in Phase 1. `/dashboard` now has Phase 2 scaffolding in place, while real metric wiring remains future work.
+**Phase 1 / Phase 2 split.** The `/activities` Archive page is implemented in Phase 1. `/dashboard` now shows real Strava-backed Running cards from the local archive, while Health and Training Load remain scaffolded for later Phase 2 / Phase 3 work.
 
 ---
 
@@ -49,8 +49,9 @@ Phase 2: redirect to `/dashboard` once data is available.
 ### `/dashboard` - Main dashboard
 Current:
 - Reusable dashboard shell and card primitives are implemented in `src/components/dashboard/`
-- `/dashboard` renders section scaffolding for Running, Health, and Training Load
-- All cards remain honest empty states until later PRs wire real Strava, Apple Health, and derived analytics data
+- `/dashboard` now reads the Running section from real local Strava activity rows and local sync metadata
+- Running currently shows weekly distance/time/pace/elevation/run-count summaries plus recent run, longest run, average cadence, average HR, and pace trend when the local archive supports them
+- Health and Training Load still render honest empty states until later PRs wire Apple Health imports and derived analytics data
 - Presentational primitives include `DashboardShell`, `DashboardHeader`, `SectionHeader`, `MetricCard`, `LargeMetricCard`, `TrendCard`, `StatusBadge`, `LastSyncedBadge`, `SourceLabel`, `EmptyMetricState`, `TimeRangeToggle`, `MiniBarChart`, and `MiniLineChart`
 - Dashboard metric tokens now exist in `globals.css`: `--metric-move`, `--metric-exercise`, `--metric-distance`, `--metric-time`, `--metric-trend`, `--metric-cardio`, `--metric-recovery`, and `--metric-warning`
 - These tokens are semantic aliases over the locked green accent ramp, not a second multicolor brand system; `--metric-warning` remains status-only

@@ -62,9 +62,13 @@ Current Phase 1 coverage:
 - The in-memory test database is created by applying every committed Drizzle SQL migration in filename order so the test schema stays aligned with `src/db/schema.ts` as new migrations are added.
 
 ### Phase 2
+- [x] Dashboard Strava rollups and status reads
 - [ ] Apple Health XML parsing
 - [ ] Daily metric aggregation
 - [ ] Upsert conflict resolution
+
+Current Phase 2 coverage:
+- `tests/dashboard/strava.test.ts` verifies dashboard header status reads from the stored Strava connection and recent sync logs, plus current-week running rollups for distance, moving time, elevation, weighted pace/cadence/heart rate, recent-run selection, longest-run selection, and empty-week behavior.
 
 ### Phase 3
 - [ ] TSS calculation

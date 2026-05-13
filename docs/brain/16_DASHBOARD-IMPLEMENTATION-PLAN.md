@@ -6,7 +6,7 @@
 
 ## Status
 
-**PR B implemented.** Dashboard design tokens and reusable component primitives now exist, and `/dashboard` renders the new scaffold in honest empty-state-only form. Real Strava, Apple Health, and derived metric wiring remain scheduled in later PR phases below.
+**PR C implemented.** Dashboard design tokens and reusable component primitives now exist, and `/dashboard` now renders real Strava-backed Running cards from the local archive. Apple Health and derived Training Load surfaces remain scheduled in later PR phases below.
 
 ---
 
@@ -101,8 +101,8 @@ Reuse existing `--glass-border`, `--glass-border-strong`, `--shadow-slab`, and `
 
 - Header: "FarSygil"
 - Subtitle: "Local-first running command center"
-- Strava connection status badge (scaffolded with an unavailable state in PR B; real `/connect`-backed status wiring lands in PR C)
-- Last-synced badge (scaffolded with an empty value in PR B; real sync-log wiring lands in PR C)
+- Strava connection status badge (wired in PR C from the stored local Strava connection state)
+- Last-synced badge (wired in PR C from recent local Strava sync-log rows)
 - Time-range toggle scaffold (`D / W / M / Y`, presentational only in PR B)
 
 ### Hero band
@@ -276,7 +276,7 @@ Dashboard labels use the conventional shorthand (ATL / CTL / TSB / daily load) w
 - `dailyTrainingStress`, `acuteLoad`, `chronicLoad`, `trainingStressBalance`: formulas in [[08_TRAINING-ANALYTICS]].
 - ACWR: 7-day `dailyTrainingStress` sum / 28-day `dailyTrainingStress` average.
 
-All derivations live server-side in `src/server/dashboard/` (to be created in PR C / PR F). None ship in this PR. This PR makes **no schema changes**.
+Dashboard derivations now begin in `src/server/dashboard/strava.ts` for PR C's Strava-backed weekly rollups. Later derived analytics continue to live server-side as PR F expands `src/server/dashboard/`. None of this work requires schema changes.
 
 ---
 
@@ -285,7 +285,7 @@ All derivations live server-side in `src/server/dashboard/` (to be created in PR
 | Route | Status | Purpose |
 |---|---|---|
 | `/` | implemented | Home / connect-front-door (existing) |
-| `/dashboard` | **scaffolded in PR B** | Main dashboard shell. Empty states only until PR C. |
+| `/dashboard` | **Running cards wired in PR C** | Main dashboard shell. Running reads from local Strava data; Health and Training Load remain intentionally empty. |
 | `/connect` | implemented | Strava OAuth + local sync log (existing) |
 | `/activities` | implemented | Archive page (existing). Long-term: alias under `/runs`. |
 | `/runs` | future (PR D) | Renamed/aliased runs list using new `ActivitySessionCard`. |
@@ -319,11 +319,13 @@ Each phase is intended to ship as one focused PR.
 - Rebuilt `/dashboard` around those primitives while keeping every section in an honest empty state.
 - Still no metric values, still no fake data, and no runtime wiring.
 
-### PR C - Strava-derived cards
+### PR C (implemented) - Strava-derived cards
 
 - Add `src/server/dashboard/` queries for weekly rollups.
 - Wire real Strava-backed metric cards: weekly distance, weekly time, average pace, elevation, recent run, longest run, average cadence, average HR.
 - Cards follow the per-card missing and zero-state behavior defined in Section 5. Aggregate totals may show real zero values when there are no activities in range; standalone card-level empty states show `Data not available`.
+- Added real `/dashboard` header wiring for local Strava connection status and last successful sync time.
+- Added focused database-backed tests for the new dashboard Strava queries.
 
 ### PR D - runs list and run detail
 
@@ -370,8 +372,8 @@ These are non-negotiable for every dashboard PR:
 
 ## 9. Suggested next PR
 
-**PR C - Strava-derived cards.**
+**PR D - runs list and run detail.**
 
-Reasoning: the design system and reusable dashboard primitives now exist, so the next smallest meaningful step is wiring real Strava-backed cards without inventing numbers or placeholder charts.
+Reasoning: the dashboard now has real Running cards, so the next clean step is moving deeper into run-level browsing and detail using the archive's real local Strava data rather than adding more broad dashboard surfaces first.
 
-Scope of PR C in one paragraph: add `src/server/dashboard/` weekly-rollup queries, wire real Strava-backed cards like weekly distance, weekly time, recent run, longest run, pace, cadence, and heart rate into the existing dashboard primitives, preserve empty states where data is missing, and run `pnpm lint` plus `pnpm build`.
+Scope of PR D in one paragraph: add `/runs` and `/runs/[id]`, introduce the deferred `ActivitySessionCard`, carry over real route previews, splits, heart-rate charts, and source labels, and keep `/activities` alive via redirect while the new run-first information architecture settles.
