@@ -144,7 +144,7 @@ export default function DashboardPage() {
           />
           <MetricCard
             title="Load Warning"
-            tone="warning"
+            tone="trend"
             source="Derived"
             hint="Warning surfaces appear only when real acute/chronic load comparisons are available."
           />
@@ -169,7 +169,7 @@ export default function DashboardPage() {
         />
         <div className="relative flex flex-col gap-3 text-sm text-[var(--ink-2)]">
           <p>
-            `/dashboard` now uses reusable dashboard primitives, but it still
+            <code>/dashboard</code> now uses reusable dashboard primitives, but it still
             renders only empty states. No fake metrics, fake chart traces, or
             fake provider status are shown here.
           </p>
@@ -179,14 +179,14 @@ export default function DashboardPage() {
               href="/connect"
               className="underline decoration-dotted underline-offset-4 hover:text-[var(--ink-1)]"
             >
-              /connect
+              <code>/connect</code>
             </Link>
             . Real activity browsing remains on{" "}
             <Link
               href="/activities"
               className="underline decoration-dotted underline-offset-4 hover:text-[var(--ink-1)]"
             >
-              /activities
+              <code>/activities</code>
             </Link>
             .
           </p>
