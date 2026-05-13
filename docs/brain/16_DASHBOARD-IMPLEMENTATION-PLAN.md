@@ -42,16 +42,17 @@ The Apple Fitness multi-color metric palette is mapped to FarSygil-flavored toke
 
 | Token | Suggested value | Semantic use |
 |---|---|---|
-| `--metric-move` | `#ff4d7d` | move, high-attention cardio surfaces |
+| `--metric-move` | reuse `--accent-core` (`#7bc241`) | movement and cardio emphasis within the green-led system |
 | `--metric-exercise` | reuse `--accent-bright` (`#a8e26c`) | sessions, runs, effort summaries |
-| `--metric-distance` | `#22d3ee` | distance, pace, endurance surfaces |
-| `--metric-time` | `#facc15` | weekly time, duration, elevation |
-| `--metric-trend` | `#a78bfa` | trends, load, longitudinal charts |
-| `--metric-cardio` | `#fb923c` | VO2 max, cardio fitness, physiology |
-| `--metric-recovery` | `#c084fc` | recovery, HRV, readiness |
-| `--metric-warning` | `#ff6b57` | warnings, disconnect states, risk surfaces |
+| `--metric-distance` | reuse `--accent-bright` (`#a8e26c`) | distance, pace, endurance surfaces |
+| `--metric-time` | reuse `--accent-core` (`#7bc241`) | weekly time, duration, elevation |
+| `--metric-trend` | reuse `--accent-deep` (`#3f7220`) | trends, load, longitudinal surfaces |
+| `--metric-cardio` | reuse `--accent-core` (`#7bc241`) | cardio fitness and physiology surfaces |
+| `--metric-recovery` | reuse `--accent-bright` (`#a8e26c`) | recovery, HRV, readiness surfaces |
+| `--metric-warning` | reuse the warning role (`--danger-ink` / `--danger-soft`) | warnings and disconnect states only |
 
 Each token is exposed as both a solid color and a low-opacity wash (for example `--metric-distance-wash`) for card halos.
+These semantic aliases exist so dashboard components can describe intent without introducing a second hue system. All non-warning dashboard tones stay inside the locked green accent family.
 
 ### Typography
 

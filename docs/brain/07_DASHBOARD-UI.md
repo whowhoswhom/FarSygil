@@ -53,6 +53,7 @@ Current:
 - All cards remain honest empty states until later PRs wire real Strava, Apple Health, and derived analytics data
 - Presentational primitives include `DashboardShell`, `DashboardHeader`, `SectionHeader`, `MetricCard`, `LargeMetricCard`, `TrendCard`, `StatusBadge`, `LastSyncedBadge`, `SourceLabel`, `EmptyMetricState`, `TimeRangeToggle`, `MiniBarChart`, and `MiniLineChart`
 - Dashboard metric tokens now exist in `globals.css`: `--metric-move`, `--metric-exercise`, `--metric-distance`, `--metric-time`, `--metric-trend`, `--metric-cardio`, `--metric-recovery`, and `--metric-warning`
+- These tokens are semantic aliases over the locked green accent ramp, not a second multicolor brand system; `--metric-warning` remains status-only
 
 Later:
 - Recent activities list (last 10 runs)
