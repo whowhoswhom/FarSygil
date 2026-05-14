@@ -19,7 +19,7 @@
 
 **Goal:** Working local app with Strava OAuth, activity ingestion, and basic UI.
 
-Current progress: Strava OAuth, local token storage, refresh-aware token access, summary activity sync, connection-status UI/API, the `/activities` Archive page, and the sync log viewer are complete. Phase 1's planned foundation deliverables are now in place.
+Current progress: Strava OAuth, local token storage, refresh-aware token access, summary activity sync, connection-status UI/API, the original `/activities` Archive page, and the sync log viewer are complete. Phase 1's planned foundation deliverables are now in place.
 
 Deliverables:
 - [x] Project structure, package.json, tsconfig, Next.js config
@@ -43,7 +43,8 @@ Deliverables:
 - [ ] Apple Health XML parser and importer
 - [ ] Daily metrics aggregation
 - [x] Main dashboard page (`/dashboard`)
-- [ ] Activity detail page (`/activities/[id]`)
+- [x] Runs list page (`/runs`)
+- [x] Run detail page (`/runs/[id]`)
 - [ ] Health metrics page (`/health`)
 - [ ] Resting HR, HRV, sleep, steps charts (real data only)
 

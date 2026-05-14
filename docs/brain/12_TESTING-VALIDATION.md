@@ -69,6 +69,7 @@ Current Phase 1 coverage:
 
 Current Phase 2 coverage:
 - `tests/dashboard/strava.test.ts` verifies dashboard header status reads from the stored Strava connection and recent sync logs, plus current-week running rollups for distance, moving time, elevation, weighted pace/cadence/heart rate, recent-run selection, longest-run selection, and empty-week behavior.
+- `tests/runs/queries.test.ts` verifies the new run-first query layer: run-only archive filtering, descending order, route-preview normalization, run-detail reads from `activities` plus `activity_splits` / `activity_streams`, split-heart-rate fallback behavior, run counting, and rejection of non-run detail ids.
 
 ### Phase 3
 - [ ] TSS calculation

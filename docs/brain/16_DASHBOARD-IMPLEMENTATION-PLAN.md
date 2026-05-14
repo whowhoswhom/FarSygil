@@ -6,7 +6,7 @@
 
 ## Status
 
-**PR C implemented.** Dashboard design tokens and reusable component primitives now exist, and `/dashboard` now renders real Strava-backed Running cards from the local archive. Apple Health and derived Training Load surfaces remain scheduled in later PR phases below.
+**PR D implemented.** Dashboard design tokens and reusable component primitives now exist, `/dashboard` renders real Strava-backed Running cards from the local archive, and `/runs` plus `/runs/[id]` now provide the run-first browsing and detail layer over the same local Strava data. Apple Health and derived Training Load surfaces remain scheduled in later PR phases below.
 
 ---
 
@@ -287,9 +287,9 @@ Dashboard derivations now begin in `src/server/dashboard/strava.ts` for PR C's S
 | `/` | implemented | Home / connect-front-door (existing) |
 | `/dashboard` | **Running cards wired in PR C** | Main dashboard shell. Running reads from local Strava data; Health and Training Load remain intentionally empty. |
 | `/connect` | implemented | Strava OAuth + local sync log (existing) |
-| `/activities` | implemented | Archive page (existing). Long-term: alias under `/runs`. |
-| `/runs` | future (PR D) | Renamed/aliased runs list using new `ActivitySessionCard`. |
-| `/runs/[id]` | future (PR D) | Single activity detail with splits, HR graph, GPS map. |
+| `/activities` | compatibility redirect | Legacy archive URL. Redirects to `/runs`. |
+| `/runs` | implemented in PR D | Run-first archive list using `ActivitySessionCard`. |
+| `/runs/[id]` | implemented in PR D | Single run detail with splits, heart-rate graph, and GPS route preview. |
 | `/health` | future (PR E) | Apple Health metrics page with D/W/M/Y toggle. |
 | `/training-load` | future (PR F) | TSS / CTL / ATL / TSB / ACWR with warnings. |
 | `/race-plan` | later | Race prediction surface, post-Phase 3. |
@@ -297,7 +297,7 @@ Dashboard derivations now begin in `src/server/dashboard/strava.ts` for PR C's S
 Route decisions:
 
 - `/dashboard` is the new canonical landing for a connected user once real cards exist. The existing `/` home stays for first-time setup until dashboard data wiring is complete.
-- `/runs` will replace `/activities` once `ActivitySessionCard` exists. The old `/activities` URL stays alive via redirect for at least one release.
+- `/runs` now replaces `/activities` as the user-facing run archive. The old `/activities` URL stays alive via redirect for compatibility.
 - No route rename in PR B.
 
 ---
@@ -327,11 +327,12 @@ Each phase is intended to ship as one focused PR.
 - Added real `/dashboard` header wiring for local Strava connection status and last successful sync time.
 - Added focused database-backed tests for the new dashboard Strava queries.
 
-### PR D - runs list and run detail
+### PR D (implemented) - runs list and run detail
 
 - Add `/runs` using `ActivitySessionCard`.
-- Add `/runs/[id]` with splits, HR graph, GPS map, time-range toggle.
+- Add `/runs/[id]` with splits, HR graph, GPS map, and a split-unit toggle.
 - Redirect `/activities` to `/runs`.
+- Update the main app links so home, connect, and dashboard all point at `/runs` instead of the old archive route.
 
 ### PR E - Apple Health cards
 
@@ -372,8 +373,8 @@ These are non-negotiable for every dashboard PR:
 
 ## 9. Suggested next PR
 
-**PR D - runs list and run detail.**
+**PR E - Apple Health cards.**
 
-Reasoning: the dashboard now has real Running cards, so the next clean step is moving deeper into run-level browsing and detail using the archive's real local Strava data rather than adding more broad dashboard surfaces first.
+Reasoning: the run-first browsing layer now exists, so the next clean step is importing and surfacing Apple Health data without mixing it into fake or derived placeholders first.
 
-Scope of PR D in one paragraph: add `/runs` and `/runs/[id]`, introduce the deferred `ActivitySessionCard`, carry over real route previews, splits, heart-rate charts, and source labels, and keep `/activities` alive via redirect while the new run-first information architecture settles.
+Scope of PR E in one paragraph: land the Apple Health importer and the first real Apple Health-backed cards on `/dashboard`, plus the dedicated `/health` page, while preserving the current rule that empty physiology surfaces stay blank until real imported rows exist.

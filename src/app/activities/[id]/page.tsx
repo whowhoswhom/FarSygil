@@ -3,12 +3,14 @@ import { redirect } from "next/navigation";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export default async function ActivitiesRedirectPage({
+export default async function ActivityDetailRedirectPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const resolvedSearchParams = await searchParams;
+  const [{ id }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const nextSearchParams = new URLSearchParams();
 
   for (const [key, value] of Object.entries(resolvedSearchParams)) {
@@ -23,6 +25,6 @@ export default async function ActivitiesRedirectPage({
 
   const search = nextSearchParams.toString();
 
-  redirect(search ? `/runs?${search}` : "/runs");
+  redirect(search ? `/runs/${id}?${search}` : `/runs/${id}`);
 }
 

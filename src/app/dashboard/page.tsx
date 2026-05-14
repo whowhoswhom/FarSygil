@@ -269,12 +269,12 @@ export default async function DashboardPage() {
             >
               <code>/connect</code>
             </Link>
-            . Full archive browsing remains on{" "}
+            . Run-by-run browsing now lives on{" "}
             <Link
-              href="/activities"
+              href="/runs"
               className="underline decoration-dotted underline-offset-4 hover:text-[var(--ink-1)]"
             >
-              <code>/activities</code>
+              <code>/runs</code>
             </Link>
             .
           </p>
