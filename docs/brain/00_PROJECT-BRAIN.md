@@ -16,7 +16,7 @@ This document is the canonical entry point for the entire project. All other bra
 
 **Phase 1 - Foundation complete**
 
-Current progress: Strava OAuth, local token storage, refresh-aware Strava token access, summary activity sync, the connection-status surface, the `/activities` Archive page, and the sync log viewer are all in place. Phase 2 dashboard work is now underway: `/dashboard` renders real Strava-backed Running cards from the local archive, while Health and Training Load remain scaffolded until their data systems land.
+Current progress: Strava OAuth, local token storage, refresh-aware Strava token access, summary activity sync, the connection-status surface, the run archive at `/runs`, the legacy `/activities` compatibility redirect, and the sync log viewer are all in place. Phase 2 dashboard work is now underway: `/dashboard` renders real Strava-backed Running cards from the local archive, `/runs/[id]` exposes run detail over local SQLite rows, and Health and Training Load remain scaffolded until their data systems land.
 
 See [[13_ROADMAP-PHASES|Roadmap]] for full phase breakdown.
 

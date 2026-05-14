@@ -68,10 +68,10 @@ export default async function HomePage() {
                   {stravaStatus.connected ? "Reconnect Strava" : "Connect Strava"}
                 </a>
                 <Link
-                  href="/activities"
+                  href="/runs"
                   className="ghost-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
                 >
-                  Open Archive
+                  Open Runs
                 </Link>
               </div>
             </div>

@@ -6,7 +6,7 @@
 
 ## Status
 
-**Phase 1 / Phase 2 split.** The `/activities` Archive page is implemented in Phase 1. `/dashboard` now shows real Strava-backed Running cards from the local archive, while Health and Training Load remain scaffolded for later Phase 2 / Phase 3 work.
+**Phase 1 / Phase 2 split.** The Phase 1 archive still exists behind `/activities`, but it now survives as a compatibility redirect into the Phase 2 run-first `/runs` surface. `/dashboard` shows real Strava-backed Running cards from the local archive, while Health and Training Load remain scaffolded for later Phase 2 / Phase 3 work.
 
 ---
 
@@ -24,7 +24,7 @@
 ## Planned pages
 
 ### `/` - Home
-Current: a green-led front door with one full-bleed hero slab, two primary actions (`Connect Strava` and `Open Archive`), one persistent connection-status row linking to `/connect`, a footer note that distinguishes local storage from user-initiated Strava traffic, and a callback-status banner after OAuth redirects. The banner is announced as a live region so one-off OAuth results are exposed to screen readers.
+Current: a green-led front door with one full-bleed hero slab, two primary actions (`Connect Strava` and `Open Runs`), one persistent connection-status row linking to `/connect`, a footer note that distinguishes local storage from user-initiated Strava traffic, and a callback-status banner after OAuth redirects. The banner is announced as a live region so one-off OAuth results are exposed to screen readers.
 Phase 2: redirect to `/dashboard` once data is available.
 
 ### `/connect` - Strava connection
@@ -32,19 +32,18 @@ Phase 2: redirect to `/dashboard` once data is available.
 - View persisted local connection metadata
 - Trigger a local summary-activity sync via `POST /api/strava/sync`
 - Review the recent local sync log without leaving the page
-- Jump into `/activities` once local activity rows exist
+- Jump into `/runs` once local activity rows exist
 - Use the home-page callback banner for one-off OAuth success or failure messages
 - Callback status includes local config errors as well as Strava-returned OAuth outcomes
 
-### `/activities` - Archive
-- Implemented in Phase 1 as a dark, slab-based archive rather than a simple table
-- Hero surface for the latest visible activity
-- Floating filter rail with URL-synced sport, range, search, sort, and minimum-distance filters
-- Recent band with two major slabs, then a Synced totals strip, then an Archive band of smaller slabs
+### `/runs` - Run archive
+- Implemented in Phase 2 as the run-first successor to the original archive
+- Hero surface for the latest run, linking directly into detail
+- Stack of `ActivitySessionCard` rows for the rest of the local run history
 - Real route previews when GPS data exists; indoor/no-GPS activities render an honest fallback state
-- Imperial units are now the default UI language (`mi`, `ft`, `/mi`, `mph`)
-- Synced totals reflect the full local archive, not the active filter slice
-- No fake charts, no fake calories, and no estimated indoor-bike distance
+- Imperial units are the default UI language (`mi`, `ft`, `/mi`)
+- `/activities` remains alive as a compatibility redirect to `/runs`
+- No fake charts, no fake calories, and no estimated indoor-run distance
 
 ### `/dashboard` - Main dashboard
 Current:
@@ -62,9 +61,11 @@ Later:
 - 90-day resting HR trend (from Apple Health)
 - Current training load summary (ATL / CTL / TSB)
 
-### `/activities/[id]` - Activity detail
-- Full activity data: splits table, HR graph, GPS map
-- Raw Strava data accessible via toggle
+### `/runs/[id]` - Run detail
+- Full run summary from local SQLite rows
+- Splits table, heart-rate graph, and GPS route preview when those local tables exist
+- MI/KM split toggle for distance and pace presentation
+- Empty-state honesty when split rows or heart-rate streams have not been imported yet
 
 ### `/health` - Health metrics
 - Resting HR over time
