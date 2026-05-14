@@ -1,53 +1,64 @@
 # 00 - Project Brain
 
-> **Agents: read this file first before taking any action in this repository.**
+> Agents: read this file first before taking any action in this repository.
 
 ---
 
 ## Purpose
 
-FarSygil is a personal, local-first running archive and command center. It aggregates data from [[04_STRAVA-INGESTION|Strava]] and [[05_APPLE-HEALTH-INGESTION|Apple Health]], stores everything locally in [[06_DATABASE-SCHEMA|SQLite]], and provides a private product surface for browsing real efforts before later analytics layers arrive.
+FarSygil is a personal, local-first running archive and command center. It
+aggregates data from [[04_STRAVA-INGESTION|Strava]] and later
+[[05_APPLE-HEALTH-INGESTION|Apple Health]], stores everything locally in
+[[06_DATABASE-SCHEMA|SQLite]], and provides a private product surface for
+browsing real efforts before later analytics layers arrive.
 
-This document is the canonical entry point for the entire project. All other brain files extend it.
-
----
-
-## Current Phase
-
-**Phase 1 - Foundation complete**
-
-Current progress: Strava OAuth, local token storage, refresh-aware Strava token access, summary activity sync, the connection-status surface, the run archive at `/runs`, the legacy `/activities` compatibility redirect, and the sync log viewer are all in place. Phase 2 dashboard work is now underway: `/dashboard` renders real Strava-backed Running cards from the local archive, `/runs/[id]` exposes run detail over local SQLite rows, and Health and Training Load remain scaffolded until their data systems land.
-
-See [[13_ROADMAP-PHASES|Roadmap]] for full phase breakdown.
+This document is the canonical entry point for the whole repository.
 
 ---
 
-## Core Rules
+## Current phase
+
+Phase 1 foundation is complete.
+
+Phase 2 is now the visual reboot + detail-sync program:
+- connected users land on `/dashboard`
+- `/runs` and `/runs/[id]` are the run-first browsing surfaces
+- `/connect` manages summary sync and detail sync
+- `/settings`, `/health`, and `/training-load` now exist as real shell routes
+- Health and Training Load still remain honest empty states until their later
+  data systems land
+
+See [[13_ROADMAP-PHASES|Roadmap]] and
+[[17_VISUAL-REBOOT-PLAN|Visual Reboot Plan]] for the active breakdown.
+
+---
+
+## Core rules
 
 ### Data authority
 
 | Data type | Authoritative source |
 |---|---|
-| Run activity data (distance, pace, HR, splits) | **Strava** |
-| Physiology data (resting HR, HRV, sleep, steps, weight) | **Apple Health** |
+| Run activity, splits, streams | Strava |
+| Physiology data | Apple Health |
 
-- The app must **never invent data**.
-- If data is missing, display `--` or `"Data not available"` - never fabricate values.
-- **Canonical empty-state string:** `Data not available` with no trailing period. Use `--` only for compact inline or table-cell missing values.
-- Do not blend invented data with real data.
-
-### AI chat
-
-AI chat ([[09_GROUNDED-AI-CHAT|Grounded AI Chat]]) is **out of scope until Phase 4**. Do not implement AI features in earlier phases.
+- Never invent data.
+- Standalone empty state: `Data not available`
+- Compact inline missing value: `--`
+- Never blend fabricated data with real data.
 
 ### Application rules
 
-- Single-user localhost app only. No public deployment.
-- No Supabase. No Postgres. No Docker. No Prisma.
-- No public auth. No Stripe. No cloud.
-- All data stays on the user's machine.
-- No fake charts. No demo data.
-- Never commit secrets, database files, or Apple Health exports.
+- Single-user localhost app only
+- No public deployment
+- No cloud database
+- No fake charts
+- No demo data in user paths
+- Never commit secrets, database files, or Apple Health exports
+
+### AI chat
+
+Grounded AI chat is out of scope until Phase 4.
 
 ---
 
@@ -55,19 +66,20 @@ AI chat ([[09_GROUNDED-AI-CHAT|Grounded AI Chat]]) is **out of scope until Phase
 
 | File | Topic |
 |---|---|
-| [[01_PRODUCT-VISION]] | What FarSygil is and why it exists |
-| [[02_TECH-STACK]] | Technology choices and rationale |
-| [[03_DATA-SOURCES]] | Strava and Apple Health overview |
-| [[04_STRAVA-INGESTION]] | Strava OAuth and activity sync |
-| [[05_APPLE-HEALTH-INGESTION]] | Apple Health XML import |
+| [[01_PRODUCT-VISION]] | product vision |
+| [[02_TECH-STACK]] | technology choices |
+| [[03_DATA-SOURCES]] | source overview |
+| [[04_STRAVA-INGESTION]] | Strava OAuth, summary sync, detail sync |
+| [[05_APPLE-HEALTH-INGESTION]] | Apple Health import |
 | [[06_DATABASE-SCHEMA]] | SQLite schema overview |
-| [[07_DASHBOARD-UI]] | Dashboard design and components |
-| [[08_TRAINING-ANALYTICS]] | Load, fitness, fatigue, projections |
-| [[09_GROUNDED-AI-CHAT]] | Claude-powered chat (Phase 4) |
-| [[10_SYNC-LOGGING-BACKUPS]] | Sync logs and backup strategy |
-| [[11_SECURITY-PRIVACY]] | Privacy and security considerations |
-| [[12_TESTING-VALIDATION]] | Test strategy and validation |
-| [[13_ROADMAP-PHASES]] | Phase-by-phase roadmap |
-| [[14_AGENT-INSTRUCTIONS]] | Instructions for AI coding agents |
-| [[15_RESEARCH-SOURCES]] | External references and resources |
-| [[16_DASHBOARD-IMPLEMENTATION-PLAN]] | Apple Fitness-inspired dashboard plan |
+| [[07_DASHBOARD-UI]] | shell, dashboard, runs, and route UI rules |
+| [[08_TRAINING-ANALYTICS]] | future analytics |
+| [[09_GROUNDED-AI-CHAT]] | future AI chat |
+| [[10_SYNC-LOGGING-BACKUPS]] | sync logs and backups |
+| [[11_SECURITY-PRIVACY]] | privacy and security rules |
+| [[12_TESTING-VALIDATION]] | test strategy |
+| [[13_ROADMAP-PHASES]] | phase roadmap |
+| [[14_AGENT-INSTRUCTIONS]] | implementation rules for agents |
+| [[15_RESEARCH-SOURCES]] | references |
+| [[16_DASHBOARD-IMPLEMENTATION-PLAN]] | superseded historical plan |
+| [[17_VISUAL-REBOOT-PLAN]] | active Phase 2 visual reboot plan |

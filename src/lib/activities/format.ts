@@ -3,6 +3,7 @@ import type {
   ArchiveMetric,
   ArchiveTotals,
 } from "@/lib/activities/types";
+import { METERS_PER_MILE, metersToFeet, metersToMiles } from "@/lib/units";
 
 const RUN_LIKE_SPORTS = new Set([
   "Hike",
@@ -31,8 +32,6 @@ const DISTANCE_OMITTED_SPORTS = new Set([
   "StairStepper",
 ]);
 
-const METERS_PER_MILE = 1609.344;
-const METERS_PER_FOOT = 0.3048;
 const EM_DASH = "—";
 
 export function canonicalSport(sportType: string | null): string {
@@ -126,7 +125,7 @@ export function formatDistanceMiles(meters: number | null): string {
     return EM_DASH;
   }
 
-  const miles = meters / METERS_PER_MILE;
+  const miles = metersToMiles(meters);
   return miles >= 100 ? `${miles.toFixed(0)} mi` : `${miles.toFixed(1)} mi`;
 }
 
@@ -135,7 +134,7 @@ export function formatDistanceValueMiles(meters: number | null): string {
     return EM_DASH;
   }
 
-  const miles = meters / METERS_PER_MILE;
+  const miles = metersToMiles(meters);
   return miles >= 100 ? miles.toFixed(0) : miles.toFixed(1);
 }
 
@@ -144,7 +143,7 @@ export function formatElevationFeet(meters: number | null): string {
     return EM_DASH;
   }
 
-  return `${Math.round(meters / METERS_PER_FOOT).toLocaleString()} ft`;
+  return `${Math.round(metersToFeet(meters)).toLocaleString()} ft`;
 }
 
 export function formatElevationValueFeet(meters: number | null): string {
@@ -152,7 +151,7 @@ export function formatElevationValueFeet(meters: number | null): string {
     return EM_DASH;
   }
 
-  return `${Math.round(meters / METERS_PER_FOOT).toLocaleString()}`;
+  return `${Math.round(metersToFeet(meters)).toLocaleString()}`;
 }
 
 export function formatDuration(seconds: number | null): string {
@@ -236,7 +235,7 @@ export function formatPaceOrSpeed(activity: ArchiveActivity): string {
     return EM_DASH;
   }
 
-  const miles = (activity.distanceMeters ?? 0) / METERS_PER_MILE;
+  const miles = metersToMiles(activity.distanceMeters ?? 0);
 
   if (isRunLike(activity.sportType)) {
     const secondsPerMile = activity.movingTimeSeconds / miles;

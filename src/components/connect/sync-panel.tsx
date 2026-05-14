@@ -2,11 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+
 import type { StravaSyncLogEntry } from "@/server/strava/sync-logs";
 
 interface SyncPanelProps {
   connected: boolean;
   logs: StravaSyncLogEntry[];
+  coverage: {
+    totalActivities: number;
+    detailActivities: number;
+    streamActivities: number;
+  };
 }
 
 type SyncFeedback =
@@ -20,24 +26,50 @@ type SyncFeedback =
     }
   | null;
 
-export function SyncPanel({ connected, logs }: SyncPanelProps) {
+type SyncAction = "summary" | "detail-incremental" | "detail-full";
+
+export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
   const router = useRouter();
   const [feedback, setFeedback] = useState<SyncFeedback>(null);
+  const [pendingAction, setPendingAction] = useState<SyncAction | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  async function handleSync() {
+  async function runSync(action: SyncAction) {
     setFeedback(null);
+    setPendingAction(action);
 
     try {
-      const response = await fetch("/api/strava/sync", {
+      const request =
+        action === "summary"
+          ? {
+              url: "/api/strava/sync",
+              body: undefined,
+            }
+          : {
+              url: "/api/strava/sync-details",
+              body:
+                action === "detail-full"
+                  ? JSON.stringify({ mode: "full" })
+                  : undefined,
+            };
+      const response = await fetch(request.url, {
         method: "POST",
         cache: "no-store",
+        headers: request.body
+          ? {
+              "Content-Type": "application/json",
+            }
+          : undefined,
+        body: request.body,
       });
       const payload = (await response.json().catch(() => null)) as
         | {
             message?: string;
             activitiesAdded?: number;
             activitiesUpdated?: number;
+            activitiesSynced?: number;
+            detailsFetched?: number;
+            streamsFetched?: number;
           }
         | null;
 
@@ -53,10 +85,17 @@ export function SyncPanel({ connected, logs }: SyncPanelProps) {
 
       setFeedback({
         kind: "success",
-        message: formatSyncSuccessMessage(
-          payload?.activitiesAdded ?? 0,
-          payload?.activitiesUpdated ?? 0,
-        ),
+        message:
+          action === "summary"
+            ? formatSummarySyncSuccessMessage(
+                payload?.activitiesAdded ?? 0,
+                payload?.activitiesUpdated ?? 0,
+              )
+            : formatDetailSyncSuccessMessage(
+                payload?.activitiesSynced ?? 0,
+                payload?.detailsFetched ?? 0,
+                payload?.streamsFetched ?? 0,
+              ),
       });
 
       startTransition(() => {
@@ -68,6 +107,8 @@ export function SyncPanel({ connected, logs }: SyncPanelProps) {
         message:
           "Strava sync could not be started from this browser session. Try again.",
       });
+    } finally {
+      setPendingAction(null);
     }
   }
 
@@ -75,20 +116,58 @@ export function SyncPanel({ connected, logs }: SyncPanelProps) {
     <section className="mt-6 rounded-[22px] border border-white/6 bg-black/10 px-5 py-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="section-kicker mb-2">Sync log</p>
+          <p className="section-kicker mb-2">Sync control</p>
           <p className="max-w-2xl text-sm text-[var(--ink-2)]">
-            Recent local sync attempts and outcomes. The archive stays on this
-            machine; only direct Strava requests leave it.
+            Summary sync builds the archive. Detail sync enriches runs with
+            split rows and stream series for route detail surfaces. Only direct
+            Strava requests leave this machine.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleSync}
-          disabled={!connected || isPending}
-          className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? "Syncing..." : "Sync now"}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => void runSync("summary")}
+            disabled={!connected || isPending}
+            className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pendingAction === "summary" ? "Syncing..." : "Sync summary"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void runSync("detail-incremental")}
+            disabled={!connected || isPending}
+            className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pendingAction === "detail-incremental"
+              ? "Syncing details..."
+              : "Sync missing details"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void runSync("detail-full")}
+            disabled={!connected || isPending}
+            className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pendingAction === "detail-full"
+              ? "Refreshing details..."
+              : "Sync all details"}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <MetricCell
+          label="Archived runs"
+          value={String(coverage.totalActivities)}
+        />
+        <MetricCell
+          label="Detailed rows"
+          value={`${coverage.detailActivities}/${coverage.totalActivities}`}
+        />
+        <MetricCell
+          label="Stream rows"
+          value={`${coverage.streamActivities}/${coverage.totalActivities}`}
+        />
       </div>
 
       {!connected ? (
@@ -147,9 +226,7 @@ export function SyncPanel({ connected, logs }: SyncPanelProps) {
                 />
                 <MetricCell
                   label="Completed"
-                  value={
-                    log.completedAt ? formatDateTime(log.completedAt) : "—"
-                  }
+                  value={log.completedAt ? formatDateTime(log.completedAt) : "--"}
                 />
               </dl>
             </article>
@@ -212,13 +289,25 @@ function formatDateTime(value: string): string {
   }
 }
 
-function formatSyncSuccessMessage(
+function formatSummarySyncSuccessMessage(
   activitiesAdded: number,
   activitiesUpdated: number,
 ): string {
   if (activitiesAdded === 0 && activitiesUpdated === 0) {
-    return "Sync complete. No new Strava activities were found.";
+    return "Summary sync complete. No new Strava activities were found.";
   }
 
-  return `Sync complete. Added ${activitiesAdded} and updated ${activitiesUpdated} activities.`;
+  return `Summary sync complete. Added ${activitiesAdded} and updated ${activitiesUpdated} activities.`;
+}
+
+function formatDetailSyncSuccessMessage(
+  activitiesSynced: number,
+  detailsFetched: number,
+  streamsFetched: number,
+): string {
+  if (activitiesSynced === 0) {
+    return "Detail sync complete. No missing local detail rows were found.";
+  }
+
+  return `Detail sync complete. Refreshed ${activitiesSynced} runs, fetched ${detailsFetched} detail payloads, and wrote ${streamsFetched} stream payloads.`;
 }

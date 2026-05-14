@@ -7,13 +7,11 @@ import {
   lt,
 } from "drizzle-orm";
 import { activities } from "@/db/schema";
+import { RUN_SPORTS } from "@/lib/strava/run-sports";
+import { metersToFeet, metersToMiles } from "@/lib/units";
 import type { FarSygilDatabase } from "@/server/strava/oauth";
 import { getStravaConnectionStatus } from "@/server/strava/oauth";
 import { getRecentStravaSyncLogs } from "@/server/strava/sync-logs";
-
-const DASHBOARD_RUN_SPORTS = ["Run", "TrailRun", "VirtualRun"] as const;
-const METERS_PER_MILE = 1609.344;
-const METERS_PER_FOOT = 0.3048;
 
 type DashboardStatusState =
   | "connected"
@@ -64,6 +62,8 @@ export interface DashboardRunningSnapshot {
   averageCadence: number | null;
   averageHeartrate: number | null;
   distanceSeriesMiles: number[];
+  movingTimeSeriesMinutes: number[];
+  elevationSeriesFeet: number[];
   paceSeriesSecondsPerMile: number[];
   cadenceSeries: number[];
   heartrateSeries: number[];
@@ -129,7 +129,7 @@ export async function getDashboardRunningSnapshot(
     .where(
       and(
         eq(activities.source, "strava"),
-        inArray(activities.sportType, [...DASHBOARD_RUN_SPORTS]),
+        inArray(activities.sportType, [...RUN_SPORTS]),
         gte(activities.startDate, start.toISOString()),
         lt(activities.startDate, endExclusive.toISOString()),
       ),
@@ -149,7 +149,7 @@ export async function getDashboardRunningSnapshot(
 
   const averagePaceSecondsPerMile =
     totalDistanceMeters > 0 && totalMovingTimeSeconds > 0
-      ? totalMovingTimeSeconds / (totalDistanceMeters / METERS_PER_MILE)
+      ? totalMovingTimeSeconds / metersToMiles(totalDistanceMeters)
       : null;
 
   const averageCadence = weightedAverage(
@@ -186,6 +186,10 @@ export async function getDashboardRunningSnapshot(
       bucket.movingTimeSeconds += row.movingTimeSeconds;
     }
 
+    if (isNumber(row.totalElevationGain)) {
+      bucket.totalElevationGain += row.totalElevationGain;
+    }
+
     if (isNumber(row.averageCadence) && isPositiveNumber(row.movingTimeSeconds)) {
       bucket.cadenceWeighted += row.averageCadence * row.movingTimeSeconds;
       bucket.cadenceWeight += row.movingTimeSeconds;
@@ -199,6 +203,8 @@ export async function getDashboardRunningSnapshot(
 
   const orderedBuckets = [...dailyBuckets.values()];
   const distanceSeriesMiles = buildDistanceSeriesMiles(orderedBuckets);
+  const movingTimeSeriesMinutes = buildMovingTimeSeriesMinutes(orderedBuckets);
+  const elevationSeriesFeet = buildElevationSeriesFeet(orderedBuckets);
   const paceSeriesSecondsPerMile = buildPaceSeries(orderedBuckets);
   const cadenceSeries = buildWeightedSeries(
     orderedBuckets.map((bucket) => ({
@@ -224,6 +230,8 @@ export async function getDashboardRunningSnapshot(
     averageCadence,
     averageHeartrate,
     distanceSeriesMiles,
+    movingTimeSeriesMinutes,
+    elevationSeriesFeet,
     paceSeriesSecondsPerMile,
     cadenceSeries,
     heartrateSeries,
@@ -252,7 +260,7 @@ async function getMostRecentRun(
     .where(
       and(
         eq(activities.source, "strava"),
-        inArray(activities.sportType, [...DASHBOARD_RUN_SPORTS]),
+        inArray(activities.sportType, [...RUN_SPORTS]),
       ),
     )
     .orderBy(desc(activities.startDate))
@@ -316,6 +324,7 @@ function createDailyBuckets(start: Date) {
       cadenceWeight: number;
       heartrateWeighted: number;
       heartrateWeight: number;
+      totalElevationGain: number;
     }
   >();
 
@@ -332,6 +341,7 @@ function createDailyBuckets(start: Date) {
       cadenceWeight: 0,
       heartrateWeighted: 0,
       heartrateWeight: 0,
+      totalElevationGain: 0,
     });
   }
 
@@ -341,7 +351,7 @@ function createDailyBuckets(start: Date) {
 function buildDistanceSeriesMiles(
   buckets: Array<{ distanceMeters: number }>,
 ): number[] {
-  const values = buckets.map((bucket) => bucket.distanceMeters / METERS_PER_MILE);
+  const values = buckets.map((bucket) => metersToMiles(bucket.distanceMeters));
   return values.some((value) => value > 0) ? values : [];
 }
 
@@ -354,10 +364,26 @@ function buildPaceSeries(
     )
     .map(
       (bucket) =>
-        bucket.movingTimeSeconds / (bucket.distanceMeters / METERS_PER_MILE),
+        bucket.movingTimeSeconds / metersToMiles(bucket.distanceMeters),
     );
 
   return values.length >= 2 ? values : [];
+}
+
+function buildMovingTimeSeriesMinutes(
+  buckets: Array<{ movingTimeSeconds: number }>,
+): number[] {
+  const values = buckets.map((bucket) => Math.round(bucket.movingTimeSeconds / 60));
+  return values.some((value) => value > 0) ? values : [];
+}
+
+function buildElevationSeriesFeet(
+  buckets: Array<{ totalElevationGain: number }>,
+): number[] {
+  const values = buckets.map((bucket) =>
+    Math.round(metersToFeet(bucket.totalElevationGain)),
+  );
+  return values.some((value) => value > 0) ? values : [];
 }
 
 function buildWeightedSeries(
@@ -427,10 +453,3 @@ function isPositiveNumber(value: number | null): value is number {
   return isNumber(value) && value > 0;
 }
 
-export function metersToMiles(meters: number): number {
-  return meters / METERS_PER_MILE;
-}
-
-export function metersToFeet(meters: number): number {
-  return meters / METERS_PER_FOOT;
-}

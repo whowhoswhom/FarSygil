@@ -1,85 +1,131 @@
 # 12 - Testing and Validation
 
-> See also: [[00_PROJECT-BRAIN]] · [[04_STRAVA-INGESTION]] · [[05_APPLE-HEALTH-INGESTION]]
+> See also: [[00_PROJECT-BRAIN]] | [[04_STRAVA-INGESTION]] | [[05_APPLE-HEALTH-INGESTION]] | [[17_VISUAL-REBOOT-PLAN]]
 
 ---
 
 ## Test strategy
 
-FarSygil uses a practical, minimal test suite focused on:
-1. Database schema and query correctness
-2. Strava ingestion logic (parsing, upserts, token refresh)
-3. Apple Health parsing logic
-4. Training analytics computation
-5. API route correctness
+FarSygil uses a practical test suite focused on:
+1. database schema and query correctness
+2. Strava OAuth and sync logic
+3. route behavior for redirects and shell entry points
+4. honest degradation when real data is absent or malformed
+5. future Apple Health and analytics computation
 
-Unit tests for UI components are out of scope for early phases.
+UI component unit tests remain out of scope for the early local-first phases.
 
 ---
 
-## Test fixtures
+## Fixtures
 
 Sample data lives in `tests/fixtures/`:
 
 | Directory | Purpose |
 |---|---|
-| `tests/fixtures/strava/` | Sample Strava API JSON responses |
-| `tests/fixtures/apple-health/` | Sample Apple Health XML snippets |
+| `tests/fixtures/strava/` | sample Strava API JSON responses |
+| `tests/fixtures/apple-health/` | sample Apple Health XML snippets |
 
-Fixtures must use anonymised fake data - never real athlete data or real health records.
+Fixtures must stay anonymized and fake. Never commit real athlete or health
+records.
 
 ---
 
-## Testing tools
+## Tooling
 
 | Tool | Purpose |
 |---|---|
-| Vitest | Unit and integration tests |
-| SQLite in-memory DB | Isolated database tests |
+| Vitest | unit and integration tests |
+| SQLite in-memory DB | isolated database tests |
 
 ---
 
-## Key things to test
+## Current coverage
 
-### Phase 1
+### Phase 1 / Strava foundation
+
 - [x] Strava OAuth token exchange and storage
-- [x] Activity upsert (new and update)
-- [ ] Split parsing from raw JSON
+- [x] Summary activity sync
 - [x] Token refresh logic
+- [x] Connection-status reads
+- [x] Sync-log reads
+- [x] Archive formatting, filtering, aggregation, and polyline helpers
 
-Current Phase 1 coverage:
-- `tests/strava/oauth.test.ts` verifies the authorize redirect URL, `state` handling, access-denied short-circuiting before token exchange even when `code` and valid scopes are present, callback token exchange, replacement of a stale token row when a different athlete reconnects, single-row token upsert, missing-code handling, missing-scope handling, invalid-state handling, exchange failure, storage failure, connection-status reads, valid-token reuse, expired-token refresh, refresh-failure handling, missing-stored-token handling, default leeway-window refresh, opt-out via `leewaySeconds: 0`, opt-in via a larger custom leeway, and negative-leeway clamping.
-- `tests/strava/connect-route.test.ts` verifies that the real `/api/strava/connect` redirect response carries the expected Strava authorize URL parameters and the expected OAuth state-cookie attributes.
-- `tests/strava/callback-route.test.ts` verifies that callback-route configuration failures still redirect to `/?strava=config_error` and clear the OAuth state cookie, and that unexpected callback-helper throws are not relabeled as config errors.
-- `tests/strava/sync.test.ts` verifies paginated summary-activity sync into SQLite, incremental sync using the latest local Strava timestamp, normalized upserts into `activities`, raw summary payload storage in `activity_raw_json`, and sync error logging for missing connections or invalid upstream payloads.
-- `tests/strava/sync-route.test.ts` verifies the real `/api/strava/sync` route's JSON success path, missing-config handling, and `not_connected` error mapping.
-- `tests/strava/sync-logs.test.ts` verifies recent Strava sync-log reads from `data_import_logs`, including source filtering, descending order, and explicit limits for the `/connect` viewer surface.
-- `tests/activities/format.test.ts` verifies imperial distance/elevation formatting, run pace formatting, the global `sufferScore / 250` effort scale, and the rule that indoor rides do not synthesize distance metrics.
-- `tests/activities/filters.test.ts` verifies `/activities` filter URL parsing/serialization plus archive filtering by sport, search, and minimum distance.
-- `tests/activities/aggregates.test.ts` verifies archive total aggregation for count, distance, moving time, and elevation.
-- `tests/activities/polyline.test.ts` verifies polyline decoding and SVG path normalization for route previews.
-- Strava API responses in tests are mocked and loaded from `tests/fixtures/strava/`.
-- The in-memory test database is created by applying every committed Drizzle SQL migration in filename order so the test schema stays aligned with `src/db/schema.ts` as new migrations are added.
+Relevant files:
+- `tests/strava/oauth.test.ts`
+- `tests/strava/connect-route.test.ts`
+- `tests/strava/callback-route.test.ts`
+- `tests/strava/sync.test.ts`
+- `tests/strava/sync-route.test.ts`
+- `tests/strava/sync-logs.test.ts`
+- `tests/activities/format.test.ts`
+- `tests/activities/filters.test.ts`
+- `tests/activities/aggregates.test.ts`
+- `tests/activities/polyline.test.ts`
 
-### Phase 2
+### Phase 2 / visual reboot and detail sync
+
 - [x] Dashboard Strava rollups and status reads
-- [ ] Apple Health XML parsing
-- [ ] Daily metric aggregation
-- [ ] Upsert conflict resolution
+- [x] Run-first query layer
+- [x] Smart-entry home behavior
+- [x] `/activities` redirect compatibility
+- [x] Strava detail sync writes
+- [x] Detail-sync rate-limit retry behavior
+- [x] Detail-sync route behavior
+- [x] Malformed stream degradation
 
-Current Phase 2 coverage:
-- `tests/dashboard/strava.test.ts` verifies dashboard header status reads from the stored Strava connection and recent sync logs, plus current-week running rollups for distance, moving time, elevation, weighted pace/cadence/heart rate, recent-run selection, longest-run selection, and empty-week behavior.
-- `tests/runs/queries.test.ts` verifies the new run-first query layer: run-only archive filtering, descending order, route-preview normalization, run-detail reads from `activities` plus `activity_splits` / `activity_streams`, split-heart-rate fallback behavior, run counting, and rejection of non-run detail ids.
+Relevant files:
+- `tests/dashboard/strava.test.ts`
+- `tests/runs/queries.test.ts`
+- `tests/app/home-page.test.ts`
+- `tests/activities/redirects.test.ts`
+- `tests/strava/detail-sync.test.ts`
+- `tests/strava/sync-details-route.test.ts`
 
-### Phase 3
+Current Phase 2 assertions cover:
+- dashboard weekly running rollups, pace/cadence/HR weighting, recent-run and
+  longest-run selection, and empty-week behavior
+- run archive filtering and ordering
+- run-detail query reads from `activities`, `activity_splits`, and
+  `activity_streams`
+- split fallback behavior and malformed stream degradation
+- home smart-entry redirect for connected users and onboarding render for
+  disconnected users
+- compatibility redirects from `/activities` to `/runs`
+- incremental and full detail sync, raw payload writes, split/stream writes,
+  sync-log writes, and retry behavior on rate-limited detail requests
+
+### Phase 3 / future analytics
+
 - [ ] TSS calculation
-- [ ] ATL/CTL/TSB EMA calculation
+- [ ] ATL / CTL / TSB EMA calculation
 - [ ] Riegel race predictor
+
+### Phase 4 / future grounded AI
+
+- [ ] grounded context selection
+- [ ] refusal behavior for missing local data
+- [ ] chat route and system behavior
 
 ---
 
 ## Validation rules
 
-- All sync functions must be testable in isolation (no live Strava API calls in tests).
-- Use fixture JSON files instead of live API calls.
-- Tests must not write to the production database - use in-memory or temp file databases.
+- No live Strava API calls in tests
+- Use fixtures instead of real upstream traffic
+- Tests must never write to the production database
+- Keep applying committed Drizzle migrations in test setup so schema and tests
+  stay aligned
+- Every significant wave should pass:
+  - `pnpm lint`
+  - `pnpm test`
+  - `pnpm build`
+  - `pnpm db:generate`
+
+Manual QA remains required for:
+- desktop shell
+- mobile bottom nav
+- dashboard with real local data
+- run detail with and without splits/streams
+- connect disconnected / connected / expired states
+- health and training-load honest empty states

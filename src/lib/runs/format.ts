@@ -1,8 +1,10 @@
 import type { ArchiveActivity } from "@/lib/activities/types";
-
-const METERS_PER_MILE = 1609.344;
-const METERS_PER_KILOMETER = 1000;
-const METERS_PER_FOOT = 0.3048;
+import {
+  METERS_PER_KILOMETER,
+  METERS_PER_MILE,
+  metersToFeet,
+  metersToMiles,
+} from "@/lib/units";
 
 export type SplitUnit = "mi" | "km";
 
@@ -11,7 +13,7 @@ export function formatRunDistanceValue(meters: number | null): string | null {
     return null;
   }
 
-  const miles = meters / METERS_PER_MILE;
+  const miles = metersToMiles(meters);
   return miles >= 100 ? miles.toFixed(0) : miles.toFixed(1);
 }
 
@@ -87,7 +89,7 @@ export function formatRunElevationFeet(meters: number | null): string {
     return "--";
   }
 
-  return `${Math.round(meters / METERS_PER_FOOT).toLocaleString()}`;
+  return `${Math.round(metersToFeet(meters)).toLocaleString()}`;
 }
 
 export function formatRunDate(value: string | null): string {
@@ -167,4 +169,3 @@ function withUnit(value: string | null, unit: string): string {
 function isPositiveNumber(value: number | null): value is number {
   return typeof value === "number" && Number.isFinite(value) && value > 0;
 }
-

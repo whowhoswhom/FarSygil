@@ -7,9 +7,8 @@ import * as testSchema from "../../src/db/schema";
 import {
   getDashboardHeaderSnapshot,
   getDashboardRunningSnapshot,
-  metersToFeet,
-  metersToMiles,
 } from "../../src/server/dashboard/strava";
+import { metersToFeet, metersToMiles } from "../../src/lib/units";
 import type { FarSygilDatabase } from "../../src/server/strava/oauth";
 
 const COMMITTED_MIGRATIONS = readCommittedMigrations();
@@ -167,6 +166,8 @@ describe("dashboard Strava snapshots", () => {
       expect(snapshot.averageCadence).toBeCloseTo(172.211, 3);
       expect(snapshot.averageHeartrate).toBeCloseTo(152.947, 3);
       expect(snapshot.distanceSeriesMiles).toEqual([3, 10, 5, 0, 0, 0, 0]);
+      expect(snapshot.movingTimeSeriesMinutes).toEqual([27, 60, 35, 0, 0, 0, 0]);
+      expect(snapshot.elevationSeriesFeet).toEqual([100, 1000, 500, 0, 0, 0, 0]);
       expect(snapshot.paceSeriesSecondsPerMile).toEqual([540, 360, 420]);
       expect(snapshot.cadenceSeries).toEqual([170, 176]);
       expect(snapshot.heartrateSeries).toEqual([150, 158]);
@@ -215,6 +216,8 @@ describe("dashboard Strava snapshots", () => {
       expect(snapshot.averageCadence).toBeNull();
       expect(snapshot.averageHeartrate).toBeNull();
       expect(snapshot.distanceSeriesMiles).toEqual([]);
+      expect(snapshot.movingTimeSeriesMinutes).toEqual([]);
+      expect(snapshot.elevationSeriesFeet).toEqual([]);
       expect(snapshot.paceSeriesSecondsPerMile).toEqual([]);
       expect(snapshot.cadenceSeries).toEqual([]);
       expect(snapshot.heartrateSeries).toEqual([]);

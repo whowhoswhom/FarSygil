@@ -1,93 +1,139 @@
-# 07 - Dashboard UI
+# 07 - Dashboard and Shell UI
 
-> See also: [[00_PROJECT-BRAIN]] | [[03_DATA-SOURCES]] | [[08_TRAINING-ANALYTICS]]
+> See also: [[00_PROJECT-BRAIN]] | [[04_STRAVA-INGESTION]] | [[13_ROADMAP-PHASES]] | [[17_VISUAL-REBOOT-PLAN]]
 
 ---
 
 ## Status
 
-**Phase 1 / Phase 2 split.** The Phase 1 archive still exists behind `/activities`, but it now survives as a compatibility redirect into the Phase 2 run-first `/runs` surface. `/dashboard` shows real Strava-backed Running cards from the local archive, while Health and Training Load remain scaffolded for later Phase 2 / Phase 3 work.
+Phase 2 now uses a unified app shell instead of the old page-by-page Phase 1
+composition. `/dashboard`, `/runs`, `/runs/[id]`, `/connect`, `/settings`,
+`/health`, and `/training-load` all live inside the reboot shell. `/` is now a
+smart entry that redirects connected users to `/dashboard` and renders a
+disconnected onboarding surface otherwise.
 
 ---
 
-## Design principles
+## Route model
 
-- Dark theme by default with a green-led accent system
-- No fake charts - only render charts when real data exists
-- Missing values display as `--`
-- Standalone empty states use `Data not available`
-- Mobile-friendly but optimized for desktop (localhost app)
-- Large rounded slab surfaces beat dense widget grids
-
----
-
-## Planned pages
-
-### `/` - Home
-Current: a green-led front door with one full-bleed hero slab, two primary actions (`Connect Strava` and `Open Runs`), one persistent connection-status row linking to `/connect`, a footer note that distinguishes local storage from user-initiated Strava traffic, and a callback-status banner after OAuth redirects. The banner is announced as a live region so one-off OAuth results are exposed to screen readers.
-Phase 2: redirect to `/dashboard` once data is available.
-
-### `/connect` - Strava connection
-- Start or repeat the Strava OAuth flow
-- View persisted local connection metadata
-- Trigger a local summary-activity sync via `POST /api/strava/sync`
-- Review the recent local sync log without leaving the page
-- Jump into `/runs` once local activity rows exist
-- Use the home-page callback banner for one-off OAuth success or failure messages
-- Callback status includes local config errors as well as Strava-returned OAuth outcomes
-
-### `/runs` - Run archive
-- Implemented in Phase 2 as the run-first successor to the original archive
-- Hero surface for the latest run, linking directly into detail
-- Stack of `ActivitySessionCard` rows for the rest of the local run history
-- Real route previews when GPS data exists; indoor/no-GPS activities render an honest fallback state
-- Imperial units are the default UI language (`mi`, `ft`, `/mi`)
-- `/activities` remains alive as a compatibility redirect to `/runs`
-- No fake charts, no fake calories, and no estimated indoor-run distance
-
-### `/dashboard` - Main dashboard
-Current:
-- Reusable dashboard shell and card primitives are implemented in `src/components/dashboard/`
-- `/dashboard` now reads the Running section from real local Strava activity rows and local sync metadata
-- Running currently shows weekly distance/time/pace/elevation/run-count summaries plus recent run, longest run, average cadence, average HR, and pace trend when the local archive supports them
-- Health and Training Load still render honest empty states until later PRs wire Apple Health imports and derived analytics data
-- Presentational primitives include `DashboardShell`, `DashboardHeader`, `SectionHeader`, `MetricCard`, `LargeMetricCard`, `TrendCard`, `StatusBadge`, `LastSyncedBadge`, `SourceLabel`, `EmptyMetricState`, `TimeRangeToggle`, `MiniBarChart`, and `MiniLineChart`
-- Dashboard metric tokens now exist in `globals.css`: `--metric-move`, `--metric-exercise`, `--metric-distance`, `--metric-time`, `--metric-trend`, `--metric-cardio`, `--metric-recovery`, and `--metric-warning`
-- These tokens are semantic aliases over the locked green accent ramp, not a second multicolor brand system; `--metric-warning` remains status-only
-
-Later:
-- Recent activities list (last 10 runs)
-- Weekly mileage bar chart (real data only)
-- 90-day resting HR trend (from Apple Health)
-- Current training load summary (ATL / CTL / TSB)
-
-### `/runs/[id]` - Run detail
-- Full run summary from local SQLite rows
-- Splits table, heart-rate graph, and GPS route preview when those local tables exist
-- MI/KM split toggle for distance and pace presentation
-- Empty-state honesty when split rows or heart-rate streams have not been imported yet
-
-### `/health` - Health metrics
-- Resting HR over time
-- HRV trend
-- Sleep duration trend
-- Steps per day
-
-### `/analytics` - Training analytics (Phase 3)
-- CTL / ATL / TSB over time
-- Race predictor
-- Weekly training load
-
-### `/settings` - Settings
-- Strava connection status
-- Sync controls
-- Database stats
+| Route | Status | Purpose |
+|---|---|---|
+| `/` | implemented | disconnected onboarding; connected users redirect to `/dashboard` |
+| `/dashboard` | implemented | primary connected landing with real Strava-backed Running cards |
+| `/runs` | implemented | run-first archive route inside the shell |
+| `/runs/[id]` | implemented | premium run-detail route with faux-map, splits, and chart tiles |
+| `/connect` | implemented | Strava auth and sync management, including detail sync |
+| `/settings` | implemented | local-first system surface and future preference placeholder |
+| `/health` | implemented scaffold | shell route with honest empty body until Apple Health import lands |
+| `/training-load` | implemented scaffold | shell route with honest empty body until analytics land |
+| `/activities` | compatibility redirect | temporary redirect to `/runs` |
+| `/activities/[id]` | compatibility redirect | temporary redirect to `/runs/[id]` |
 
 ---
 
-## Data rules for UI
+## Design rules
 
-1. Never render a chart with zero data points.
-2. Show `Data not available` instead of an empty chart when no real series exists.
-3. Show `--` in any cell where the value is `null` or `undefined`.
-4. Do not show estimated or projected values without a clear label.
+- Near-black glass shell stays.
+- FarSygil brand identity stays green-led.
+- Metric surfaces may use the multicolor data palette defined in
+  `docs/design/DESIGN_CONTRACT.md`.
+- Standalone empty state: `Data not available`
+- Compact inline missing value: `--`
+- Mockup frame, honest empty body
+- No fake charts
+- No fake geographic maps
+- No Apple-style rings
+- No motivational copy
+
+---
+
+## Implemented shell pieces
+
+- Desktop left rail
+- Mobile bottom navigation
+- Top status strip with local Strava state and last-sync context
+- Specialized dashboard cards and run-detail tiles
+- Local faux-map route treatment built from real polyline data only
+
+The shell and new metric palette are opt-in by rebuilt routes. Unreworked
+surfaces should not be half-upgraded by global CSS drift.
+
+---
+
+## Data-reality matrix
+
+This matrix is the implementation authority whenever a mockup conflicts with
+data reality.
+
+| Surface | Data status | Rendering policy | Unlock condition |
+|---|---|---|---|
+| Dashboard weekly distance, time, pace, elevation, cadence, HR, recent run, longest run | real today from Strava archive rows | render fully with real values and charts | none |
+| Dashboard power tile | partially available; depends on real `averageWatts` data | render mockup-style frame; show honest empty body when data is missing | real power values on local activities |
+| Dashboard health cluster | deferred | render mockup-style frame with honest empty body | Apple Health importer writes local metric rows |
+| Dashboard training-load card | deferred | render mockup-style frame with honest empty body | analytics engine computes load rows |
+| Dashboard recovery card | deferred | render mockup-style frame with honest empty body | real health import plus analytics output |
+| Run-detail faux-map | real polyline today | render abstract faux-map backdrop plus real route only | none |
+| Run-detail splits table | real only after detail sync populates split rows | render premium frame; empty body until rows exist | detail sync writes `activity_splits` |
+| Run-detail HR / cadence / pace / elevation tiles | partial today; strongest after detail sync | render only when real series exists, otherwise honest empty body | detail sync writes usable stream rows or split fallback rows |
+| Calories cards or trends | forbidden | never render | none |
+| Apple Health trends such as VO2 Max, sleep, HRV, steps | deferred | render honest empty body on shell routes until importer lands | Apple Health importer and daily aggregation |
+| Derived insight banners | constrained | render only when deterministic, factual, and labeled as derived | route-specific deterministic rule |
+| Fake city labels or geocoded map chips | forbidden | never render | none |
+
+---
+
+## Current route notes
+
+### `/dashboard`
+
+- Uses the reboot shell and multicolor card system.
+- Running renders from real local Strava-derived aggregates.
+- Health and Training Load keep honest empty bodies for now.
+- Time-range and other future controls may exist visually before they become
+  data-driven, but they must not imply unavailable data exists.
+
+### `/runs`
+
+- Keeps the run-first archive model introduced in Phase 2.
+- Promotes the latest run in a richer hero surface.
+- Preserves route identity where real route data exists.
+
+### `/runs/[id]`
+
+- Uses a faux-map instead of external map tiles.
+- Reads real `activity_splits` and `activity_streams` when present.
+- Falls back honestly when detail rows are absent or malformed.
+
+### `/connect`
+
+- Remains the Strava authority surface.
+- Exposes both summary sync and detail sync.
+- Surfaces local sync history.
+
+### `/health`
+
+- Real route now.
+- Honest shell-integrated scaffold only.
+- No fake resting HR, VO2 Max, HRV, sleep, or steps values.
+
+### `/training-load`
+
+- Real route now.
+- Honest shell-integrated scaffold only.
+- No fake ATL / CTL / TSB / recovery scores.
+
+### `/settings`
+
+- Real route now.
+- Holds local-first product/runtime framing and future settings placeholder
+  content so `/connect` stays focused on Strava auth and sync.
+
+---
+
+## Faux-map spec
+
+- Background is abstract, not geographic.
+- Use layered gradients, subtle grid/noise/contour texture only.
+- Show real route polyline and distance chip only.
+- No coordinates fallback line.
+- Indoor / no-GPS routes keep the honest fallback state.

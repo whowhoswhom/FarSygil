@@ -1,248 +1,233 @@
-# FarSygil — Design Contract (Phase 1)
+# FarSygil - Design Contract (Phase 2+)
 
-> A short, implementation-facing reference. Pin this to any task that touches the real Next.js UI. Anything not enumerated here is up to the implementer's judgement *within* the system below.
+> This document supersedes the original Phase 1 single-accent contract for new
+> Phase 2+ surfaces. The old green-only system remains historical context for
+> shipped Phase 1 work, but it is no longer the active rule set for the
+> dashboard-era product shell.
 
 ---
 
-## 1. Color tokens (locked)
+## 1. Product direction
 
-Use these hex values verbatim. Do not introduce siblings.
+FarSygil is now a shell-based, local-first running command center.
+
+The product look is defined by:
+- near-black glass surfaces
+- a green-led FarSygil brand mark
+- multicolor metric tones for data surfaces
+- dense, premium cards instead of generic admin widgets
+- factual copy and real-data-only rendering
+
+The design target is the approved mockup family, but data honesty wins
+whenever a mockup element conflicts with reality.
+
+---
+
+## 2. Core color system
+
+Use these tokens as the source of truth. They must match `src/app/globals.css`.
 
 ```css
 :root {
-  /* Field — background layers */
-  --field-deep:    #050705;
-  --field-mid:     #0d120d;
-  --field-lift:    #151b14;
+  --field-deep: #050705;
+  --field-mid: #0d120d;
+  --field-lift: #151b14;
 
-  /* Ink — text */
-  --ink-1: #f4f7f0;                       /* primary */
-  --ink-2: rgba(232, 239, 229, 0.76);     /* secondary */
-  --ink-3: rgba(210, 221, 205, 0.42);     /* tertiary, kicker, em-dash placeholder */
+  --ink-1: #f4f7f0;
+  --ink-2: rgba(232, 239, 229, 0.76);
+  --ink-3: rgba(210, 221, 205, 0.42);
 
-  /* Accent — single accent, four shades */
-  --accent-core:    #7BC241;
-  --accent-bright:  #A8E26C;
-  --accent-deep:    #3F7220;
-  --accent-glow:    rgba(168, 226, 108, 0.35);
-  --accent-wash-a:  rgba(123, 194, 65, 0.18);  /* page top-right bloom */
-  --accent-wash-b:  rgba(63, 114, 32, 0.16);   /* page bottom-left wash  */
+  --accent-core: #7bc241;
+  --accent-bright: #a8e26c;
+  --accent-deep: #3f7220;
+  --accent-glow: rgba(168, 226, 108, 0.35);
+  --accent-wash-a: rgba(123, 194, 65, 0.18);
+  --accent-wash-b: rgba(63, 114, 32, 0.16);
 
-  /* Glass — surface fill / borders */
-  --glass-bg:            rgba(17, 23, 18, 0.58);
-  --glass-bg-strong:     rgba(17, 23, 18, 0.72);
-  --glass-border:        rgba(255, 255, 255, 0.08);
-  --glass-border-strong: rgba(255, 255, 255, 0.14);
+  --metric-move: #ff7a33;
+  --metric-move-wash: rgba(255, 122, 51, 0.18);
+  --metric-exercise: #a7f43d;
+  --metric-exercise-wash: rgba(167, 244, 61, 0.18);
+  --metric-distance: #22dcff;
+  --metric-distance-wash: rgba(34, 220, 255, 0.18);
+  --metric-time: #ffd84d;
+  --metric-time-wash: rgba(255, 216, 77, 0.18);
+  --metric-trend: #8d63ff;
+  --metric-trend-wash: rgba(141, 99, 255, 0.18);
+  --metric-cardio: #ff5b88;
+  --metric-cardio-wash: rgba(255, 91, 136, 0.18);
+  --metric-recovery: #bb84ff;
+  --metric-recovery-wash: rgba(187, 132, 255, 0.18);
+  --metric-warning: var(--danger-ink);
+  --metric-warning-wash: var(--danger-soft);
 
-  /* Status — only the warning role exists */
+  --source-strava: #fc6a1f;
+  --source-strava-wash: rgba(252, 106, 31, 0.18);
+  --source-apple: #ff5ebc;
+  --source-apple-wash: rgba(255, 94, 188, 0.18);
+
   --danger-soft: rgba(229, 102, 74, 0.18);
-  --danger-ink:  #f1b8ab;
+  --danger-ink: #f1b8ab;
 }
 ```
 
-**Forbidden**: orange-led identity, purple, magenta, cyan, lime overload, multicolor accent rings, rainbow charts. The accent green is the only chromatic note.
+### Token intent
 
-**Usage notes:**
-- The accent green is the **only chromatic accent** across the product. No second brand accent may be introduced — not for charts, not for emphasis, not for differentiation between sports.
-- The warning role (`--danger-soft` / `--danger-ink`) is **status-only**. It expresses one specific failure mode (token expired, auth error) and must never be promoted into a second brand accent, used as a chart color, or applied for visual contrast.
-
----
-
-## 2. Typography (locked)
-
-- **Display + body**: Geist Sans (400 / 500 / 600).
-- **Numerals**: Geist Mono with `font-variant-numeric: tabular-nums`. Use for **every** metric that aligns vertically — distance, pace, duration, HR, elevation, the visible/total counter.
-- Tracking philosophy:
-  - Display text → **negative** tracking (`-0.05em` to `-0.07em`).
-  - Micro-labels → **strong positive** tracking (`0.18em` to `0.26em`), uppercase.
-  - Body and pills → default tracking.
-  - There is no in-between.
-
-Semantic scale:
-
-| Role | Size | Family | Weight | Tracking | Notes |
-|---|---|---|---|---|---|
-| Hero metric | `clamp(96px, 12vw, 192px)` | Geist Sans | 600 | -0.07em | Vertical gradient `--ink-1` to `--accent-bright`, clipped to text. Single token; no breakpoint variants. |
-| Display L | 80px | Geist Sans | 600 | -0.065em | Hero title |
-| Display M | 48px | Geist Sans | 600 | -0.05em | Band heading |
-| Title L | 32px | Geist Sans | 600 | -0.05em | MajorTile title |
-| Title M | 25px | Geist Sans | 600 | -0.045em | MinorTile title |
-| Body L | 18px | Geist Sans | 400 | 0 | |
-| Body | 16px | Geist Sans | 400 | 0 | |
-| Body S | 14px | Geist Sans | 400 | 0 | |
-| Caption | 12px | Geist Sans | 500 | 0 | |
-| Kicker | 11px | Geist Sans | 600 | 0.22em uppercase | Section label, metric label, footer |
-| Mono metric | 22px | Geist Mono | 500 | -0.04em | Tile sub-metric values |
-
----
-
-## 3. Surface system (locked)
-
-Every elevated surface is a `surface-slab`. The exact recipe (do not deviate; tweak via `data-depth` only):
-
-```css
-.surface-slab {
-  border: 1px solid var(--glass-border);
-  background:
-    linear-gradient(145deg,
-      rgba(255,255,255,0.065) 0%,
-      rgba(255,255,255,0.018) 36%,
-      rgba(255,255,255,0.006) 100%),
-    var(--glass-bg);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -1px 0 rgba(255,255,255,0.03),
-    0 40px 80px -48px rgba(0,0,0,0.9);
-  backdrop-filter: blur(18px) saturate(150%);
-}
-```
-
-Three depths:
-
-- `tile` (default) — blur 18, soft shadow.
-- `hero` — blur 24, stronger top highlight, double-stacked shadow `0 56px 120px -72px rgba(0,0,0,0.95), 0 28px 52px -36px rgba(0,0,0,0.55)`.
-- `rail` — blur 28, denser fill, used for the sticky Filter HUD only.
-
-Two organic flourishes:
-1. Pointer-tracked specular highlight on `::before` (the existing `LiquidSurface` already does this — keep it).
-2. Faint top-edge gradient on `::after` — a 2px specular line.
-
-Hover state on a slab: border lifts to `--glass-border-strong`, `transform: translateY(-2px)`, accent inner ring `inset 0 0 0 1px rgba(168,226,108,0.24)` fades in via `.surface-rim`.
-
----
-
-## 4. Spacing & radii
-
-Base unit: **4px**. Every spacing value below is a multiple of 4. There are no off-grid exceptions.
-
-- Page-shell padding scale: `8 / 16 / 24 / 40` (px), keyed off breakpoint (xs / sm / md / lg).
-- Grid gaps inside an archive band: `20px` mobile, `24px` desktop.
-- Inside a tile: `20px` and `32px` rests. Never inline `<br>`.
-- Vertical rhythm between bands (Hero / Recent / Synced / Archive / Footer): `40px` minimum, `64px` typical.
-
-Radii ladder — bigger surface, bigger radius:
-
-| Radius | Usage |
+| Token | Use |
 |---|---|
-| `34px` | Hero slab (one in the whole product) |
-| `30px` | Empty-state cards, large welcome card |
-| `28px` | Major tiles, Connect status card |
-| `24px` | Minor tiles, status panels |
-| `22px` | Synced totals strip, info cards |
-| `18px` | Metric rail cells |
-| `999px` (full pill) | Chips, status badges, sport pills, accent buttons, the entire Filter HUD bar |
+| `--accent-*` | brand identity, active navigation, wordmark support |
+| `--metric-distance` | distance and pace surfaces |
+| `--metric-time` | time and elevation surfaces |
+| `--metric-cardio` | heart-rate and cardio surfaces |
+| `--metric-recovery` | recovery and health surfaces |
+| `--metric-trend` | longitudinal and load surfaces |
+| `--metric-exercise` | run/session emphasis |
+| `--metric-move` | controlled movement/status emphasis where approved |
+| `--metric-warning` | warning and error states only |
+| `--source-strava` | Strava source labeling only |
+| `--source-apple` | Apple Health source labeling only |
 
-Square corners do not appear.
+### Hard color rules
 
----
-
-## 5. Hero / Recent / Archive hierarchy (locked)
-
-The Activities page composes **four bands** in this exact order:
-
-1. **Hero** — the most recent activity. `min-h-[72svh]` slab, radius 34, `data-depth="hero"`. Route art at 70% opacity behind text, with a black floor gradient `transparent → rgba(0,0,0,0.35) → rgba(5,7,5,0.94)`. Hero metric is the headline — full hero-metric scale.
-
-2. **Recent** — the next **two** activities, rendered as `MajorTile`s, **not** `MinorTile`s. A MajorTile is materially different:
-   - Radius **28**, min-height ~420px.
-   - Route art occupies the **full top half** edge-to-edge, with the sport pill and date floating over it.
-   - Headline metric is hero-scale-adjacent (~76px), gradient-filled.
-   - Sub-metrics sit on a **single row** (flex-wrap), not in a 3-up grid.
-   - A MajorTile must look like a **first-class slab**, not a scaled-up archive card.
-
-3. **Synced totals** — a content-honest strip, radius 22. Always renders four cells (Efforts / Distance / Elev gain / Moving). **Scope: the full local archive.** The strip reflects every synced activity row in the local database — it is *not* recomputed against the active filter slice. (The Filter HUD already shows the filtered visible/total counter; that is the place for slice-aware counts.) Cells are computed at render time from the activities table: if any rows exist, real totals appear immediately, regardless of whether a sync flow ran in this session. Each cell renders `—` only when the local database has no usable activity rows for that field. Numbers are **never** hardcoded in the implementation. Footer caption is factual (e.g. "Totals derive from real activities in your local database.") — never "128 efforts", "762.4 mi", etc.
-
-4. **Archive** — a 3-up grid of `MinorTile`s, radius 24. "Reveal N earlier efforts" expands the band. Empty state lives here (radius 30, centered).
-
-Home composition (locked):
-- One full-bleed hero slab is the page. Wordmark + one-line subhead + two primary actions (Connect Strava / Open Archive).
-- Below the hero: **one** connection-status row, no duplicates.
-- Roadmap content does **not** belong on Home. If phase context is needed, it lives on `/connect`. There is no `/about` route in Phase 1 and the implementer must not invent one.
-- One calm footer line. No marketing.
+- The FarSygil brand mark stays green-led.
+- Multicolor metric tones are allowed on dashboard, run-detail, health, and
+  training-load surfaces.
+- Orange-adjacent tones may appear inside metric and source surfaces, but they
+  must never become the primary FarSygil identity color.
+- Warning/error tones stay status-only.
+- Do not add new chromatic families outside the token list above.
+- Do not hardcode ad hoc chart colors inside components.
 
 ---
 
-## 6. Copy tone rules
+## 3. Shell and surface system
 
-- Editorial, calm, factual. Sentence case for almost everything.
-- Title Case is reserved for product surfaces ("Strava", "Apple Health", "Archive" when used as a proper section name).
-- Uppercase + tracked-out is a **micro-label texture only** (`letter-spacing: 0.22em–0.26em`, 10–11px). Kickers, metric labels, date stamps, footer status. Never headlines.
-- **No emoji, ever.** No marketing hype: no "smash", "crush", "next-level", "AI-powered", "10x", exclamation marks, rhetorical questions.
-- **No first-person plural.** This is a single-user tool; there is no "we".
-- **No invented numbers.** Null → `—`. The slot keeps its dimensions.
-- Status messages name the failure mode and the next action. No apology language.
+The active product shell includes:
+- desktop left rail
+- mobile bottom navigation
+- a top status strip on shell routes
+- page content framed inside a glass command-center layout
 
-Approved phrases (pull from these before inventing new ones):
-- "Local-first running command center."
-- "FarSygil only talks to Strava when you connect or sync your own account."
-- "Authorize FarSygil to read your activity data. Tokens are stored locally in `data/running.db`."
-- "The archive is empty for this slice."
-- "Widen the range, lower the minimum distance, or clear the search to bring more of your local Strava history back into view."
-- "Reveal N earlier efforts"
-- "Stored locally · synced from Strava"
-- "Indoor / no GPS"
-- "Untitled effort"
+Surface rules:
+- major surfaces use dark glass slabs with blur and inset highlights
+- cards may use a tone wash, icon badge, metric value, and mini-chart frame
+- route shells and cards should feel tactile but restrained
+- motion is light and purposeful only
+
+Do not reintroduce the old Phase 1 "one hero plus archive only" page hierarchy
+as a global rule. That hierarchy remains valid historical context for the
+original archive, not the current app shell.
 
 ---
 
-## 7. Motion timing rules (locked)
+## 4. Faux-map rule
 
-Three primitives, all in `globals.css`. All honor `prefers-reduced-motion: reduce` (disables animation; sets final state).
+Run-detail map surfaces use a local faux-map only.
 
-| Name | Duration | Easing | Effect |
-|---|---|---|---|
-| `archive-rise` | 620ms | `cubic-bezier(0.16, 1, 0.3, 1)` | `opacity 0→1` + `translateY(12px)→0`. Tile entry. |
-| `route-draw` | 1500ms (180ms delay) | `cubic-bezier(0.22, 1, 0.36, 1)` forwards | `stroke-dashoffset 1→0` on path with `pathLength=1`. |
-| Hover lift | 220ms | `ease` | `transform: translateY(-2px)`. Slab moves; nothing else. |
+Allowed:
+- abstract dark gradient floor
+- faint grid lines
+- subtle contour-like texture
+- real route polyline
+- real start/end markers
+- a distance-only chip
 
-Interactive transitions (`a`, `button`, `input`, `select`): `color 180ms`, `background 180ms`, `border 180ms`, `box-shadow 220ms`, `transform 220ms`, all `ease`.
+Forbidden:
+- tile providers
+- geocoding
+- fake city names
+- fake street names
+- fake parks
+- fake block grids that imply a specific place
+- coordinates as a decorative fallback line
 
-**Forbidden motion**: full-page parallax, infinite ambient loops, bouncing cards, rotation, scale `>1.02`, hue shifts.
-
----
-
-## 8. Sport pill labels (locked)
-
-Map raw `sportType` values to these labels exactly. The map is exhaustive for Phase 1; do not fall through to a raw value. Anything outside this table renders as `Other`.
-
-| `sportType` | Label |
-|---|---|
-| `Run` | `Run` |
-| `TrailRun` | `Trail run` |
-| `VirtualRun` | `Indoor run` |
-| `Ride` | `Ride` |
-| `VirtualRide` | `Indoor ride` |
-| `MountainBikeRide` | `MTB` |
-| `GravelRide` | `Gravel ride` |
-| `EBikeRide` | `E-bike ride` |
-| `Walk` | `Walk` |
-| `Hike` | `Hike` |
-| `Swim` | `Swim` |
-| `WeightTraining` | `Strength` |
-| `Workout` | `Workout` |
-| `StairStepper` | `Stairs` |
-| `Yoga` | `Yoga` |
-| anything else | `Other` |
-
-Pill chrome: 11px, weight 600, `letter-spacing: 0.22em`, uppercase, color `--accent-bright` over `rgba(123, 194, 65, 0.10)` background, border `rgba(168, 226, 108, 0.22)`, subtle `0 0 20px -12px var(--accent-glow)` outer glow.
+If a run has no real route polyline, the UI must render the existing honest
+indoor/no-GPS fallback instead of a fabricated map.
 
 ---
 
-## 9. Real-data guardrails (non-negotiable)
+## 5. Typography and iconography
 
-The system **enforces** these — components must not accept props that imply fabricated data.
+- Use Geist Sans for interface text.
+- Use Geist Mono and tabular numerals where metrics must align.
+- Favor large value numerals, smaller labels, and concise secondary copy.
+- Use local in-repo SVG icons only.
 
-- **Schema is the only source of truth.** Components may render only fields present in `src/db/schema.ts`: `name`, `sportType`, `startDate`, `startDateLocal`, `timezone`, `distanceMeters`, `movingTimeSeconds`, `elapsedTimeSeconds`, `totalElevationGain`, `averageSpeed`, `maxSpeed`, `averageHeartrate`, `maxHeartrate`, `averageCadence`, `averageWatts`, `sufferScore`, `perceivedExertion`, `startLatitude`, `startLongitude`, `mapPolyline`, `source`.
-- **No `calories`. No `trainingScore`. No `fitness`. No `fatigue`. No `tsb`. No `predictedRaceTime`.** Removed, not stubbed.
-- **No projection charts. No trend arrows. No AI insight cards.**
-- **No synthetic indoor-distance estimates, ever.** The system never calculates indoor distance from speed*time, power curves, or any model. This is the only suppression rule.
-- **`VirtualRide` shows real `distanceMeters` when Strava provides it.** Modern trainers (Zwift, Wahoo, Tacx, etc.) report calibrated distance; that value is truthful and must be rendered. If `distanceMeters` is null on a `VirtualRide`, render `—`. The product never invents a number to fill the slot.
-- **`VirtualRun` shows real `distanceMeters` when Strava provides it.** Treadmill belts are calibrated; the value is truthful and must not be suppressed. If `distanceMeters` is null on a `VirtualRun`, render `—`.
-- **`WeightTraining`, `Workout`, `StairStepper`, and `Yoga` do not have a meaningful distance field.** These render duration and HR if present; distance is omitted from the metric rail entirely (not shown as `—`).
-- **Effort intensity** = `sufferScore / 250` clamped to `[0, 1]`, falling back to `perceivedExertion / 10`. If both are absent, the effort glow does not render.
-- **Imperial units only** in the current UI: `mi`, `ft`, `/mi` for run pace, `mph` for ride speed.
-- **Tabular numerals on every aligned metric.** Geist Mono.
-- **Null renders `—`.** The slot keeps its dimensions. Screen-reader text is acceptable.
-- **Synced totals derive from the full local archive.** They are computed at render time from the activities table, scoped to every synced row — not the filtered slice. They are never hardcoded. If rows exist, totals render immediately. Each cell renders `—` only when the local database has no usable rows for that field.
-- **No sample data ships in the real app.** Mock data lives only in `ui_kits/`.
+Forbidden:
+- copied Apple iconography
+- SF Symbols
+- external icon runtime dependencies
+- literal or near-literal Apple Activity Rings or any equivalent tri-ring
+  progress motif
 
-If a designer reaches for a stat that isn't in the schema, the answer is to remove it, not to invent it.
+FarSygil uses distinct cards and chart tiles for multi-metric health/load
+surfaces, not stacked ring metaphors.
+
+---
+
+## 6. Copy rules
+
+Copy must remain:
+- calm
+- factual
+- single-user
+- local-first
+
+Hard rules:
+- standalone empty state: `Data not available`
+- compact inline missing value: `--`
+- no encouragement copy
+- no "coming soon" marketing filler
+- no invented numbers
+- no fake readiness states
+- no motivational derived banners
+
+Allowed derived copy must be:
+- deterministic
+- factual
+- clearly labeled as derived
+
+Example:
+- Allowed: `Longest run in the current week`
+- Forbidden: `Great work staying consistent`
+
+---
+
+## 7. Real-data guardrails
+
+These rules remain non-negotiable:
+
+- No fake values
+- No fake charts
+- No fake calories
+- No fake recovery scores
+- No fake ATL / CTL / TSB
+- No fake Apple Health values
+- No fake source labels
+- No placeholder series that imply unavailable data exists
+
+When a mockup surface depends on unavailable data, render the real frame with an
+honest empty body plus a deterministic unlock hint.
+
+The mockup never outranks the data rules.
+
+---
+
+## 8. Route model
+
+The active public route model is:
+- `/` disconnected onboarding only
+- `/dashboard` connected landing
+- `/runs`
+- `/runs/[id]`
+- `/connect`
+- `/settings`
+- `/health`
+- `/training-load`
+
+Compatibility redirects:
+- `/activities` -> `/runs`
+- `/activities/[id]` -> `/runs/[id]`
+
+Do not invent additional shell destinations without updating the roadmap and
+brain docs in the same change set.

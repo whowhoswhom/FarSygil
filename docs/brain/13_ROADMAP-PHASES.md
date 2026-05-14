@@ -1,6 +1,6 @@
 # 13 - Roadmap and Phases
 
-> See also: [[00_PROJECT-BRAIN]] · [[01_PRODUCT-VISION]]
+> See also: [[00_PROJECT-BRAIN]] | [[17_VISUAL-REBOOT-PLAN]]
 
 ---
 
@@ -8,69 +8,78 @@
 
 | Phase | Name | Status |
 |---|---|---|
-| **Phase 1** | Foundation | Complete |
-| **Phase 2** | Apple Health + Dashboard | In progress |
-| **Phase 3** | Training Analytics | Planned |
-| **Phase 4** | Grounded AI Chat | Planned |
+| Phase 1 | Foundation | complete |
+| Phase 2 | Visual reboot + detail sync | in progress |
+| Phase 3 | Training analytics | planned |
+| Phase 4 | Grounded AI chat | planned |
 
 ---
 
 ## Phase 1 - Foundation
 
-**Goal:** Working local app with Strava OAuth, activity ingestion, and basic UI.
+Goal: working local app with Strava OAuth, summary activity ingestion, and the
+first browseable local archive.
 
-Current progress: Strava OAuth, local token storage, refresh-aware token access, summary activity sync, connection-status UI/API, the original `/activities` Archive page, and the sync log viewer are complete. Phase 1's planned foundation deliverables are now in place.
-
-Deliverables:
-- [x] Project structure, package.json, tsconfig, Next.js config
-- [x] SQLite schema with Drizzle ORM
-- [x] Project brain documentation
-- [x] Green-led home / connect / archive shell
-- [x] Strava OAuth and connection-status surface (`/api/strava/connect`, `/api/strava/callback`, `/api/strava/status`)
-- [x] Activity sync (initial + incremental summary import via `/api/strava/sync`)
-- [x] Activity list page (`/activities`)
-- [x] Sync log viewer
+Delivered:
+- [x] project structure, TypeScript, Next.js, Drizzle, SQLite
+- [x] Strava OAuth and connection-status surface
+- [x] refresh-aware token access
+- [x] summary activity sync
+- [x] sync-log viewer
+- [x] original activity archive
+- [x] compatibility redirects that keep old `/activities` URLs alive
 
 ---
 
-## Phase 2 - Apple Health + Dashboard
+## Phase 2 - Visual reboot + detail sync
 
-**Goal:** Import Apple Health data and show a useful dashboard.
+Goal: turn FarSygil into the mockup-faithful shell product while staying strict
+about real data.
 
-Current progress: `/dashboard` now renders real Strava-backed Running cards from the local archive, including weekly rollups, recent-run summary, longest-run summary, cadence / heart-rate cards, and a pace trend. Apple Health import, Health surfaces, and derived load surfaces remain upcoming.
+Delivered or active in the reboot program:
+- [x] smart-entry home (`/`)
+- [x] app shell with desktop rail and mobile bottom nav
+- [x] connected landing dashboard (`/dashboard`)
+- [x] run archive (`/runs`)
+- [x] run detail (`/runs/[id]`)
+- [x] Strava detail sync for splits and streams
+- [x] connect management route (`/connect`) with detail-sync controls
+- [x] settings route (`/settings`)
+- [x] health scaffold route (`/health`)
+- [x] training-load scaffold route (`/training-load`)
+- [ ] Apple Health importer
+- [ ] real health metric cards and trends
 
-Deliverables:
-- [ ] Apple Health XML parser and importer
-- [ ] Daily metrics aggregation
-- [x] Main dashboard page (`/dashboard`)
-- [x] Runs list page (`/runs`)
-- [x] Run detail page (`/runs/[id]`)
-- [ ] Health metrics page (`/health`)
-- [ ] Resting HR, HRV, sleep, steps charts (real data only)
-
----
-
-## Phase 3 - Training Analytics
-
-**Goal:** Compute and display deterministic training analytics.
-
-Deliverables:
-- [ ] TSS calculation from HR data
-- [ ] ATL / CTL / TSB (EMA-based)
-- [ ] Training load chart
-- [ ] Race predictor (Riegel formula)
-- [ ] Weekly mileage trend
-- [ ] Analytics page (`/analytics`)
+Notes:
+- Health and training-load routes are real shell pages now, but they remain
+  honest empty states until their later data programs land.
+- Phase 2 no longer uses the old green-only dashboard palette. The active
+  contract is now the visual reboot contract in `docs/design/DESIGN_CONTRACT.md`.
 
 ---
 
-## Phase 4 - Grounded AI Chat
+## Phase 3 - Training analytics
 
-**Goal:** Natural language Q&A grounded in local data.
+Goal: compute deterministic analytics from real local history.
 
-Deliverables:
+Planned deliverables:
+- [ ] TSS / TRIMP computation
+- [ ] ATL / CTL / TSB
+- [ ] ACWR and related warnings
+- [ ] training-load charts
+- [ ] recovery/readiness derivations grounded in real inputs only
+- [ ] real data inside `/training-load`
+
+---
+
+## Phase 4 - Grounded AI chat
+
+Goal: natural-language Q&A grounded in local data.
+
+Planned deliverables:
 - [ ] Claude API integration
-- [ ] Structured query context injection
-- [ ] Chat UI (`/chat`)
-- [ ] Refusal handling for missing data
-- [ ] System prompt design
+- [ ] structured context assembly from local SQLite rows
+- [ ] refusal handling for missing local data
+- [ ] chat route and UI
+
+No AI surfaces should appear before Phase 4.

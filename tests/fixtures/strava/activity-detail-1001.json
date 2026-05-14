@@ -1,0 +1,49 @@
+{
+  "id": 1001,
+  "name": "Morning Run",
+  "sport_type": "Run",
+  "start_date": "2026-05-06T11:30:00Z",
+  "start_date_local": "2026-05-06T07:30:00Z",
+  "timezone": "(GMT-04:00) America/New_York",
+  "distance": 16093.4,
+  "moving_time": 4120,
+  "elapsed_time": 4300,
+  "total_elevation_gain": 182.4,
+  "average_speed": 3.91,
+  "max_speed": 5.2,
+  "average_heartrate": 154.2,
+  "max_heartrate": 171,
+  "average_cadence": 172.1,
+  "average_watts": null,
+  "suffer_score": 62,
+  "perceived_exertion": 6,
+  "start_latlng": [38.2527, -85.7585],
+  "map": {
+    "summary_polyline": "abcd1234"
+  },
+  "gear_id": "g-001",
+  "splits_standard": [
+    {
+      "split": 1,
+      "distance": 1609.344,
+      "elapsed_time": 465,
+      "moving_time": 462,
+      "elevation_difference": 12.5,
+      "average_speed": 3.4834285714,
+      "average_heartrate": 148.4,
+      "average_grade_adjusted_speed": 3.44,
+      "pace_zone": 2
+    },
+    {
+      "split": 2,
+      "distance": 1609.344,
+      "elapsed_time": 452,
+      "moving_time": 449,
+      "elevation_difference": 6.2,
+      "average_speed": 3.5842848552,
+      "average_heartrate": 152.1,
+      "average_grade_adjusted_speed": 3.52,
+      "pace_zone": 2
+    }
+  ]
+}
