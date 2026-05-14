@@ -113,6 +113,23 @@ describe("run queries", () => {
         streamType: "heartrate",
         data: JSON.stringify([140, 145, 150, 148]),
       });
+      await database.insert(testSchema.activityStreams).values([
+        {
+          activityId: activity.id,
+          streamType: "cadence",
+          data: JSON.stringify([168, 170, 171, 172]),
+        },
+        {
+          activityId: activity.id,
+          streamType: "velocity_smooth",
+          data: JSON.stringify([3.5, 3.6, 3.7, 3.8]),
+        },
+        {
+          activityId: activity.id,
+          streamType: "altitude",
+          data: JSON.stringify([100, 104, 107, 110]),
+        },
+      ]);
 
       const snapshot = await getRunDetailSnapshot(database, activity.id);
 
@@ -120,6 +137,9 @@ describe("run queries", () => {
       expect(snapshot?.activity.name).toBe("Long Run");
       expect(snapshot?.splits).toHaveLength(2);
       expect(snapshot?.heartrateSeries).toEqual([140, 145, 150, 148]);
+      expect(snapshot?.cadenceSeries).toEqual([168, 170, 171, 172]);
+      expect(snapshot?.paceSeriesSecondsPerMile).toHaveLength(4);
+      expect(snapshot?.elevationSeriesFeet).toEqual([328, 341, 351, 361]);
     } finally {
       sqlite.close();
     }
@@ -158,6 +178,47 @@ describe("run queries", () => {
       const snapshot = await getRunDetailSnapshot(database, activity.id);
 
       expect(snapshot?.heartrateSeries).toEqual([150, 153]);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("degrades malformed stream JSON into empty chart series", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      const [activity] = await database
+        .insert(testSchema.activities)
+        .values({
+          stravaId: 3202,
+          source: "strava",
+          sportType: "Run",
+          name: "Corrupted Streams Run",
+          startDate: "2026-05-12T12:00:00.000Z",
+          startDateLocal: "2026-05-12T08:00:00.000-04:00",
+          movingTimeSeconds: 2_400,
+        })
+        .returning({ id: testSchema.activities.id });
+
+      await database.insert(testSchema.activityStreams).values([
+        {
+          activityId: activity.id,
+          streamType: "heartrate",
+          data: "{",
+        },
+        {
+          activityId: activity.id,
+          streamType: "cadence",
+          data: "{\"bad\":true}",
+        },
+      ]);
+
+      const snapshot = await getRunDetailSnapshot(database, activity.id);
+
+      expect(snapshot?.heartrateSeries).toEqual([]);
+      expect(snapshot?.cadenceSeries).toEqual([]);
+      expect(snapshot?.paceSeriesSecondsPerMile).toEqual([]);
+      expect(snapshot?.elevationSeriesFeet).toEqual([]);
     } finally {
       sqlite.close();
     }
@@ -234,4 +295,3 @@ function readCommittedMigrations(): string {
     )
     .join("\n");
 }
-

@@ -1,16 +1,16 @@
 # 14 - Agent Instructions
 
-> See also: [[00_PROJECT-BRAIN]]
+> See also: [[00_PROJECT-BRAIN]] | [[07_DASHBOARD-UI]] | [[13_ROADMAP-PHASES]] | [[17_VISUAL-REBOOT-PLAN]]
 
 ---
 
-## For AI coding agents working on this repository
+## Read this first
 
-### Read this first
-
-1. Read [[00_PROJECT-BRAIN]] before taking any action.
-2. Understand the current phase before implementing anything.
-3. Do not implement features scheduled for a later phase.
+1. Read [[00_PROJECT-BRAIN]] before taking action.
+2. Check the active phase in [[13_ROADMAP-PHASES]].
+3. For Phase 2 surfaces, follow [[17_VISUAL-REBOOT-PLAN]] and the
+   data-reality matrix in [[07_DASHBOARD-UI]].
+4. Do not implement later-phase features just because the mockups show them.
 
 ---
 
@@ -18,66 +18,71 @@
 
 | Rule | Details |
 |---|---|
-| **Never invent data** | If data is missing, display `--` or `"Data not available"` |
-| **Strava is authoritative** | All run activity data comes from Strava only |
-| **Apple Health is authoritative** | All physiology data comes from Apple Health only |
-| **No AI chat until Phase 4** | Do not implement Claude or AI features in Phases 1-3 |
-| **No fake charts** | Only render charts when real data is present |
-| **No demo data** | Never seed the database with fake activities or metrics |
-| **No secrets in code** | Never hardcode API keys, tokens, or credentials |
-| **No cloud dependencies** | All data must remain local |
-| **Be precise about local-first** | Do not claim zero network traffic when the app intentionally talks to Strava or another user-enabled provider; distinguish local storage from source API traffic |
-| **Keep copy calm and factual** | Product surfaces should read like a private training archive, not hype-driven SaaS marketing |
+| Never invent data | Missing values render as `--` or `Data not available` |
+| Strava is authoritative | Run activity, splits, and stream data come from Strava only |
+| Apple Health is authoritative | Physiology data comes from Apple Health only |
+| No AI chat until Phase 4 | Do not implement Claude or AI features before Phase 4 |
+| No fake charts | Only render charts when real series exist |
+| No fake map layers | Faux-map surfaces may use only abstract local backdrops plus real route polylines |
+| No demo data | Never seed the user database with fake activities or metrics |
+| No secrets in code | Never hardcode credentials or tokens |
+| Be precise about local-first | Do not claim zero network traffic when the app intentionally talks to Strava |
+| Keep copy calm and factual | No hype, no encouragement copy, no "coming soon" filler |
 
 ---
 
 ## Before implementing a feature
 
-1. Check the current phase in [[00_PROJECT-BRAIN]].
-2. Check if the feature is in scope for the current phase in [[13_ROADMAP-PHASES]].
-3. Check the relevant ingestion or schema brain file for data rules.
-4. Write tests using fixtures from `tests/fixtures/` - never live API calls.
+1. Check whether the feature belongs to Phase 2, 3, or 4.
+2. If the work touches a mockup-like surface, consult the data-reality matrix in
+   [[07_DASHBOARD-UI]] before writing code.
+3. If the work affects Strava sync or local privacy claims, update the relevant
+   brain docs in the same change set.
+4. Use fixtures under `tests/fixtures/` rather than live API calls in tests.
+
+---
 
 ## After implementing a change
 
-1. Update every affected brain file in the same change set.
-2. Always hand back a self-contained Claude review prompt for the current implementation change set, including:
-   - a prompt identifier line at the very top in the form `#<number>` so Claude and Codex are visibly reviewing the same prompt revision
-   - files touched
-   - why they changed
-   - commands run and pass/fail results
-   - the relevant brain files to cross-check
-   - either the full diff or a tight diff summary with key hunks
+1. Update every affected brain file in the same branch.
+2. Re-run the required local checks:
+   - `pnpm lint`
+   - `pnpm test`
+   - `pnpm build`
+   - `pnpm db:generate`
+3. Hand back a self-contained Claude review prompt for the exact change set.
 
 ---
 
-## Database changes
+## Database and route rules
 
-- All schema changes must be made in `src/db/schema.ts`.
-- Run `pnpm db:generate` to create a migration.
-- Run `pnpm db:migrate` to apply the migration.
-- Never modify the SQLite file directly.
-- Any Next.js route handler that imports the local SQLite client or `better-sqlite3` code must export `runtime = "nodejs"`.
-
----
-
-## Code style
-
-- TypeScript strict mode is enabled.
-- Use `async/await` over Promise chains.
-- Use Drizzle ORM for all database queries - no raw SQL strings unless necessary.
-- Server-only database code lives in `src/server/` or `src/db/`.
-- No database access in client components.
-- Prefer `dynamic = "force-dynamic"` on route handlers that read or write the live local database.
+- Schema changes belong in `src/db/schema.ts`.
+- Generate migrations with `pnpm db:generate`.
+- Apply migrations with `pnpm db:migrate`.
+- Never edit the SQLite file directly.
+- Any Next.js route or page that touches SQLite must use:
+  - `runtime = "nodejs"`
+  - `dynamic = "force-dynamic"`
 
 ---
 
-## What to do if data is missing
+## Rendering rules
+
+- Compact inline missing value: `--`
+- Standalone empty state: `Data not available`
+- Real zero values may render only when zero is truthful
+- Never replace missing data with zero
+- If a mockup frame depends on unavailable data, render the frame with an honest
+  empty body instead of inventing the value
+
+Example:
 
 ```typescript
-// In UI components, always handle null/undefined:
 const value = activity.averageHeartrate ?? "--";
+```
 
-// Never:
-const value = activity.averageHeartrate || 0; // wrong - hides missing data
+Never do this:
+
+```typescript
+const value = activity.averageHeartrate || 0;
 ```

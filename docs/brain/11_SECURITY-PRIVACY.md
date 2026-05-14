@@ -1,15 +1,16 @@
 # 11 - Security and Privacy
 
-> See also: [[00_PROJECT-BRAIN]] · [[09_GROUNDED-AI-CHAT]]
+> See also: [[00_PROJECT-BRAIN]] | [[04_STRAVA-INGESTION]] | [[17_VISUAL-REBOOT-PLAN]]
 
 ---
 
 ## Overview
 
 FarSygil is a single-user localhost application. Security is primarily about:
-1. Protecting sensitive credentials from being committed to Git.
-2. Keeping health data local and private.
-3. Ensuring the app cannot be accidentally exposed to the internet.
+1. protecting credentials from source control
+2. keeping SQLite-held activity and health data local
+3. being precise about the small set of user-triggered outbound requests
+4. never adding hidden telemetry, map providers, or cloud storage
 
 ---
 
@@ -17,55 +18,68 @@ FarSygil is a single-user localhost application. Security is primarily about:
 
 | Secret | Location | Committed? |
 |---|---|---|
-| `STRAVA_CLIENT_ID` | `.env.local` | No, never |
-| `STRAVA_CLIENT_SECRET` | `.env.local` | No, never |
-| `CLAUDE_API_KEY` | `.env.local` | No, never |
-| Strava access/refresh tokens | SQLite `strava_tokens` | No, never |
+| `STRAVA_CLIENT_ID` | `.env.local` | never |
+| `STRAVA_CLIENT_SECRET` | `.env.local` | never |
+| `CLAUDE_API_KEY` | `.env.local` | never |
+| Strava access/refresh tokens | SQLite `strava_tokens` | never |
 
-`.env.local` is excluded from Git via `.gitignore`.
-The `data/` directory (containing the SQLite file) is excluded from Git.
-
----
-
-## Token storage
-
-Strava OAuth tokens are stored in the SQLite database by the server-side callback route. Since this is a local app, no additional encryption layer is required for Phase 1. If the app is ever shared or used on a shared machine, consider encrypting the token fields.
-
-The OAuth callback must never expose access or refresh tokens to client-side code or query strings. Tokens are exchanged server-side and written directly to SQLite.
-
-The OAuth `state` value is stored only in an httpOnly, same-site cookie during the connect flow and is cleared after the callback returns.
-The connect route test suite must verify the real redirect response sets the expected `httpOnly`, `sameSite`, `path`, and `maxAge` cookie attributes on that state cookie, that the `Secure` flag stays off in local dev/test HTTP flows, and that production HTTPS flows set it.
-
-The connection-status API route must never return token values. It may return only safe metadata such as athlete id, accepted scope, expiry timestamp, and whether the stored token is expired.
+`.env.local` is ignored by Git. The local SQLite database under `data/` is also
+ignored by Git.
 
 ---
 
-## Strava token scopes
+## Token storage and callback rules
 
-Request only the minimum required scopes:
-- `read` - basic athlete data
-- `activity:read_all` - access to all activities (including private)
+- Strava OAuth tokens are exchanged server-side and written directly to SQLite.
+- Tokens must never be exposed to client components, query strings, or user
+  copy.
+- The OAuth `state` value lives only in an httpOnly same-site cookie during the
+  connect flow and is cleared after callback handling.
+- Connection-status responses may return safe metadata only:
+  athlete id, scope, expiry timestamp, expired flag, and updated timestamp.
 
-Do not request `write` scope unless a future phase requires it.
+---
+
+## Outbound traffic policy
+
+All user data stays local except for explicitly user-enabled provider traffic.
+
+Current outbound destinations:
+- Strava API for OAuth, summary sync, and detail sync
+- Claude API in Phase 4 only, for grounded queries when that phase lands
+
+Explicitly not used in the visual reboot:
+- map tiles
+- geocoding
+- analytics/telemetry SDKs
+- cloud databases
+- hosted auth providers
+
+The faux-map on run-detail pages is rendered locally from the stored route
+polyline. It does not contact any external map provider.
 
 ---
 
 ## Data isolation
 
-- All data lives in `./data/running.db` on the local machine.
-- No data is sent to external services except:
-  - Strava API (to fetch your own data)
-  - Claude API (Phase 4 only, for grounded chat queries - only structured query results, not raw exports)
-- Apple Health data is parsed locally and stored in SQLite. The raw export files are never sent anywhere.
-- User-facing privacy copy must distinguish between local storage and the direct Strava requests required for OAuth or sync. Do not claim zero network traffic once a source integration is active.
+- All app data lives in `./data/running.db`.
+- Summary activities, detailed activity payloads, split rows, stream rows,
+  health rows, and future analytics rows stay local.
+- Apple Health imports are parsed locally and stored locally.
+- User-facing privacy copy must distinguish local storage from direct Strava
+  requests triggered by the user.
+
+Do not claim zero network traffic once a source integration is active. Do claim
+that FarSygil does not add hidden third-party traffic beyond those provider
+requests.
 
 ---
 
 ## Network exposure
 
-- The Next.js dev server (`pnpm dev`) binds to `localhost:3000` by default.
-- Do not run the app behind a public proxy or expose it on a network.
-- Do not add `--hostname 0.0.0.0` or similar flags.
+- `pnpm dev` binds to `localhost:3000` by default.
+- Do not expose the app with `0.0.0.0` or a public proxy.
+- Do not treat localhost development as a public SaaS deployment target.
 
 ---
 
@@ -73,9 +87,9 @@ Do not request `write` scope unless a future phase requires it.
 
 The following must never be committed:
 - `.env`, `.env.local`, `.env.*.local`
-- `data/` directory
-- `exports/` directory
+- `data/`
+- `exports/`
 - `*.db`, `*.sqlite`, `*.sqlite3`, `*.db-wal`, `*.db-shm`
 - Apple Health export files
 
-All of the above are covered by `.gitignore`.
+These remain covered by `.gitignore`.

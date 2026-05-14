@@ -3,9 +3,9 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { activities, activitySplits, activityStreams } from "@/db/schema";
 import { buildNormalizedRoutePath } from "@/lib/activities/polyline";
 import type { ArchiveActivity } from "@/lib/activities/types";
+import { RUN_SPORTS } from "@/lib/strava/run-sports";
+import { METERS_PER_MILE, metersToFeet } from "@/lib/units";
 import type { FarSygilDatabase } from "@/server/strava/oauth";
-
-const RUN_SPORTS = ["Run", "TrailRun", "VirtualRun"] as const;
 
 export interface RunSplitSnapshot {
   splitIndex: number;
@@ -21,6 +21,9 @@ export interface RunDetailSnapshot {
   activity: ArchiveActivity;
   splits: RunSplitSnapshot[];
   heartrateSeries: number[];
+  cadenceSeries: number[];
+  paceSeriesSecondsPerMile: number[];
+  elevationSeriesFeet: number[];
 }
 
 type ActivityRow = Omit<ArchiveActivity, "routePathData"> & {
@@ -139,6 +142,9 @@ export async function getRunDetailSnapshot(
     activity: mapActivityRow(row),
     splits,
     heartrateSeries: buildHeartrateSeries(streams, splits),
+    cadenceSeries: buildCadenceSeries(streams),
+    paceSeriesSecondsPerMile: buildPaceSeries(streams, splits),
+    elevationSeriesFeet: buildElevationSeries(streams),
   };
 }
 
@@ -209,6 +215,70 @@ function buildHeartrateSeries(
   return splitSeries.length >= 2 ? splitSeries : [];
 }
 
+function buildCadenceSeries(
+  streams: Array<{ streamType: string; data: string }>,
+): number[] {
+  const cadenceStream = streams.find((stream) => stream.streamType === "cadence");
+
+  if (!cadenceStream) {
+    return [];
+  }
+
+  const parsed = parseNumericArray(cadenceStream.data);
+  return parsed.length >= 2 ? parsed : [];
+}
+
+function buildPaceSeries(
+  streams: Array<{ streamType: string; data: string }>,
+  splits: RunSplitSnapshot[],
+): number[] {
+  const paceStream = streams.find(
+    (stream) => stream.streamType === "velocity_smooth",
+  );
+
+  if (paceStream) {
+    const parsed = parseNumericArray(paceStream.data)
+      .map(speedToSecondsPerMile)
+      .filter((value): value is number => value != null);
+
+    if (parsed.length >= 2) {
+      return parsed;
+    }
+  }
+
+  const splitSeries = splits
+    .map((split) => speedToSecondsPerMile(split.averageSpeed))
+    .filter((value): value is number => value != null);
+
+  return splitSeries.length >= 2 ? splitSeries : [];
+}
+
+function buildElevationSeries(
+  streams: Array<{ streamType: string; data: string }>,
+): number[] {
+  const altitudeStream = streams.find(
+    (stream) => stream.streamType === "altitude",
+  );
+
+  if (!altitudeStream) {
+    return [];
+  }
+
+  const parsed = parseNumericArray(altitudeStream.data).map((value) =>
+    Math.round(metersToFeet(value)),
+  );
+
+  return parsed.length >= 2 ? parsed : [];
+}
+
+function speedToSecondsPerMile(value: number | null): number | null {
+  if (value == null || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  return METERS_PER_MILE / value;
+}
+
 function parseNumericArray(value: string): number[] {
   try {
     const parsed = JSON.parse(value);
@@ -224,4 +294,3 @@ function parseNumericArray(value: string): number[] {
     return [];
   }
 }
-
