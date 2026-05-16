@@ -26,7 +26,8 @@ It replaced the earlier dashboard-only rollout plan once the project moved to:
 - Run-detail maps use a local faux-map only
 - Mockup frame, honest empty body
 - Detail sync comes before the visual route rebuilds
-- Apple Health import and training-load analytics remain later programs
+- Apple Health import and training-load analytics are separate data programs
+  after the visual reboot
 
 ---
 
@@ -113,9 +114,13 @@ Within the active reboot branch/state:
 - Wave 5a implemented
 - Wave 5b implemented
 
+Started after the reboot:
+- first Apple Health XML importer for extracted `exports/export.xml`
+- latest real Apple Health metric population on `/health`
+
 Still deferred after the reboot:
-- Apple Health importer
-- real health metric population
+- direct Apple Health ZIP extraction
+- Apple Health trend surfaces
 - training-load analytics
 - grounded AI chat
 

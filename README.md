@@ -104,12 +104,12 @@ All five commands should complete without errors on a clean checkout.
 
 | Phase | Focus | Status |
 |---|---|---|
-| **Phase 1** | Foundation + Strava OAuth + activity ingestion | In progress |
-| **Phase 2** | Apple Health import + dashboard | Planned |
+| **Phase 1** | Foundation + Strava OAuth + activity ingestion | Complete |
+| **Phase 2** | Visual reboot + detail sync + Apple Health import | In progress |
 | **Phase 3** | Training analytics (load, fitness, fatigue) | Planned |
 | **Phase 4** | Grounded AI chat (Claude, local data only) | Planned |
 
-Current progress: the Strava OAuth slice, local token storage, connection-status surface, and the first `/activities` Archive page are complete. Activity sync and the sync log viewer are the next major Phase 1 steps.
+Current progress: Strava OAuth, summary sync, detail sync, sync logging, the unified app shell, `/dashboard`, `/runs`, `/runs/[id]`, `/connect`, `/settings`, `/health`, and `/training-load` are implemented. Apple Health import is the active Phase 2 data gap; training-load analytics remain Phase 3.
 
 ---
 

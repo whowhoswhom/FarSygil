@@ -141,7 +141,7 @@ Audit log of Apple Health import files.
 | id | INTEGER PK | |
 | filename | TEXT | |
 | imported_at | TEXT | |
-| record_count | INTEGER | |
+| record_count | INTEGER | daily metric rows inserted or updated |
 | notes | TEXT | |
 
 ---

@@ -73,6 +73,7 @@ Relevant files:
 - [x] Detail-sync rate-limit retry behavior
 - [x] Detail-sync route behavior
 - [x] Malformed stream degradation
+- [x] Apple Health XML import aggregation and route behavior
 
 Relevant files:
 - `tests/dashboard/strava.test.ts`
@@ -81,6 +82,8 @@ Relevant files:
 - `tests/activities/redirects.test.ts`
 - `tests/strava/detail-sync.test.ts`
 - `tests/strava/sync-details-route.test.ts`
+- `tests/apple-health/import.test.ts`
+- `tests/apple-health/import-route.test.ts`
 
 Current Phase 2 assertions cover:
 - dashboard weekly running rollups, pace/cadence/HR weighting, recent-run and
@@ -94,6 +97,9 @@ Current Phase 2 assertions cover:
 - compatibility redirects from `/activities` to `/runs`
 - incremental and full detail sync, raw payload writes, split/stream writes,
   sync-log writes, and retry behavior on rate-limited detail requests
+- Apple Health extracted XML imports for daily steps, resting HR, HRV, VO2 Max,
+  active energy, and sleep-hours rows, including upsert, source ownership,
+  missing-file handling, invalid-XML handling, and error logging
 
 ### Phase 3 / future analytics
 

@@ -25,8 +25,10 @@ Phase 2 is now the visual reboot + detail-sync program:
 - `/runs` and `/runs/[id]` are the run-first browsing surfaces
 - `/connect` manages summary sync and detail sync
 - `/settings`, `/health`, and `/training-load` now exist as real shell routes
-- Health and Training Load still remain honest empty states until their later
-  data systems land
+- `/health` can import an extracted Apple Health `export.xml` from `exports/`
+  and show latest local daily metrics once rows exist
+- Training Load still remains an honest empty state until its analytics system
+  lands
 
 See [[13_ROADMAP-PHASES|Roadmap]] and
 [[17_VISUAL-REBOOT-PLAN|Visual Reboot Plan]] for the active breakdown.

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HealthData locale="en_US">
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" unit="count" startDate="2026-05-15 08:00:00 -0400" endDate="2026-05-15 08:10:00 -0400" value="1200" />
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="iPhone" unit="count" startDate="2026-05-15 18:00:00 -0400" endDate="2026-05-15 18:10:00 -0400" value="300" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="Apple Watch" unit="count/min" startDate="2026-05-15 06:00:00 -0400" endDate="2026-05-15 06:00:00 -0400" value="52" />
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="Apple Watch" unit="count/min" startDate="2026-05-15 07:00:00 -0400" endDate="2026-05-15 07:00:00 -0400" value="54" />
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="Apple Watch" unit="ms" startDate="2026-05-15 06:15:00 -0400" endDate="2026-05-15 06:15:00 -0400" value="42" />
+  <Record type="HKQuantityTypeIdentifierVO2Max" sourceName="Apple Watch" unit="mL/kg/min" startDate="2026-05-15 09:00:00 -0400" endDate="2026-05-15 09:00:00 -0400" value="48.6" />
+  <Record type="HKQuantityTypeIdentifierActiveEnergyBurned" sourceName="Apple Watch" unit="kcal" startDate="2026-05-15 09:00:00 -0400" endDate="2026-05-15 10:00:00 -0400" value="540" />
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" startDate="2026-05-14 23:00:00 -0400" endDate="2026-05-15 01:30:00 -0400" value="HKCategoryValueSleepAnalysisAsleepCore" />
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" startDate="2026-05-15 01:30:00 -0400" endDate="2026-05-15 03:00:00 -0400" value="HKCategoryValueSleepAnalysisAsleepREM" />
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Apple Watch" startDate="2026-05-15 03:00:00 -0400" endDate="2026-05-15 03:30:00 -0400" value="HKCategoryValueSleepAnalysisInBed" />
+  <Record type="HKQuantityTypeIdentifierFlightsClimbed" sourceName="iPhone" unit="count" startDate="2026-05-15 12:00:00 -0400" endDate="2026-05-15 12:10:00 -0400" value="4" />
+</HealthData>

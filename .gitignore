@@ -17,8 +17,8 @@ exports/
 *.db-shm
 
 # Apple Health exports
-apple-health-export.zip
-export.xml
+/apple-health-export.zip
+/export.xml
 
 # Dependencies
 node_modules/
@@ -33,6 +33,9 @@ dist/
 
 # Testing coverage
 coverage/
+
+# Local runtime logs
+*.log
 
 # TypeScript build info
 *.tsbuildinfo
