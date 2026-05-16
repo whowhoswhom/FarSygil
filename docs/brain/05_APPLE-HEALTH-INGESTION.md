@@ -10,7 +10,7 @@
 
 Current behavior:
 - `POST /api/apple-health/import` imports an extracted
-  `exports/export.xml` file.
+  `apple_health_data/apple_health_export/export.xml` file.
 - The parser uses streaming XML parsing via `saxes`, so it does not load the
   full export into memory.
 - `/health` exposes the local import control and renders latest real metric
@@ -33,7 +33,10 @@ Apple Health data is exported from the iOS Health app:
 2. Tap profile icon -> **Export All Health Data**.
 3. Save the ZIP file (`apple_health_export.zip`) and transfer it to the computer that runs FarSygil.
 4. Extract `export.xml` from the ZIP.
-5. Place the extracted file at `exports/export.xml` (this directory is excluded from Git).
+5. Place the extracted folder at `apple_health_data/apple_health_export/` so
+   `export.xml` resolves at
+   `apple_health_data/apple_health_export/export.xml` (this directory is
+   excluded from Git).
 6. Use `/health` to import the file into the local database.
 
 The ZIP contains `export.xml` - a large XML file with all health records.
@@ -63,7 +66,8 @@ because a daily average across all contexts is not a useful health signal.
 
 The current import path:
 
-1. Accepts the extracted `exports/export.xml` path through the local API.
+1. Accepts the extracted `apple_health_data/apple_health_export/export.xml`
+   path through the local API.
 2. Parses the XML using a streaming parser (file can be several GB).
 3. Filter records to relevant types only.
 4. Aggregate daily values where appropriate:

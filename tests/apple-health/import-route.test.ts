@@ -57,12 +57,46 @@ describe("Apple Health import route", () => {
     });
     expect(importAppleHealthExportMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        filePath: path.resolve(
+          process.cwd(),
+          "apple_health_data",
+          "apple_health_export",
+          "export.xml",
+        ),
+      }),
+    );
+  });
+
+  it("allows the legacy exports directory", async () => {
+    const importAppleHealthExportMock = vi.mocked(
+      importModule.importAppleHealthExport,
+    );
+    importAppleHealthExportMock.mockResolvedValue({
+      fileName: "export.xml",
+      recordsScanned: 11,
+      recordsMatched: 9,
+      metricsWritten: 7,
+      startDate: "2026-05-14",
+      endDate: "2026-05-15",
+    });
+
+    const { POST } = await import("../../src/app/api/apple-health/import/route");
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/apple-health/import", {
+        method: "POST",
+        body: JSON.stringify({ filePath: "exports/export.xml" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(importAppleHealthExportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
         filePath: path.resolve(process.cwd(), "exports", "export.xml"),
       }),
     );
   });
 
-  it("rejects paths outside the local exports directory", async () => {
+  it("rejects paths outside local Apple Health export directories", async () => {
     const importAppleHealthExportMock = vi.mocked(
       importModule.importAppleHealthExport,
     );
@@ -80,7 +114,7 @@ describe("Apple Health import route", () => {
     expect(payload).toEqual({
       error: "invalid_path",
       message:
-        "Apple Health imports must be read from the local exports directory.",
+        "Apple Health imports must be read from a local Apple Health export directory.",
     });
     expect(importAppleHealthExportMock).not.toHaveBeenCalled();
   });
@@ -91,7 +125,7 @@ describe("Apple Health import route", () => {
     );
     importAppleHealthExportMock.mockRejectedValue(
       new importModule.AppleHealthImportError(
-        "Apple Health export file was not found at exports/export.xml",
+        "Apple Health export file was not found at apple_health_data/apple_health_export/export.xml",
         "file_not_found",
       ),
     );
@@ -108,7 +142,8 @@ describe("Apple Health import route", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(payload).toEqual({
       error: "file_not_found",
-      message: "Apple Health export file was not found at exports/export.xml",
+      message:
+        "Apple Health export file was not found at apple_health_data/apple_health_export/export.xml",
     });
   });
 

@@ -15,6 +15,8 @@ import type { FarSygilDatabase } from "@/server/strava/oauth";
 
 export const APPLE_HEALTH_SOURCE = "AppleHealth";
 
+const HEALTH_METRIC_INSERT_BATCH_SIZE = 100;
+
 type AggregateMode = "average" | "sum";
 
 interface QuantityMetricDefinition {
@@ -151,22 +153,32 @@ export async function importAppleHealthExport(options: {
 
     await database.transaction(async (transaction) => {
       if (metricRows.length > 0) {
-        const writtenMetricRows = await transaction
-          .insert(healthMetrics)
-          .values(metricRows)
-          .onConflictDoUpdate({
-            target: [healthMetrics.date, healthMetrics.metricType],
-            set: {
-              value: sql`excluded.value`,
-              unit: sql`excluded.unit`,
-            },
-            setWhere: sql`${healthMetrics.source} = ${APPLE_HEALTH_SOURCE}`,
-          })
-          .returning({
-            id: healthMetrics.id,
-          });
+        for (
+          let index = 0;
+          index < metricRows.length;
+          index += HEALTH_METRIC_INSERT_BATCH_SIZE
+        ) {
+          const metricBatch = metricRows.slice(
+            index,
+            index + HEALTH_METRIC_INSERT_BATCH_SIZE,
+          );
+          const writtenMetricRows = await transaction
+            .insert(healthMetrics)
+            .values(metricBatch)
+            .onConflictDoUpdate({
+              target: [healthMetrics.date, healthMetrics.metricType],
+              set: {
+                value: sql`excluded.value`,
+                unit: sql`excluded.unit`,
+              },
+              setWhere: sql`${healthMetrics.source} = ${APPLE_HEALTH_SOURCE}`,
+            })
+            .returning({
+              id: healthMetrics.id,
+            });
 
-        result.metricsWritten = writtenMetricRows.length;
+          result.metricsWritten += writtenMetricRows.length;
+        }
       }
 
       await transaction.insert(healthRawImports).values({

@@ -4,7 +4,10 @@ import { realpath } from "node:fs/promises";
 import { NextRequest, NextResponse } from "next/server";
 
 import { db } from "@/db/client";
-import { APPLE_HEALTH_DEFAULT_RELATIVE_PATH } from "@/lib/apple-health/constants";
+import {
+  APPLE_HEALTH_DEFAULT_RELATIVE_PATH,
+  APPLE_HEALTH_IMPORT_ROOTS,
+} from "@/lib/apple-health/constants";
 import {
   AppleHealthImportError,
   importAppleHealthExport,
@@ -112,40 +115,36 @@ async function resolveImportPath(
       message: string;
     }
 > {
-  const exportsDirectory = path.resolve(process.cwd(), "exports");
   const candidate = requestedPath?.trim()
     ? path.resolve(process.cwd(), requestedPath)
     : path.resolve(process.cwd(), APPLE_HEALTH_DEFAULT_RELATIVE_PATH);
-  const relativeToExports = path.relative(exportsDirectory, candidate);
-  const insideExports =
-    relativeToExports === "" ||
-    (!relativeToExports.startsWith("..") &&
-      !path.isAbsolute(relativeToExports));
+  const allowedRoots = APPLE_HEALTH_IMPORT_ROOTS.map((root) =>
+    path.resolve(process.cwd(), root),
+  );
 
-  if (!insideExports) {
+  if (!allowedRoots.some((root) => isInsideDirectory(candidate, root))) {
     return {
       ok: false,
-      message: "Apple Health imports must be read from the local exports directory.",
+      message:
+        "Apple Health imports must be read from a local Apple Health export directory.",
     };
   }
 
-  const [exportsRealPath, candidateRealPath] = await Promise.all([
-    realpath(exportsDirectory).catch(() => null),
+  const [candidateRealPath, ...allowedRealRoots] = await Promise.all([
     realpath(candidate).catch(() => null),
+    ...allowedRoots.map((root) => realpath(root).catch(() => null)),
   ]);
 
-  if (exportsRealPath && candidateRealPath) {
-    const realRelativeToExports = path.relative(exportsRealPath, candidateRealPath);
-    const realInsideExports =
-      realRelativeToExports === "" ||
-      (!realRelativeToExports.startsWith("..") &&
-        !path.isAbsolute(realRelativeToExports));
+  if (candidateRealPath) {
+    const realInsideAllowedRoot = allowedRealRoots.some(
+      (root) => root && isInsideDirectory(candidateRealPath, root),
+    );
 
-    if (!realInsideExports) {
+    if (!realInsideAllowedRoot) {
       return {
         ok: false,
         message:
-          "Apple Health imports must resolve inside the local exports directory.",
+          "Apple Health imports must resolve inside a local Apple Health export directory.",
       };
     }
   }
@@ -154,6 +153,15 @@ async function resolveImportPath(
     ok: true,
     filePath: candidate,
   };
+}
+
+function isInsideDirectory(candidate: string, directory: string): boolean {
+  const relativePath = path.relative(directory, candidate);
+
+  return (
+    relativePath === "" ||
+    (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
+  );
 }
 
 function getStatusCode(code: AppleHealthImportError["code"]): number {

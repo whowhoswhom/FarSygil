@@ -25,7 +25,8 @@ Phase 2 is now the visual reboot + detail-sync program:
 - `/runs` and `/runs/[id]` are the run-first browsing surfaces
 - `/connect` manages summary sync and detail sync
 - `/settings`, `/health`, and `/training-load` now exist as real shell routes
-- `/health` can import an extracted Apple Health `export.xml` from `exports/`
+- `/health` can import an extracted Apple Health `export.xml` from
+  `apple_health_data/apple_health_export/`
   and show latest local daily metrics once rows exist
 - Training Load still remains an honest empty state until its analytics system
   lands
