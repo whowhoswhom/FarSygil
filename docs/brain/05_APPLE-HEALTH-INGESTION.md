@@ -44,16 +44,18 @@ The ZIP contains `export.xml` - a large XML file with all health records.
 
 Key record types in `export.xml`:
 
-| Record type | Metric | Maps to |
+| Record type | Metric | `health_metrics.metric_type` |
 |---|---|---|
-| `HKQuantityTypeIdentifierHeartRate` | Instantaneous HR | `health_metrics` |
-| `HKQuantityTypeIdentifierRestingHeartRate` | Resting HR | `health_metrics` |
-| `HKQuantityTypeIdentifierHeartRateVariabilitySDNN` | HRV | `health_metrics` |
-| `HKQuantityTypeIdentifierStepCount` | Steps | `health_metrics` |
-| `HKQuantityTypeIdentifierBodyMass` | Weight | `health_metrics` |
-| `HKQuantityTypeIdentifierVO2Max` | VO2 Max | `health_metrics` |
-| `HKCategoryTypeIdentifierSleepAnalysis` | Sleep | `health_metrics` |
-| `HKQuantityTypeIdentifierActiveEnergyBurned` | Active calories | `health_metrics` |
+| `HKQuantityTypeIdentifierRestingHeartRate` | Resting HR | `resting_hr` |
+| `HKQuantityTypeIdentifierHeartRateVariabilitySDNN` | HRV | `hrv` |
+| `HKQuantityTypeIdentifierStepCount` | Steps | `steps` |
+| `HKQuantityTypeIdentifierBodyMass` | Weight | `body_mass` |
+| `HKQuantityTypeIdentifierVO2Max` | VO2 Max | `vo2_max` |
+| `HKCategoryTypeIdentifierSleepAnalysis` | Sleep | `sleep_hours` |
+| `HKQuantityTypeIdentifierActiveEnergyBurned` | Active calories | `active_energy` |
+
+Instantaneous heart-rate records are intentionally not imported in this slice
+because a daily average across all contexts is not a useful health signal.
 
 ---
 

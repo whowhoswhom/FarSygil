@@ -67,6 +67,12 @@ describe("Apple Health import", () => {
             unit: "mL/kg/min",
           }),
           expect.objectContaining({
+            date: "2026-05-15",
+            metricType: "active_energy",
+            value: 540,
+            unit: "kcal",
+          }),
+          expect.objectContaining({
             date: "2026-05-14",
             metricType: "sleep_hours",
             value: 2.5,
@@ -126,6 +132,40 @@ describe("Apple Health import", () => {
     }
   });
 
+  it("does not overwrite a metric row owned by another source", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.healthMetrics).values({
+        date: "2026-05-15",
+        metricType: "steps",
+        value: 999,
+        unit: "count",
+        source: "Manual",
+      });
+
+      await importAppleHealthExport({
+        database,
+        filePath: readFixturePath("export.xml"),
+      });
+
+      const [stepsRow] = await database
+        .select()
+        .from(testSchema.healthMetrics)
+        .where(eq(testSchema.healthMetrics.metricType, "steps"));
+
+      expect(stepsRow).toMatchObject({
+        date: "2026-05-15",
+        metricType: "steps",
+        value: 999,
+        unit: "count",
+        source: "Manual",
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("records an import error when the export file is missing", async () => {
     const { database, sqlite } = createTestDatabase();
 
@@ -149,6 +189,42 @@ describe("Apple Health import", () => {
         .where(eq(testSchema.dataImportLogs.source, "apple_health"));
       expect(logRows).toHaveLength(1);
       expect(logRows[0]).toMatchObject({
+        eventType: "sync_error",
+        errorsCount: 1,
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("records an import error when the export XML is invalid", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await expect(
+        importAppleHealthExport({
+          database,
+          filePath: readFixturePath("invalid.xml"),
+        }),
+      ).rejects.toMatchObject({
+        name: "AppleHealthImportError",
+        code: "invalid_xml",
+      } satisfies Partial<AppleHealthImportError>);
+
+      const metricRows = await database.select().from(testSchema.healthMetrics);
+      expect(metricRows).toHaveLength(0);
+
+      const rawImports = await database.select().from(testSchema.healthRawImports);
+      expect(rawImports).toHaveLength(0);
+
+      const logRows = await database
+        .select()
+        .from(testSchema.dataImportLogs)
+        .where(eq(testSchema.dataImportLogs.source, "apple_health"))
+        .orderBy(testSchema.dataImportLogs.id);
+      expect(logRows).toHaveLength(2);
+      expect(logRows[0]?.eventType).toBe("sync_start");
+      expect(logRows[1]).toMatchObject({
         eventType: "sync_error",
         errorsCount: 1,
       });

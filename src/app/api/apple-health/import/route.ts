@@ -1,4 +1,5 @@
 import path from "node:path";
+import { realpath } from "node:fs/promises";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,9 +13,11 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+let importInProgress = false;
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const requestedPath = await getRequestedPath(request);
-  const pathResult = resolveImportPath(requestedPath);
+  const pathResult = await resolveImportPath(requestedPath);
 
   if (!pathResult.ok) {
     return NextResponse.json(
@@ -30,6 +33,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       },
     );
   }
+
+  if (importInProgress) {
+    return NextResponse.json(
+      {
+        error: "import_in_progress",
+        message: "An Apple Health import is already running locally.",
+      },
+      {
+        status: 409,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    );
+  }
+
+  importInProgress = true;
 
   try {
     const result = await importAppleHealthExport({
@@ -67,6 +87,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         },
       },
     );
+  } finally {
+    importInProgress = false;
   }
 }
 
@@ -78,9 +100,9 @@ async function getRequestedPath(request: NextRequest): Promise<string | null> {
   return typeof payload?.filePath === "string" ? payload.filePath : null;
 }
 
-function resolveImportPath(
+async function resolveImportPath(
   requestedPath: string | null,
-):
+): Promise<
   | {
       ok: true;
       filePath: string;
@@ -88,7 +110,8 @@ function resolveImportPath(
   | {
       ok: false;
       message: string;
-    } {
+    }
+> {
   const exportsDirectory = path.resolve(process.cwd(), "exports");
   const candidate = requestedPath?.trim()
     ? path.resolve(process.cwd(), requestedPath)
@@ -104,6 +127,27 @@ function resolveImportPath(
       ok: false,
       message: "Apple Health imports must be read from the local exports directory.",
     };
+  }
+
+  const [exportsRealPath, candidateRealPath] = await Promise.all([
+    realpath(exportsDirectory).catch(() => null),
+    realpath(candidate).catch(() => null),
+  ]);
+
+  if (exportsRealPath && candidateRealPath) {
+    const realRelativeToExports = path.relative(exportsRealPath, candidateRealPath);
+    const realInsideExports =
+      realRelativeToExports === "" ||
+      (!realRelativeToExports.startsWith("..") &&
+        !path.isAbsolute(realRelativeToExports));
+
+    if (!realInsideExports) {
+      return {
+        ok: false,
+        message:
+          "Apple Health imports must resolve inside the local exports directory.",
+      };
+    }
   }
 
   return {

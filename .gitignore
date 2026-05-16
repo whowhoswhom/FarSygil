@@ -17,8 +17,8 @@ exports/
 *.db-shm
 
 # Apple Health exports
-apple-health-export.zip
-export.xml
+/apple-health-export.zip
+/export.xml
 
 # Dependencies
 node_modules/

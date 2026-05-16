@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import * as importModule from "@/server/apple-health/import";
+import type { AppleHealthImportResult } from "@/server/apple-health/import";
 
 vi.mock("@/db/client", () => ({
   db: {},
@@ -109,5 +110,60 @@ describe("Apple Health import route", () => {
       error: "file_not_found",
       message: "Apple Health export file was not found at exports/export.xml",
     });
+  });
+
+  it("rejects a second import while one is already running", async () => {
+    const importAppleHealthExportMock = vi.mocked(
+      importModule.importAppleHealthExport,
+    );
+    let resolveImport!: (value: AppleHealthImportResult) => void;
+    const pendingImport = new Promise<AppleHealthImportResult>((resolve) => {
+      resolveImport = resolve;
+    });
+
+    importAppleHealthExportMock.mockReturnValueOnce(pendingImport);
+
+    const { POST } = await import("../../src/app/api/apple-health/import/route");
+    const firstResponsePromise = POST(
+      new NextRequest("http://localhost:3000/api/apple-health/import", {
+        method: "POST",
+      }),
+    );
+
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      if (importAppleHealthExportMock.mock.calls.length > 0) {
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    expect(importAppleHealthExportMock).toHaveBeenCalledTimes(1);
+
+    const secondResponse = await POST(
+      new NextRequest("http://localhost:3000/api/apple-health/import", {
+        method: "POST",
+      }),
+    );
+    const secondPayload = await secondResponse.json();
+
+    expect(secondResponse.status).toBe(409);
+    expect(secondResponse.headers.get("cache-control")).toBe("no-store");
+    expect(secondPayload).toEqual({
+      error: "import_in_progress",
+      message: "An Apple Health import is already running locally.",
+    });
+
+    resolveImport({
+      fileName: "export.xml",
+      recordsScanned: 11,
+      recordsMatched: 9,
+      metricsWritten: 7,
+      startDate: "2026-05-14",
+      endDate: "2026-05-15",
+    });
+
+    const firstResponse = await firstResponsePromise;
+    expect(firstResponse.status).toBe(200);
   });
 });

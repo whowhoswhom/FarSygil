@@ -98,7 +98,8 @@ Current Phase 2 assertions cover:
 - incremental and full detail sync, raw payload writes, split/stream writes,
   sync-log writes, and retry behavior on rate-limited detail requests
 - Apple Health extracted XML imports for daily steps, resting HR, HRV, VO2 Max,
-  active energy, and sleep-hours rows, including upsert and error logging
+  active energy, and sleep-hours rows, including upsert, source ownership,
+  missing-file handling, invalid-XML handling, and error logging
 
 ### Phase 3 / future analytics
 

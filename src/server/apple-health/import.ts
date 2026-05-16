@@ -58,11 +58,6 @@ export class AppleHealthImportError extends Error {
 }
 
 const QUANTITY_METRIC_DEFINITIONS: Record<string, QuantityMetricDefinition> = {
-  HKQuantityTypeIdentifierHeartRate: {
-    metricType: "average_hr",
-    aggregate: "average",
-    unit: "bpm",
-  },
   HKQuantityTypeIdentifierRestingHeartRate: {
     metricType: "resting_hr",
     aggregate: "average",
@@ -165,8 +160,8 @@ export async function importAppleHealthExport(options: {
             set: {
               value: sql`excluded.value`,
               unit: sql`excluded.unit`,
-              source: sql`excluded.source`,
             },
+            setWhere: sql`${healthMetrics.source} = ${APPLE_HEALTH_SOURCE}`,
           });
       }
 

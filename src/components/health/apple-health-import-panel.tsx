@@ -104,7 +104,7 @@ export function AppleHealthImportPanel({
           disabled={isImporting || isPending}
           className="accent-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isImporting || isPending ? "Importing..." : "Import export.xml"}
+          {isImporting || isPending ? "Importing..." : "Import local export"}
         </button>
       </div>
 
