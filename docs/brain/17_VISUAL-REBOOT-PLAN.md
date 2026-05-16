@@ -115,7 +115,8 @@ Within the active reboot branch/state:
 - Wave 5b implemented
 
 Started after the reboot:
-- first Apple Health XML importer for extracted `exports/export.xml`
+- first Apple Health XML importer for extracted
+  `apple_health_data/apple_health_export/export.xml`
 - latest real Apple Health metric population on `/health`
 
 Still deferred after the reboot:

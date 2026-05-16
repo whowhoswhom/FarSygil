@@ -89,6 +89,7 @@ The following must never be committed:
 - `.env`, `.env.local`, `.env.*.local`
 - `data/`
 - `exports/`
+- `apple_health_data/`
 - `*.db`, `*.sqlite`, `*.sqlite3`, `*.db-wal`, `*.db-shm`
 - Apple Health export files
 

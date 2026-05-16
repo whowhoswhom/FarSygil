@@ -113,7 +113,8 @@ data reality.
 ### `/health`
 
 - Real route now.
-- Imports an extracted Apple Health `exports/export.xml` through the local API.
+- Imports an extracted Apple Health
+  `apple_health_data/apple_health_export/export.xml` through the local API.
 - Renders latest local VO2 Max, resting HR, HRV, sleep, and steps values when
   real `health_metrics` rows with `source = "AppleHealth"` exist.
 - Missing metrics continue to render as `--`.

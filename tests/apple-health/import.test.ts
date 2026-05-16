@@ -1,4 +1,12 @@
-import { readdirSync, readFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { eq } from "drizzle-orm";
@@ -133,6 +141,35 @@ describe("Apple Health import", () => {
       expect(rawImports).toHaveLength(2);
     } finally {
       sqlite.close();
+    }
+  });
+
+  it("chunks large metric writes so real exports do not exceed SQLite variable limits", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fixtureDirectory = mkdtempSync(path.join(tmpdir(), "farsygil-health-"));
+    const filePath = path.join(fixtureDirectory, "large-export.xml");
+
+    try {
+      const records = Array.from({ length: 260 }, (_, index) => {
+        const date = new Date(Date.UTC(2026, 0, index + 1))
+          .toISOString()
+          .slice(0, 10);
+
+        return `<Record type="HKQuantityTypeIdentifierStepCount" sourceName="Apple Watch" startDate="${date} 08:00:00 -0400" endDate="${date} 09:00:00 -0400" value="1000" unit="count" />`;
+      }).join("\n");
+      writeFileSync(
+        filePath,
+        `<?xml version="1.0" encoding="UTF-8"?><HealthData>${records}</HealthData>`,
+      );
+
+      const result = await importAppleHealthExport({ database, filePath });
+      const metricRows = await database.select().from(testSchema.healthMetrics);
+
+      expect(result.metricsWritten).toBe(260);
+      expect(metricRows).toHaveLength(260);
+    } finally {
+      sqlite.close();
+      rmSync(fixtureDirectory, { recursive: true, force: true });
     }
   });
 

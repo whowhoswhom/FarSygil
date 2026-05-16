@@ -119,7 +119,7 @@ Current progress: Strava OAuth, summary sync, detail sync, sync logging, the uni
 >
 > FarSygil stores your health and training data locally in a SQLite database. Do not expose this application to the public internet. Do not commit your `.env.local` file, database files (`*.db`, `*.sqlite`), or Apple Health exports to version control.
 >
-> The `data/` and `exports/` directories are excluded from Git by `.gitignore`.
+> The `data/`, `exports/`, and `apple_health_data/` directories are excluded from Git by `.gitignore`.
 
 ---
 

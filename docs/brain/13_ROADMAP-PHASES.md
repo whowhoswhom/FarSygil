@@ -47,7 +47,8 @@ Delivered or active in the reboot program:
 - [x] settings route (`/settings`)
 - [x] health scaffold route (`/health`)
 - [x] training-load scaffold route (`/training-load`)
-- [x] first Apple Health XML importer for extracted `exports/export.xml`
+- [x] first Apple Health XML importer for extracted
+  `apple_health_data/apple_health_export/export.xml`
 - [x] latest Apple Health metric cards on `/health`
 - [ ] direct Apple Health ZIP extraction
 - [ ] Apple Health trend charts

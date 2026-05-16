@@ -8,6 +8,7 @@
 # Local data — stays on your machine only
 data/
 exports/
+apple_health_data/
 
 # SQLite database files
 *.db
