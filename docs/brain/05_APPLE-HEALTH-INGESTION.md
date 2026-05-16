@@ -66,9 +66,17 @@ The current import path:
 1. Accepts the extracted `exports/export.xml` path through the local API.
 2. Parses the XML using a streaming parser (file can be several GB).
 3. Filter records to relevant types only.
-4. Aggregate daily values where appropriate (for example, sum steps and average resting HR per day).
+4. Aggregate daily values where appropriate:
+   - sum steps and active energy
+   - sum asleep sleep duration by the record `startDate` day
+   - average resting HR, HRV, body mass, and VO2 Max
 5. Upsert into `health_metrics` (unique constraint on `date` + `metric_type`).
-6. Log the import in `health_raw_imports` and `data_import_logs`.
+   Existing rows are updated only when their source is `AppleHealth`; rows
+   owned by another source are preserved for future reconciliation work.
+6. Log the import in `health_raw_imports` and `data_import_logs`. The
+   `health_raw_imports.record_count` value stores the count of daily metric
+   rows actually inserted or updated, while the notes field records scanned and
+   matched XML record counts.
 
 ---
 

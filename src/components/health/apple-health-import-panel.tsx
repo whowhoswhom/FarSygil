@@ -123,7 +123,7 @@ export function AppleHealthImportPanel({
           Last file:{" "}
           <span className="text-[var(--ink-1)]">{latestImport.filename}</span>
           {typeof latestImport.recordCount === "number"
-            ? ` | ${latestImport.recordCount} matched records`
+            ? ` | ${latestImport.recordCount} daily metric rows written`
             : ""}
         </p>
       ) : null}

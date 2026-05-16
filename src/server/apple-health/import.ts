@@ -146,13 +146,12 @@ export async function importAppleHealthExport(options: {
 
     result.recordsScanned = parsedExport.recordsScanned;
     result.recordsMatched = parsedExport.recordsMatched;
-    result.metricsWritten = metricRows.length;
     result.startDate = parsedExport.startDate;
     result.endDate = parsedExport.endDate;
 
     await database.transaction(async (transaction) => {
       if (metricRows.length > 0) {
-        await transaction
+        const writtenMetricRows = await transaction
           .insert(healthMetrics)
           .values(metricRows)
           .onConflictDoUpdate({
@@ -162,19 +161,24 @@ export async function importAppleHealthExport(options: {
               unit: sql`excluded.unit`,
             },
             setWhere: sql`${healthMetrics.source} = ${APPLE_HEALTH_SOURCE}`,
+          })
+          .returning({
+            id: healthMetrics.id,
           });
+
+        result.metricsWritten = writtenMetricRows.length;
       }
 
       await transaction.insert(healthRawImports).values({
         filename: fileName,
-        recordCount: parsedExport.recordsMatched,
+        recordCount: result.metricsWritten,
         notes: buildRawImportNote(result),
       });
 
       await transaction.insert(dataImportLogs).values({
         source: "apple_health",
         eventType: "sync_complete",
-        message: `Apple Health import completed with ${metricRows.length} daily metric rows.`,
+        message: `Apple Health import completed with ${result.metricsWritten} daily metric rows.`,
         completedAt: sql`(datetime('now'))`,
       });
     });

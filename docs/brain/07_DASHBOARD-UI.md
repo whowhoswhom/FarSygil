@@ -69,7 +69,7 @@ data reality.
 |---|---|---|---|
 | Dashboard weekly distance, time, pace, elevation, cadence, HR, recent run, longest run | real today from Strava archive rows | render fully with real values and charts | none |
 | Dashboard power tile | partially available; depends on real `averageWatts` data | render mockup-style frame; show honest empty body when data is missing | real power values on local activities |
-| Dashboard health cluster | partial | render real latest values where `health_metrics` rows exist; otherwise show `--` | Apple Health importer writes local metric rows |
+| Dashboard health cluster | partial | render real latest values where Apple Health-sourced `health_metrics` rows exist; otherwise show `--` | Apple Health importer writes local metric rows |
 | Dashboard training-load card | deferred | render mockup-style frame with honest empty body | analytics engine computes load rows |
 | Dashboard recovery card | deferred | render mockup-style frame with honest empty body | real health import plus analytics output |
 | Run-detail faux-map | real polyline today | render abstract faux-map backdrop plus real route only | none |
@@ -115,7 +115,7 @@ data reality.
 - Real route now.
 - Imports an extracted Apple Health `exports/export.xml` through the local API.
 - Renders latest local VO2 Max, resting HR, HRV, sleep, and steps values when
-  real `health_metrics` rows exist.
+  real `health_metrics` rows with `source = "AppleHealth"` exist.
 - Missing metrics continue to render as `--`.
 - No fake resting HR, VO2 Max, HRV, sleep, or steps values.
 

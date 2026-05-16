@@ -91,8 +91,9 @@ describe("Apple Health import", () => {
       expect(rawImports).toHaveLength(1);
       expect(rawImports[0]).toMatchObject({
         filename: "export.xml",
-        recordCount: 9,
+        recordCount: 7,
       });
+      expect(rawImports[0]?.notes).toContain("9 matched");
       expect(rawImports[0]?.notes).toContain("7 daily metric rows written");
 
       const logRows = await database
@@ -132,27 +133,45 @@ describe("Apple Health import", () => {
     }
   });
 
-  it("does not overwrite a metric row owned by another source", async () => {
+  it("updates Apple Health-owned rows without overwriting rows owned by another source", async () => {
     const { database, sqlite } = createTestDatabase();
 
     try {
-      await database.insert(testSchema.healthMetrics).values({
-        date: "2026-05-15",
-        metricType: "steps",
-        value: 999,
-        unit: "count",
-        source: "Manual",
-      });
+      await database.insert(testSchema.healthMetrics).values([
+        {
+          date: "2026-05-15",
+          metricType: "steps",
+          value: 999,
+          unit: "count",
+          source: "Manual",
+        },
+        {
+          date: "2026-05-15",
+          metricType: "resting_hr",
+          value: 61,
+          unit: "bpm",
+          source: "AppleHealth",
+        },
+      ]);
 
-      await importAppleHealthExport({
+      const result = await importAppleHealthExport({
         database,
         filePath: readFixturePath("export.xml"),
       });
 
-      const [stepsRow] = await database
+      expect(result).toMatchObject({
+        recordsMatched: 9,
+        metricsWritten: 6,
+      });
+
+      const metricRows = await database
         .select()
         .from(testSchema.healthMetrics)
-        .where(eq(testSchema.healthMetrics.metricType, "steps"));
+        .orderBy(testSchema.healthMetrics.metricType);
+      const stepsRow = metricRows.find((row) => row.metricType === "steps");
+      const restingHrRow = metricRows.find(
+        (row) => row.metricType === "resting_hr",
+      );
 
       expect(stepsRow).toMatchObject({
         date: "2026-05-15",
@@ -161,6 +180,21 @@ describe("Apple Health import", () => {
         unit: "count",
         source: "Manual",
       });
+      expect(restingHrRow).toMatchObject({
+        date: "2026-05-15",
+        metricType: "resting_hr",
+        value: 53,
+        unit: "bpm",
+        source: "AppleHealth",
+      });
+      expect(metricRows).toHaveLength(7);
+
+      const [rawImport] = await database.select().from(testSchema.healthRawImports);
+      expect(rawImport).toMatchObject({
+        recordCount: 6,
+      });
+      expect(rawImport?.notes).toContain("9 matched");
+      expect(rawImport?.notes).toContain("6 daily metric rows written");
     } finally {
       sqlite.close();
     }
