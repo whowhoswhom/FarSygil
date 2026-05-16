@@ -95,6 +95,9 @@ describe("Apple Health import", () => {
       });
       expect(rawImports[0]?.notes).toContain("9 matched");
       expect(rawImports[0]?.notes).toContain("7 daily metric rows written");
+      expect(rawImports[0]?.notes).toContain(
+        "matched range 2026-05-14 to 2026-05-15",
+      );
 
       const logRows = await database
         .select()
@@ -195,6 +198,103 @@ describe("Apple Health import", () => {
       });
       expect(rawImport?.notes).toContain("9 matched");
       expect(rawImport?.notes).toContain("6 daily metric rows written");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("logs a completed import when source ownership blocks every metric write", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.healthMetrics).values([
+        {
+          date: "2026-05-14",
+          metricType: "sleep_hours",
+          value: 8,
+          unit: "hr",
+          source: "Manual",
+        },
+        {
+          date: "2026-05-15",
+          metricType: "active_energy",
+          value: 700,
+          unit: "kcal",
+          source: "Manual",
+        },
+        {
+          date: "2026-05-15",
+          metricType: "hrv",
+          value: 60,
+          unit: "ms",
+          source: "Manual",
+        },
+        {
+          date: "2026-05-15",
+          metricType: "resting_hr",
+          value: 50,
+          unit: "bpm",
+          source: "Manual",
+        },
+        {
+          date: "2026-05-15",
+          metricType: "sleep_hours",
+          value: 6,
+          unit: "hr",
+          source: "Manual",
+        },
+        {
+          date: "2026-05-15",
+          metricType: "steps",
+          value: 10000,
+          unit: "count",
+          source: "Manual",
+        },
+        {
+          date: "2026-05-15",
+          metricType: "vo2_max",
+          value: 45,
+          unit: "mL/kg/min",
+          source: "Manual",
+        },
+      ]);
+
+      const result = await importAppleHealthExport({
+        database,
+        filePath: readFixturePath("export.xml"),
+      });
+
+      expect(result).toMatchObject({
+        recordsMatched: 9,
+        metricsWritten: 0,
+        startDate: "2026-05-14",
+        endDate: "2026-05-15",
+      });
+
+      const metricRows = await database.select().from(testSchema.healthMetrics);
+      expect(metricRows).toHaveLength(7);
+      expect(metricRows.every((row) => row.source === "Manual")).toBe(true);
+
+      const [rawImport] = await database.select().from(testSchema.healthRawImports);
+      expect(rawImport).toMatchObject({
+        recordCount: 0,
+      });
+      expect(rawImport?.notes).toContain("9 matched");
+      expect(rawImport?.notes).toContain("0 daily metric rows written");
+      expect(rawImport?.notes).toContain(
+        "matched range 2026-05-14 to 2026-05-15",
+      );
+
+      const logRows = await database
+        .select()
+        .from(testSchema.dataImportLogs)
+        .orderBy(testSchema.dataImportLogs.id);
+      expect(logRows).toHaveLength(2);
+      expect(logRows[1]).toMatchObject({
+        eventType: "sync_complete",
+        message: "Apple Health import completed with 0 daily metric rows.",
+        errorsCount: 0,
+      });
     } finally {
       sqlite.close();
     }

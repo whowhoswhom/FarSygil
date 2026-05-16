@@ -458,7 +458,7 @@ function buildRawImportNote(result: AppleHealthImportResult): string {
       ? `${result.startDate} to ${result.endDate}`
       : "no matched dates";
 
-  return `${result.recordsScanned} records scanned, ${result.recordsMatched} matched, ${result.metricsWritten} daily metric rows written, range ${range}.`;
+  return `${result.recordsScanned} records scanned, ${result.recordsMatched} matched, ${result.metricsWritten} daily metric rows written, matched range ${range}.`;
 }
 
 function normalizeUnit(unit: string | undefined): string | null {

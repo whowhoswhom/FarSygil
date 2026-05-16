@@ -78,6 +78,13 @@ The current import path:
    rows actually inserted or updated, while the notes field records scanned and
    matched XML record counts.
 
+Import audit terms:
+- `scanned`: every `<Record>` element opened by the streaming parser
+- `matched`: records mapped to one of the importer-supported metric types
+- `written`: daily metric rows actually inserted or updated in `health_metrics`
+- `matched range`: min/max dates from matched XML records, not necessarily the
+  written-row date range when source ownership blocks writes
+
 ---
 
 ## Storage rules
