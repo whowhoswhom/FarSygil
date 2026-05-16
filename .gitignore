@@ -34,6 +34,9 @@ dist/
 # Testing coverage
 coverage/
 
+# Local runtime logs
+*.log
+
 # TypeScript build info
 *.tsbuildinfo
 next-env.d.ts

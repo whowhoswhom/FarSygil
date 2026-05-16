@@ -47,12 +47,14 @@ Delivered or active in the reboot program:
 - [x] settings route (`/settings`)
 - [x] health scaffold route (`/health`)
 - [x] training-load scaffold route (`/training-load`)
-- [ ] Apple Health importer
-- [ ] real health metric cards and trends
+- [x] first Apple Health XML importer for extracted `exports/export.xml`
+- [x] latest Apple Health metric cards on `/health`
+- [ ] direct Apple Health ZIP extraction
+- [ ] Apple Health trend charts
 
 Notes:
 - Health and training-load routes are real shell pages now, but they remain
-  honest empty states until their later data programs land.
+  honest where source data or computed analytics are missing.
 - Phase 2 no longer uses the old green-only dashboard palette. The active
   contract is now the visual reboot contract in `docs/design/DESIGN_CONTRACT.md`.
 
