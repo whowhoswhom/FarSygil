@@ -1,6 +1,8 @@
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { open, stat } from "node:fs/promises";
 import path from "node:path";
+import type { Readable } from "node:stream";
+import { createInflateRaw } from "node:zlib";
 
 import { sql } from "drizzle-orm";
 import { SaxesParser, type SaxesTagPlain } from "saxes";
@@ -16,6 +18,13 @@ import type { FarSygilDatabase } from "@/server/strava/oauth";
 export const APPLE_HEALTH_SOURCE = "AppleHealth";
 
 const HEALTH_METRIC_INSERT_BATCH_SIZE = 100;
+const APPLE_HEALTH_ZIP_XML_ENTRY = "apple_health_export/export.xml";
+const ZIP_EOCD_SIGNATURE = 0x06054b50;
+const ZIP_CENTRAL_DIRECTORY_SIGNATURE = 0x02014b50;
+const ZIP_LOCAL_FILE_SIGNATURE = 0x04034b50;
+const ZIP_MAX_EOCD_SEARCH_BYTES = 65_557;
+const ZIP_COMPRESSION_STORE = 0;
+const ZIP_COMPRESSION_DEFLATE = 8;
 
 type AggregateMode = "average" | "sum";
 
@@ -34,6 +43,12 @@ interface MetricAccumulator {
   count: number;
 }
 
+interface ZipEntry {
+  compressionMethod: number;
+  compressedSize: number;
+  localHeaderOffset: number;
+}
+
 export interface AppleHealthImportResult {
   fileName: string;
   recordsScanned: number;
@@ -45,6 +60,7 @@ export interface AppleHealthImportResult {
 
 export type AppleHealthImportErrorCode =
   | "file_not_found"
+  | "invalid_zip"
   | "invalid_xml"
   | "storage_failed";
 
@@ -222,6 +238,21 @@ async function parseAppleHealthExport(filePath: string): Promise<{
   let recordsMatched = 0;
   let startDate: string | null = null;
   let endDate: string | null = null;
+  let readStream: Readable;
+
+  try {
+    readStream = await openAppleHealthXmlStream(filePath);
+  } catch (error) {
+    if (error instanceof AppleHealthImportError) {
+      throw error;
+    }
+
+    throw new AppleHealthImportError(
+      "Apple Health export could not be opened",
+      "file_not_found",
+      error,
+    );
+  }
 
   parser.on("opentag", (tag: SaxesTagPlain) => {
     if (tag.name !== "Record") {
@@ -242,7 +273,6 @@ async function parseAppleHealthExport(filePath: string): Promise<{
   });
 
   await new Promise<void>((resolve, reject) => {
-    const readStream = createReadStream(filePath, { encoding: "utf8" });
     let settled = false;
 
     const rejectOnce = (error: unknown) => {
@@ -278,6 +308,10 @@ async function parseAppleHealthExport(filePath: string): Promise<{
       }
     });
   }).catch((error) => {
+    if (error instanceof AppleHealthImportError) {
+      throw error;
+    }
+
     throw new AppleHealthImportError(
       "Apple Health export XML could not be parsed",
       "invalid_xml",
@@ -308,6 +342,185 @@ async function parseAppleHealthExport(filePath: string): Promise<{
     endDate,
     metrics,
   };
+}
+
+async function openAppleHealthXmlStream(filePath: string): Promise<Readable> {
+  if (!filePath.toLowerCase().endsWith(".zip")) {
+    return createReadStream(filePath, { encoding: "utf8" });
+  }
+
+  return openAppleHealthZipXmlStream(filePath);
+}
+
+async function openAppleHealthZipXmlStream(filePath: string): Promise<Readable> {
+  const entry = await findAppleHealthZipXmlEntry(filePath);
+  const localHeader = await readBuffer(filePath, entry.localHeaderOffset, 30);
+
+  if (localHeader.readUInt32LE(0) !== ZIP_LOCAL_FILE_SIGNATURE) {
+    throw new AppleHealthImportError(
+      "Apple Health ZIP local file header could not be read",
+      "invalid_zip",
+    );
+  }
+
+  const fileNameLength = localHeader.readUInt16LE(26);
+  const extraFieldLength = localHeader.readUInt16LE(28);
+  const dataStart = entry.localHeaderOffset + 30 + fileNameLength + extraFieldLength;
+  const dataEnd = dataStart + entry.compressedSize - 1;
+  const compressedStream = createReadStream(filePath, {
+    start: dataStart,
+    end: dataEnd,
+  });
+
+  if (entry.compressionMethod === ZIP_COMPRESSION_STORE) {
+    compressedStream.setEncoding("utf8");
+    return compressedStream;
+  }
+
+  if (entry.compressionMethod === ZIP_COMPRESSION_DEFLATE) {
+    const inflateStream = createInflateRaw();
+    compressedStream.on("error", (error) => {
+      inflateStream.destroy(error);
+    });
+    inflateStream.setEncoding("utf8");
+    return compressedStream.pipe(inflateStream);
+  }
+
+  throw new AppleHealthImportError(
+    `Apple Health ZIP entry uses unsupported compression method ${entry.compressionMethod}`,
+    "invalid_zip",
+  );
+}
+
+async function findAppleHealthZipXmlEntry(filePath: string): Promise<ZipEntry> {
+  const fileStats = await stat(filePath);
+  const tailLength = Math.min(fileStats.size, ZIP_MAX_EOCD_SEARCH_BYTES);
+  const tail = await readBuffer(filePath, fileStats.size - tailLength, tailLength);
+  let eocdOffset = -1;
+
+  for (let index = tail.length - 22; index >= 0; index -= 1) {
+    if (tail.readUInt32LE(index) === ZIP_EOCD_SIGNATURE) {
+      eocdOffset = index;
+      break;
+    }
+  }
+
+  if (eocdOffset === -1) {
+    throw new AppleHealthImportError(
+      "Apple Health ZIP end-of-central-directory record was not found",
+      "invalid_zip",
+    );
+  }
+
+  const centralDirectorySize = tail.readUInt32LE(eocdOffset + 12);
+  const centralDirectoryOffset = tail.readUInt32LE(eocdOffset + 16);
+
+  if (
+    centralDirectorySize === 0xffffffff ||
+    centralDirectoryOffset === 0xffffffff
+  ) {
+    throw new AppleHealthImportError(
+      "Apple Health ZIP64 archives are not supported by this importer",
+      "invalid_zip",
+    );
+  }
+
+  const centralDirectory = await readBuffer(
+    filePath,
+    centralDirectoryOffset,
+    centralDirectorySize,
+  );
+  let offset = 0;
+
+  while (offset < centralDirectory.length) {
+    if (centralDirectory.readUInt32LE(offset) !== ZIP_CENTRAL_DIRECTORY_SIGNATURE) {
+      throw new AppleHealthImportError(
+        "Apple Health ZIP central directory is malformed",
+        "invalid_zip",
+      );
+    }
+
+    const generalPurposeBitFlag = centralDirectory.readUInt16LE(offset + 8);
+    const compressionMethod = centralDirectory.readUInt16LE(offset + 10);
+    const compressedSize = centralDirectory.readUInt32LE(offset + 20);
+    const fileNameLength = centralDirectory.readUInt16LE(offset + 28);
+    const extraFieldLength = centralDirectory.readUInt16LE(offset + 30);
+    const fileCommentLength = centralDirectory.readUInt16LE(offset + 32);
+    const localHeaderOffset = centralDirectory.readUInt32LE(offset + 42);
+    const fileNameStart = offset + 46;
+    const fileNameEnd = fileNameStart + fileNameLength;
+    const entryName = centralDirectory
+      .subarray(fileNameStart, fileNameEnd)
+      .toString("utf8")
+      .replace(/\\/g, "/");
+
+    if (!isSafeZipEntryName(entryName)) {
+      throw new AppleHealthImportError(
+        "Apple Health ZIP contains an unsafe entry path",
+        "invalid_zip",
+      );
+    }
+
+    if (entryName === APPLE_HEALTH_ZIP_XML_ENTRY) {
+      if ((generalPurposeBitFlag & 0x1) !== 0) {
+        throw new AppleHealthImportError(
+          "Apple Health ZIP export.xml entry is encrypted",
+          "invalid_zip",
+        );
+      }
+
+      if (
+        compressedSize === 0xffffffff ||
+        localHeaderOffset === 0xffffffff
+      ) {
+        throw new AppleHealthImportError(
+          "Apple Health ZIP64 export.xml entries are not supported by this importer",
+          "invalid_zip",
+        );
+      }
+
+      return {
+        compressionMethod,
+        compressedSize,
+        localHeaderOffset,
+      };
+    }
+
+    offset = fileNameEnd + extraFieldLength + fileCommentLength;
+  }
+
+  throw new AppleHealthImportError(
+    `Apple Health ZIP did not contain ${APPLE_HEALTH_ZIP_XML_ENTRY}`,
+    "invalid_zip",
+  );
+}
+
+async function readBuffer(
+  filePath: string,
+  position: number,
+  length: number,
+): Promise<Buffer> {
+  const fileHandle = await open(filePath, "r");
+
+  try {
+    const buffer = Buffer.alloc(length);
+    await fileHandle.read(buffer, 0, length, position);
+    return buffer;
+  } finally {
+    await fileHandle.close();
+  }
+}
+
+function isSafeZipEntryName(entryName: string): boolean {
+  if (
+    entryName.length === 0 ||
+    entryName.startsWith("/") ||
+    /^[A-Za-z]:/.test(entryName)
+  ) {
+    return false;
+  }
+
+  return entryName.split("/").every((segment) => segment !== "..");
 }
 
 function readMetricContribution(attributes: Record<string, string>):

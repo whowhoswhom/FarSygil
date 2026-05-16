@@ -9,8 +9,10 @@
 **Phase 2 - first importer slice implemented.**
 
 Current behavior:
-- `POST /api/apple-health/import` imports an extracted
-  `apple_health_data/apple_health_export/export.xml` file.
+- `POST /api/apple-health/import` imports either:
+  - `apple_health_data/apple_health_export/export.xml`
+  - `apple_health_data/apple_health_export.zip`, reading only
+    `apple_health_export/export.xml` from inside the ZIP
 - The parser uses streaming XML parsing via `saxes`, so it does not load the
   full export into memory.
 - `/health` exposes the local import control and renders latest real metric
@@ -19,9 +21,7 @@ Current behavior:
   `health_raw_imports`, and import events to `data_import_logs`.
 
 Still deferred:
-- direct ZIP extraction from `apple_health_export.zip`
 - advanced duplicate/source reconciliation
-- historical trend charts beyond latest metric cards
 
 ---
 
@@ -32,14 +32,17 @@ Apple Health data is exported from the iOS Health app:
 1. Open **Health** app on iPhone.
 2. Tap profile icon -> **Export All Health Data**.
 3. Save the ZIP file (`apple_health_export.zip`) and transfer it to the computer that runs FarSygil.
-4. Extract `export.xml` from the ZIP.
-5. Place the extracted folder at `apple_health_data/apple_health_export/` so
+4. Place the ZIP at `apple_health_data/apple_health_export.zip`, or extract it
+   and place the extracted folder at `apple_health_data/apple_health_export/` so
    `export.xml` resolves at
    `apple_health_data/apple_health_export/export.xml` (this directory is
    excluded from Git).
-6. Use `/health` to import the file into the local database.
+5. Use `/health` to import either the ZIP or the extracted XML into the local
+   database.
 
-The ZIP contains `export.xml` - a large XML file with all health records.
+The ZIP contains `apple_health_export/export.xml` - a large XML file with all
+health records. FarSygil reads only that entry; it does not extract routes,
+ECGs, or any other ZIP contents in this slice.
 
 ---
 
@@ -66,18 +69,21 @@ because a daily average across all contexts is not a useful health signal.
 
 The current import path:
 
-1. Accepts the extracted `apple_health_data/apple_health_export/export.xml`
-   path through the local API.
-2. Parses the XML using a streaming parser (file can be several GB).
-3. Filter records to relevant types only.
-4. Aggregate daily values where appropriate:
+1. Accepts either the extracted
+   `apple_health_data/apple_health_export/export.xml` path or
+   `apple_health_data/apple_health_export.zip` through the local API.
+2. For ZIP imports, validates central-directory entry paths and streams only
+   `apple_health_export/export.xml`; unsafe ZIP paths are rejected.
+3. Parses the XML using a streaming parser (file can be several GB).
+4. Filter records to relevant types only.
+5. Aggregate daily values where appropriate:
    - sum steps and active energy
    - sum asleep sleep duration by the record `startDate` day
    - average resting HR, HRV, body mass, and VO2 Max
-5. Upsert into `health_metrics` (unique constraint on `date` + `metric_type`).
+6. Upsert into `health_metrics` (unique constraint on `date` + `metric_type`).
    Existing rows are updated only when their source is `AppleHealth`; rows
    owned by another source are preserved for future reconciliation work.
-6. Log the import in `health_raw_imports` and `data_import_logs`. The
+7. Log the import in `health_raw_imports` and `data_import_logs`. The
    `health_raw_imports.record_count` value stores the count of daily metric
    rows actually inserted or updated, while the notes field records scanned and
    matched XML record counts.
