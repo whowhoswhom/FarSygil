@@ -51,7 +51,8 @@ disconnected onboarding surface otherwise.
 
 - Desktop left rail
 - Mobile bottom navigation
-- Top status strip with local Strava state and last-sync context
+- Top status strip with local Strava state, Apple Health import state, and
+  last-sync context
 - Specialized dashboard cards and run-detail tiles
 - Local faux-map route treatment built from real polyline data only
 
@@ -76,7 +77,7 @@ data reality.
 | Run-detail splits table | real only after detail sync populates split rows | render premium frame; empty body until rows exist | detail sync writes `activity_splits` |
 | Run-detail HR / cadence / pace / elevation tiles | partial today; strongest after detail sync | render only when real series exists, otherwise honest empty body | detail sync writes usable stream rows or split fallback rows |
 | Calories cards or trends | forbidden | never render | none |
-| Apple Health trends such as VO2 Max, sleep, HRV, steps | deferred | render honest empty body on shell routes until importer lands | Apple Health importer and daily aggregation |
+| Apple Health latest values such as VO2 Max, sleep, HRV, steps | real today when imported rows exist | render latest local values on `/health` and the dashboard health cluster; missing metrics remain `--` | Apple Health importer writes local metric rows |
 | Derived insight banners | constrained | render only when deterministic, factual, and labeled as derived | route-specific deterministic rule |
 | Fake city labels or geocoded map chips | forbidden | never render | none |
 
@@ -88,7 +89,8 @@ data reality.
 
 - Uses the reboot shell and multicolor card system.
 - Running renders from real local Strava-derived aggregates.
-- Health and Training Load keep honest empty bodies for now.
+- Health renders latest local Apple Health values where imported rows exist.
+- Training Load keeps an honest empty body for now.
 - Time-range and other future controls may exist visually before they become
   data-driven, but they must not imply unavailable data exists.
 

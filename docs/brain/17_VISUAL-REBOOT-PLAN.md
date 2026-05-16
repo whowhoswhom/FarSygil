@@ -26,8 +26,8 @@ It replaced the earlier dashboard-only rollout plan once the project moved to:
 - Run-detail maps use a local faux-map only
 - Mockup frame, honest empty body
 - Detail sync comes before the visual route rebuilds
-- Apple Health import and training-load analytics are separate data programs
-  after the visual reboot
+- Apple Health import is a completed follow-on data program; training-load
+  analytics remains separate and deferred
 
 ---
 
@@ -46,7 +46,7 @@ No fake:
 - calories
 - recovery scores
 - ATL / CTL / TSB
-- Apple Health values
+- Apple Health values without imported local rows
 - geocoded place labels
 - tile-based maps
 
@@ -81,7 +81,8 @@ No fake:
 
 - rebuild `/dashboard` to the new hierarchy
 - keep Running real
-- keep Health and Load honestly empty
+- show imported Apple Health latest values when local rows exist
+- keep Load honestly empty
 
 ### Wave 4 - runs and run-detail rebuild
 
@@ -118,6 +119,7 @@ Started after the reboot:
 - first Apple Health XML importer for extracted
   `apple_health_data/apple_health_export/export.xml`
 - latest real Apple Health metric population on `/health`
+- latest real Apple Health metric population in the dashboard health cluster
 
 Still deferred after the reboot:
 - direct Apple Health ZIP extraction

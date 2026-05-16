@@ -74,6 +74,7 @@ Relevant files:
 - [x] Detail-sync route behavior
 - [x] Malformed stream degradation
 - [x] Apple Health XML import aggregation and route behavior
+- [x] Apple Health latest-metric queries and shell-status summaries
 
 Relevant files:
 - `tests/dashboard/strava.test.ts`
@@ -84,6 +85,7 @@ Relevant files:
 - `tests/strava/sync-details-route.test.ts`
 - `tests/apple-health/import.test.ts`
 - `tests/apple-health/import-route.test.ts`
+- `tests/apple-health/queries.test.ts`
 
 Current Phase 2 assertions cover:
 - dashboard weekly running rollups, pace/cadence/HR weighting, recent-run and
@@ -100,6 +102,8 @@ Current Phase 2 assertions cover:
 - Apple Health extracted XML imports for daily steps, resting HR, HRV, VO2 Max,
   active energy, and sleep-hours rows, including upsert, source ownership,
   missing-file handling, invalid-XML handling, and error logging
+- Apple Health latest-metric queries, including sparse metrics such as VO2 Max,
+  and import summaries used by shell status
 
 ### Phase 3 / future analytics
 

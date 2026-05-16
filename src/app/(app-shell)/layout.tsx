@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { db } from "@/db/client";
+import { getAppleHealthImportSummary } from "@/server/apple-health/queries";
 import { getDashboardHeaderSnapshot } from "@/server/dashboard/strava";
 
 export const runtime = "nodejs";
@@ -12,12 +13,20 @@ export default async function AppShellLayout({
 }: {
   children: ReactNode;
 }) {
-  const shellSnapshot = await getDashboardHeaderSnapshot(db);
+  const [shellSnapshot, healthSummary] = await Promise.all([
+    getDashboardHeaderSnapshot(db),
+    getAppleHealthImportSummary(db),
+  ]);
+  const hasAppleHealthMetrics = healthSummary.metricRows > 0;
 
   return (
     <AppShell
       stravaLabel={shellSnapshot.statusLabel}
       stravaState={shellSnapshot.statusState}
+      healthLabel={
+        hasAppleHealthMetrics ? "Apple Health imported" : "Health import pending"
+      }
+      healthState={hasAppleHealthMetrics ? "connected" : "unavailable"}
       lastSyncedLabel={formatRelativeLastSynced(shellSnapshot.lastSyncedAt)}
     >
       {children}
