@@ -5,12 +5,16 @@ import { LastSyncedBadge, StatusBadge } from "@/components/dashboard";
 interface TopStatusStripProps {
   stravaLabel: string;
   stravaState: "connected" | "disconnected" | "pending" | "unavailable";
+  healthLabel: string;
+  healthState: "connected" | "disconnected" | "pending" | "unavailable";
   lastSyncedLabel: string | null;
 }
 
 export function TopStatusStrip({
   stravaLabel,
   stravaState,
+  healthLabel,
+  healthState,
   lastSyncedLabel,
 }: TopStatusStripProps) {
   return (
@@ -18,7 +22,7 @@ export function TopStatusStrip({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <StatusBadge label={stravaLabel} state={stravaState} />
-          <StatusBadge label="Health import pending" state="unavailable" />
+          <StatusBadge label={healthLabel} state={healthState} />
           <LastSyncedBadge label="Last synced" value={lastSyncedLabel} />
         </div>
         <div className="flex flex-wrap items-center gap-3">

@@ -18,6 +18,8 @@ const MOBILE_ITEMS = DESKTOP_ITEMS.filter((item) => item.href !== "/settings");
 interface AppShellProps {
   stravaLabel: string;
   stravaState: "connected" | "disconnected" | "pending" | "unavailable";
+  healthLabel: string;
+  healthState: "connected" | "disconnected" | "pending" | "unavailable";
   lastSyncedLabel: string | null;
   children: ReactNode;
 }
@@ -25,6 +27,8 @@ interface AppShellProps {
 export function AppShell({
   stravaLabel,
   stravaState,
+  healthLabel,
+  healthState,
   lastSyncedLabel,
   children,
 }: AppShellProps) {
@@ -36,6 +40,8 @@ export function AppShell({
           <TopStatusStrip
             stravaLabel={stravaLabel}
             stravaState={stravaState}
+            healthLabel={healthLabel}
+            healthState={healthState}
             lastSyncedLabel={lastSyncedLabel}
           />
           <div className="app-shell-content">{children}</div>

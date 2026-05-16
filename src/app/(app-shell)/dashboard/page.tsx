@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 
 import { db } from "@/db/client";
 import {
+  buildAppleHealthDashboardMetrics,
+  getAppleHealthDashboardMetricTypes,
+} from "@/lib/apple-health/display";
+import {
   formatDistanceValueMiles,
   formatDurationCompact,
   formatElevationFeetValue,
@@ -19,6 +23,10 @@ import {
   DashboardWeeklySummaryCard,
 } from "@/components/visual-reboot";
 import {
+  getAppleHealthImportSummary,
+  getLatestAppleHealthMetrics,
+} from "@/server/apple-health/queries";
+import {
   getDashboardRunningSnapshot,
   type DashboardRunSnapshot,
 } from "@/server/dashboard/strava";
@@ -33,7 +41,11 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const runningSnapshot = await getDashboardRunningSnapshot(db);
+  const [runningSnapshot, latestHealthMetrics, healthSummary] = await Promise.all([
+    getDashboardRunningSnapshot(db),
+    getLatestAppleHealthMetrics(db, getAppleHealthDashboardMetricTypes()),
+    getAppleHealthImportSummary(db),
+  ]);
   const recentRunMetric = buildRunMetric(runningSnapshot.recentRun);
   const longestRunMetric = buildRunMetric(runningSnapshot.longestRun);
 
@@ -76,12 +88,14 @@ export default async function DashboardPage() {
             value: formatPaceFromSecondsPerMile(
               runningSnapshot.averagePaceSecondsPerMile,
             ),
-            unit: runningSnapshot.averagePaceSecondsPerMile != null ? "/mi" : undefined,
+            unit:
+              runningSnapshot.averagePaceSecondsPerMile != null ? "/mi" : undefined,
             tone: "distance",
             icon: "pace",
             chartType: "line",
             chartValues: runningSnapshot.paceSeriesSecondsPerMile,
-            emptyHint: "Requires at least one real run with distance and moving time in the current week.",
+            emptyHint:
+              "Requires at least one real run with distance and moving time in the current week.",
           },
           {
             label: "Elevation",
@@ -98,15 +112,21 @@ export default async function DashboardPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(340px,0.85fr)]">
         <DashboardRecentRunCard
           title="Recent Run"
-          href={runningSnapshot.recentRun ? `/runs/${runningSnapshot.recentRun.id}` : undefined}
+          href={
+            runningSnapshot.recentRun
+              ? `/runs/${runningSnapshot.recentRun.id}`
+              : undefined
+          }
           sportLabel={resolveRunSurfaceLabel(runningSnapshot.recentRun?.sportType)}
           value={recentRunMetric.value}
           unit={recentRunMetric.unit}
-          detail={formatRunDayDate(
-            runningSnapshot.recentRun?.startDateLocal ??
-              runningSnapshot.recentRun?.startDate ??
-              null,
-          ) ?? undefined}
+          detail={
+            formatRunDayDate(
+              runningSnapshot.recentRun?.startDateLocal ??
+                runningSnapshot.recentRun?.startDate ??
+                null,
+            ) ?? undefined
+          }
           source="Strava"
           hint={recentRunMetric.hint}
         />
@@ -119,7 +139,11 @@ export default async function DashboardPage() {
             source="Strava"
             value={longestRunMetric.value}
             unit={longestRunMetric.unit}
-            href={runningSnapshot.longestRun ? `/runs/${runningSnapshot.longestRun.id}` : undefined}
+            href={
+              runningSnapshot.longestRun
+                ? `/runs/${runningSnapshot.longestRun.id}`
+                : undefined
+            }
             chartValues={runningSnapshot.distanceSeriesMiles}
           />
         </div>
@@ -155,14 +179,14 @@ export default async function DashboardPage() {
         <DashboardHealthClusterCard
           title="Health & Wellness"
           sourceLabel="Apple Health"
-          metrics={[
-            { label: "VO₂ Max", tone: "time", icon: "spark" },
-            { label: "Resting HR", tone: "cardio", icon: "heartrate" },
-            { label: "HRV", tone: "recovery", icon: "spark" },
-            { label: "Sleep", tone: "recovery", icon: "recovery" },
-            { label: "Steps", tone: "distance", icon: "runs" },
-          ]}
-          hint="Data not available until the Apple Health importer writes real physiology rows into local SQLite."
+          metrics={buildAppleHealthDashboardMetrics(latestHealthMetrics)}
+          hint={
+            healthSummary.metricRows > 0
+              ? `Latest local Apple Health metric date: ${
+                  healthSummary.latestMetricDate ?? "--"
+                }.`
+              : "Data not available until the Apple Health importer writes real physiology rows into local SQLite."
+          }
         />
       </div>
 

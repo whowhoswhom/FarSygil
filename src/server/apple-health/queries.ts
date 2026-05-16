@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 import {
   dataImportLogs,
@@ -49,9 +49,13 @@ export async function getLatestAppleHealthMetrics(
       source: healthMetrics.source,
     })
     .from(healthMetrics)
-    .where(eq(healthMetrics.source, "AppleHealth"))
-    .orderBy(desc(healthMetrics.date), desc(healthMetrics.id))
-    .limit(500);
+    .where(
+      and(
+        eq(healthMetrics.source, "AppleHealth"),
+        inArray(healthMetrics.metricType, metricTypes),
+      ),
+    )
+    .orderBy(desc(healthMetrics.date), desc(healthMetrics.id));
   const requestedTypes = new Set(metricTypes);
   const seenTypes = new Set<string>();
   const snapshots: AppleHealthMetricSnapshot[] = [];
