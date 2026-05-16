@@ -15,6 +15,16 @@ export interface AppleHealthMetricSnapshot {
   source: string | null;
 }
 
+export interface AppleHealthMetricTrendPoint {
+  date: string;
+  value: number;
+}
+
+export interface AppleHealthMetricTrendSeries {
+  metricType: string;
+  points: AppleHealthMetricTrendPoint[];
+}
+
 export interface AppleHealthImportSummary {
   metricRows: number;
   latestMetricDate: string | null;
@@ -77,6 +87,71 @@ export async function getLatestAppleHealthMetrics(
     (left, right) =>
       metricTypes.indexOf(left.metricType) - metricTypes.indexOf(right.metricType),
   );
+}
+
+export async function getAppleHealthMetricTrendSeries(
+  database: FarSygilDatabase,
+  metricTypes: string[],
+  pointsPerMetric = 30,
+): Promise<AppleHealthMetricTrendSeries[]> {
+  const safePointLimit = Math.max(0, Math.floor(pointsPerMetric));
+
+  if (metricTypes.length === 0 || safePointLimit === 0) {
+    return [];
+  }
+
+  const rows = await database
+    .select({
+      date: healthMetrics.date,
+      metricType: healthMetrics.metricType,
+      value: healthMetrics.value,
+    })
+    .from(healthMetrics)
+    .where(
+      and(
+        eq(healthMetrics.source, "AppleHealth"),
+        inArray(healthMetrics.metricType, metricTypes),
+      ),
+    )
+    .orderBy(desc(healthMetrics.date), desc(healthMetrics.id));
+  const requestedTypes = new Set(metricTypes);
+  const pointsByType = new Map<string, AppleHealthMetricTrendPoint[]>();
+  const seenDatesByType = new Map<string, Set<string>>();
+
+  for (const row of rows) {
+    if (!requestedTypes.has(row.metricType)) {
+      continue;
+    }
+
+    if (typeof row.value !== "number" || !Number.isFinite(row.value)) {
+      continue;
+    }
+
+    const points = pointsByType.get(row.metricType) ?? [];
+
+    if (points.length >= safePointLimit) {
+      continue;
+    }
+
+    const seenDates = seenDatesByType.get(row.metricType) ?? new Set<string>();
+
+    if (seenDates.has(row.date)) {
+      continue;
+    }
+
+    seenDates.add(row.date);
+    seenDatesByType.set(row.metricType, seenDates);
+    points.push({
+      date: row.date,
+      value: row.value,
+    });
+    pointsByType.set(row.metricType, points);
+  }
+
+  return metricTypes.map((metricType) => ({
+    metricType,
+    points: (pointsByType.get(metricType) ?? []).reverse(),
+  }));
 }
 
 export async function getAppleHealthImportSummary(

@@ -27,9 +27,9 @@ Phase 2 is now the visual reboot + detail-sync program:
 - `/settings`, `/health`, and `/training-load` now exist as real shell routes
 - `/health` can import an extracted Apple Health `export.xml` from
   `apple_health_data/apple_health_export/`
-  and show latest local daily metrics once rows exist
-- `/dashboard` shows latest local Apple Health values in the Health & Wellness
-  cluster when imported rows exist
+  and show latest local daily metrics and trend sparklines once rows exist
+- `/dashboard` shows latest local Apple Health values and trend sparklines in
+  the Health & Wellness cluster when imported rows exist
 - Training Load still remains an honest empty state until its analytics system
   lands
 

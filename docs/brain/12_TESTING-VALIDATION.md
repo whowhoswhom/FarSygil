@@ -74,7 +74,7 @@ Relevant files:
 - [x] Detail-sync route behavior
 - [x] Malformed stream degradation
 - [x] Apple Health XML import aggregation and route behavior
-- [x] Apple Health latest-metric queries and shell-status summaries
+- [x] Apple Health latest-metric queries, trend queries, and shell-status summaries
 
 Relevant files:
 - `tests/dashboard/strava.test.ts`
@@ -103,10 +103,11 @@ Current Phase 2 assertions cover:
 - Apple Health extracted XML imports for daily steps, resting HR, HRV, VO2 Max,
   active energy, and sleep-hours rows, including upsert, source ownership,
   missing-file handling, invalid-XML handling, and error logging
-- Apple Health latest-metric queries, including sparse metrics such as VO2 Max,
-  and import summaries used by shell status
+- Apple Health latest-metric and trend queries, including sparse metrics such as
+  VO2 Max, bounded latest-point series, and import summaries used by shell status
 - Apple Health dashboard display helpers, including the shared metric order,
-  `VO₂ Max` label, and no unit suffix beside inline missing values
+  `VO₂ Max` label, no unit suffix beside inline missing values, and chart values
+  only when at least two real trend points exist
 
 ### Phase 3 / future analytics
 
