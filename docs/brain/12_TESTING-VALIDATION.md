@@ -85,6 +85,7 @@ Relevant files:
 - `tests/strava/sync-details-route.test.ts`
 - `tests/apple-health/import.test.ts`
 - `tests/apple-health/import-route.test.ts`
+- `tests/apple-health/display.test.ts`
 - `tests/apple-health/queries.test.ts`
 
 Current Phase 2 assertions cover:
@@ -104,6 +105,8 @@ Current Phase 2 assertions cover:
   missing-file handling, invalid-XML handling, and error logging
 - Apple Health latest-metric queries, including sparse metrics such as VO2 Max,
   and import summaries used by shell status
+- Apple Health dashboard display helpers, including the shared metric order,
+  `VO₂ Max` label, and no unit suffix beside inline missing values
 
 ### Phase 3 / future analytics
 

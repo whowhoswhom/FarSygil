@@ -14,7 +14,7 @@ export const APPLE_HEALTH_DASHBOARD_METRICS: AppleHealthDisplayMetricDefinition[
   [
     {
       metricType: "vo2_max",
-      label: "VO2 Max",
+      label: "VO₂ Max",
       tone: "time",
       icon: "spark",
       digits: 1,
@@ -68,15 +68,16 @@ export function buildAppleHealthDashboardMetrics(
 
   return APPLE_HEALTH_DASHBOARD_METRICS.map((definition) => {
     const metric = latestMetricsByType.get(definition.metricType);
+    const value = metric
+      ? formatAppleHealthMetricValue(metric, definition.digits)
+      : undefined;
 
     return {
       label: definition.label,
       tone: definition.tone,
       icon: definition.icon,
-      value: metric
-        ? formatAppleHealthMetricValue(metric, definition.digits)
-        : undefined,
-      unit: metric?.unit ?? undefined,
+      value,
+      unit: value && value !== "--" ? metric?.unit ?? undefined : undefined,
     };
   });
 }
