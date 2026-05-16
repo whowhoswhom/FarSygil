@@ -24,6 +24,7 @@ import {
 } from "@/components/visual-reboot";
 import {
   getAppleHealthImportSummary,
+  getAppleHealthMetricTrendSeries,
   getLatestAppleHealthMetrics,
 } from "@/server/apple-health/queries";
 import {
@@ -41,9 +42,16 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const [runningSnapshot, latestHealthMetrics, healthSummary] = await Promise.all([
+  const healthMetricTypes = getAppleHealthDashboardMetricTypes();
+  const [
+    runningSnapshot,
+    latestHealthMetrics,
+    healthTrendSeries,
+    healthSummary,
+  ] = await Promise.all([
     getDashboardRunningSnapshot(db),
-    getLatestAppleHealthMetrics(db, getAppleHealthDashboardMetricTypes()),
+    getLatestAppleHealthMetrics(db, healthMetricTypes),
+    getAppleHealthMetricTrendSeries(db, healthMetricTypes),
     getAppleHealthImportSummary(db),
   ]);
   const recentRunMetric = buildRunMetric(runningSnapshot.recentRun);
@@ -179,7 +187,10 @@ export default async function DashboardPage() {
         <DashboardHealthClusterCard
           title="Health & Wellness"
           sourceLabel="Apple Health"
-          metrics={buildAppleHealthDashboardMetrics(latestHealthMetrics)}
+          metrics={buildAppleHealthDashboardMetrics(
+            latestHealthMetrics,
+            healthTrendSeries,
+          )}
           hint={
             healthSummary.metricRows > 0
               ? `Latest local Apple Health metric date: ${

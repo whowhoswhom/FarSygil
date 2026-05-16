@@ -51,8 +51,8 @@ Delivered or active in the reboot program:
   `apple_health_data/apple_health_export/export.xml`
 - [x] latest Apple Health metric cards on `/health`
 - [x] latest Apple Health values in the dashboard health cluster
+- [x] Apple Health trend charts from imported local metric rows
 - [ ] direct Apple Health ZIP extraction
-- [ ] Apple Health trend charts
 
 Notes:
 - Health and training-load routes are real shell pages now, but they remain

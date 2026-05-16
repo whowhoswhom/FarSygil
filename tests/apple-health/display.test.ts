@@ -39,4 +39,56 @@ describe("Apple Health display helpers", () => {
       unit: undefined,
     });
   });
+
+  it("attaches chart values only when a metric has at least two trend points", () => {
+    const metrics = buildAppleHealthDashboardMetrics(
+      [
+        {
+          date: "2026-05-16",
+          metricType: "resting_hr",
+          value: 53,
+          unit: "bpm",
+          source: "AppleHealth",
+        },
+        {
+          date: "2026-05-16",
+          metricType: "hrv",
+          value: 68,
+          unit: "ms",
+          source: "AppleHealth",
+        },
+      ],
+      [
+        {
+          metricType: "resting_hr",
+          points: [
+            {
+              date: "2026-05-15",
+              value: 55,
+            },
+            {
+              date: "2026-05-16",
+              value: 53,
+            },
+          ],
+        },
+        {
+          metricType: "hrv",
+          points: [
+            {
+              date: "2026-05-16",
+              value: 68,
+            },
+          ],
+        },
+      ],
+    );
+
+    expect(metrics.find((metric) => metric.label === "Resting HR")).toMatchObject({
+      chartValues: [55, 53],
+    });
+    expect(metrics.find((metric) => metric.label === "HRV")).not.toHaveProperty(
+      "chartValues",
+    );
+  });
 });

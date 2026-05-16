@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import * as testSchema from "../../src/db/schema";
 import {
   getAppleHealthImportSummary,
+  getAppleHealthMetricTrendSeries,
   getLatestAppleHealthMetrics,
 } from "../../src/server/apple-health/queries";
 import type { FarSygilDatabase } from "../../src/server/strava/oauth";
@@ -108,6 +109,93 @@ describe("Apple Health queries", () => {
           message: "Apple Health import completed.",
         },
       });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("builds bounded latest trend series for requested Apple Health metrics", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.healthMetrics).values([
+        {
+          date: "2024-01-01",
+          metricType: "vo2_max",
+          value: 51.1,
+          unit: "mL/kg/min",
+          source: "AppleHealth",
+        },
+        {
+          date: "2024-02-01",
+          metricType: "vo2_max",
+          value: 52.4,
+          unit: "mL/kg/min",
+          source: "AppleHealth",
+        },
+        {
+          date: "2025-02-05",
+          metricType: "steps",
+          value: null,
+          unit: "count",
+          source: "AppleHealth",
+        },
+        ...Array.from({ length: 35 }, (_, index) => {
+          const date = new Date(Date.UTC(2025, 0, index + 1))
+            .toISOString()
+            .slice(0, 10);
+
+          return {
+            date,
+            metricType: "steps",
+            value: index + 1,
+            unit: "count",
+            source: "AppleHealth",
+          };
+        }),
+        {
+          date: "2025-02-06",
+          metricType: "distance",
+          value: 100,
+          unit: "m",
+          source: "Strava",
+        },
+      ]);
+
+      const series = await getAppleHealthMetricTrendSeries(database, [
+        "vo2_max",
+        "steps",
+      ]);
+
+      expect(series).toEqual([
+        {
+          metricType: "vo2_max",
+          points: [
+            {
+              date: "2024-01-01",
+              value: 51.1,
+            },
+            {
+              date: "2024-02-01",
+              value: 52.4,
+            },
+          ],
+        },
+        {
+          metricType: "steps",
+          points: expect.arrayContaining([
+            {
+              date: "2025-01-06",
+              value: 6,
+            },
+            {
+              date: "2025-02-04",
+              value: 35,
+            },
+          ]),
+        },
+      ]);
+      expect(series[1]?.points).toHaveLength(30);
     } finally {
       sqlite.close();
     }

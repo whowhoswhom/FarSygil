@@ -1,6 +1,7 @@
 import type { DashboardMetricTone } from "@/components/dashboard/dashboard-types";
 import { AppIcon } from "@/components/app-shell/app-icons";
 import type { AppIconName } from "@/components/app-shell/app-icons";
+import { MiniLineChart } from "@/components/dashboard/mini-line-chart";
 
 import { MetricIconBadge } from "@/components/visual-reboot/icon-badge";
 
@@ -10,6 +11,7 @@ interface HealthClusterMetric {
   icon: AppIconName;
   value?: string;
   unit?: string;
+  chartValues?: number[];
 }
 
 export function DashboardHealthClusterCard({
@@ -42,25 +44,37 @@ export function DashboardHealthClusterCard({
         </div>
 
         <div className="dashboard-mock-empty grid gap-4 p-4 md:grid-cols-5">
-          {metrics.map((metric, index) => (
-            <div key={metric.label} className="relative flex flex-col gap-3">
-              {index < metrics.length - 1 ? (
-                <div className="dashboard-stat-divider absolute right-0 top-0 hidden h-full md:block" />
-              ) : null}
-              <div className="flex items-center gap-3">
-                <MetricIconBadge tone={metric.tone} icon={metric.icon} size="sm" />
-                <span className="text-sm font-medium text-[var(--ink-2)]">{metric.label}</span>
-              </div>
-              <div className="flex items-end gap-2 pl-1">
-                <span className="dashboard-tile-value text-[2rem] font-semibold text-white/80">
-                  {metric.value ?? "--"}
-                </span>
-                {metric.unit ? (
-                  <span className="pb-1 text-sm text-[var(--ink-3)]">{metric.unit}</span>
+          {metrics.map((metric, index) => {
+            const hasChart =
+              Array.isArray(metric.chartValues) && metric.chartValues.length >= 2;
+
+            return (
+              <div key={metric.label} className="relative flex flex-col gap-3">
+                {index < metrics.length - 1 ? (
+                  <div className="dashboard-stat-divider absolute right-0 top-0 hidden h-full md:block" />
+                ) : null}
+                <div className="flex items-center gap-3">
+                  <MetricIconBadge tone={metric.tone} icon={metric.icon} size="sm" />
+                  <span className="text-sm font-medium text-[var(--ink-2)]">
+                    {metric.label}
+                  </span>
+                </div>
+                <div className="flex items-end gap-2 pl-1">
+                  <span className="dashboard-tile-value text-[2rem] font-semibold text-white/80">
+                    {metric.value ?? "--"}
+                  </span>
+                  {metric.unit ? (
+                    <span className="pb-1 text-sm text-[var(--ink-3)]">{metric.unit}</span>
+                  ) : null}
+                </div>
+                {hasChart ? (
+                  <div className="mt-auto h-12 pl-1 pr-3">
+                    <MiniLineChart values={metric.chartValues ?? []} tone={metric.tone} />
+                  </div>
                 ) : null}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <p className="text-sm leading-relaxed text-[var(--ink-3)]">{hint}</p>

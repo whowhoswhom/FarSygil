@@ -1,6 +1,9 @@
 import type { AppIconName } from "@/components/app-shell/app-icons";
 import type { DashboardMetricTone } from "@/components/dashboard/dashboard-types";
-import type { AppleHealthMetricSnapshot } from "@/server/apple-health/queries";
+import type {
+  AppleHealthMetricSnapshot,
+  AppleHealthMetricTrendSeries,
+} from "@/server/apple-health/queries";
 
 export interface AppleHealthDisplayMetricDefinition {
   metricType: string;
@@ -55,30 +58,42 @@ export function getAppleHealthDashboardMetricTypes(): string[] {
 
 export function buildAppleHealthDashboardMetrics(
   latestMetrics: AppleHealthMetricSnapshot[],
+  trendSeries: AppleHealthMetricTrendSeries[] = [],
 ): Array<{
   label: string;
   tone: DashboardMetricTone;
   icon: AppIconName;
   value?: string;
   unit?: string;
+  chartValues?: number[];
 }> {
   const latestMetricsByType = new Map(
     latestMetrics.map((metric) => [metric.metricType, metric]),
   );
+  const trendSeriesByType = new Map(
+    trendSeries.map((series) => [series.metricType, series]),
+  );
 
   return APPLE_HEALTH_DASHBOARD_METRICS.map((definition) => {
     const metric = latestMetricsByType.get(definition.metricType);
+    const trend = trendSeriesByType.get(definition.metricType);
     const value = metric
       ? formatAppleHealthMetricValue(metric, definition.digits)
       : undefined;
+    const chartValues =
+      trend && trend.points.length >= 2
+        ? trend.points.map((point) => point.value)
+        : undefined;
 
-    return {
+    const displayMetric = {
       label: definition.label,
       tone: definition.tone,
       icon: definition.icon,
       value,
       unit: value && value !== "--" ? metric?.unit ?? undefined : undefined,
     };
+
+    return chartValues ? { ...displayMetric, chartValues } : displayMetric;
   });
 }
 
