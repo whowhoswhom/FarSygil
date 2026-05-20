@@ -180,6 +180,36 @@ describe("training load daily stress", () => {
     }
   });
 
+  it("buckets stress by the activity local date prefix", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.activities).values({
+        stravaId: 5251,
+        source: "strava",
+        sportType: "Run",
+        name: "Late Local Run",
+        startDate: "2026-05-12T02:30:00.000Z",
+        startDateLocal: "2026-05-11T22:30:00.000-04:00",
+        sufferScore: 44,
+      });
+
+      const result = await recomputeDailyTrainingStress(database);
+      const [row] = await database.select().from(testSchema.trainingLoad);
+
+      expect(result).toMatchObject({
+        startDate: "2026-05-11",
+        endDate: "2026-05-11",
+      });
+      expect(row).toMatchObject({
+        date: "2026-05-11",
+        dailyTrainingStress: 44,
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("reads a bounded latest daily stress snapshot in chronological order", async () => {
     const { database, sqlite } = createTestDatabase();
 
