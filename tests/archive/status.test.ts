@@ -182,6 +182,125 @@ describe("archive status snapshot", () => {
       sqlite.close();
     }
   });
+
+  it("reports zero-percent coverage when Strava activities have no raw payloads", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.activities).values([
+        {
+          stravaId: 7101,
+          source: "strava",
+          sportType: "Run",
+          name: "Summary Only One",
+          startDate: "2026-05-10T12:00:00.000Z",
+        },
+        {
+          stravaId: 7102,
+          source: "strava",
+          sportType: "Run",
+          name: "Summary Only Two",
+          startDate: "2026-05-11T12:00:00.000Z",
+        },
+      ]);
+
+      const snapshot = await getArchiveStatusSnapshot(database);
+
+      expect(snapshot.coverage).toEqual({
+        totalStravaActivities: 2,
+        detailedActivities: 0,
+        streamActivities: 0,
+        detailCoveragePercent: 0,
+        streamCoveragePercent: 0,
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("keeps coverage percentages null when only manual activities exist", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.activities).values({
+        source: "manual",
+        sportType: "Run",
+        name: "Manual Only",
+        startDate: "2026-05-10T12:00:00.000Z",
+      });
+
+      const snapshot = await getArchiveStatusSnapshot(database);
+
+      expect(snapshot.counts).toMatchObject({
+        activities: 1,
+        stravaActivities: 0,
+      });
+      expect(snapshot.coverage).toEqual({
+        totalStravaActivities: 0,
+        detailedActivities: 0,
+        streamActivities: 0,
+        detailCoveragePercent: null,
+        streamCoveragePercent: null,
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("derives latest local write when only health and load rows exist", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.healthMetrics).values({
+        date: "2026-05-12",
+        metricType: "hrv",
+        value: 55,
+        source: "AppleHealth",
+        createdAt: "2026-05-13 09:00:00",
+      });
+      await database.insert(testSchema.trainingLoad).values({
+        date: "2026-05-13",
+        dailyTrainingStress: 42,
+        updatedAt: "2026-05-14 09:00:00",
+      });
+
+      const snapshot = await getArchiveStatusSnapshot(database);
+
+      expect(snapshot.latest.latestLocalWriteAt).toBe("2026-05-14 09:00:00");
+      expect(snapshot.latest.latestHealthMetricDate).toBe("2026-05-12");
+      expect(snapshot.latest.latestDailyStressDate).toBe("2026-05-13");
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("skips invalid latest timestamps when another local write is valid", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.healthMetrics).values({
+        date: "2026-05-12",
+        metricType: "resting_hr",
+        value: 58,
+        source: "AppleHealth",
+        createdAt: "2026-05-13 09:00:00",
+      });
+      await database.insert(testSchema.dataImportLogs).values({
+        source: "strava",
+        eventType: "sync_complete",
+        message: "Bad timestamp",
+        startedAt: "2026-05-14 09:00:00",
+        completedAt: "not-a-date",
+      });
+
+      const snapshot = await getArchiveStatusSnapshot(database);
+
+      expect(snapshot.latest.stravaSyncAt).toBe("not-a-date");
+      expect(snapshot.latest.latestLocalWriteAt).toBe("2026-05-13 09:00:00");
+    } finally {
+      sqlite.close();
+    }
+  });
 });
 
 function createTestDatabase(): {

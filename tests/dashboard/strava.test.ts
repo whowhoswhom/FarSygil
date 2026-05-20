@@ -235,6 +235,71 @@ describe("dashboard Strava snapshots", () => {
       sqlite.close();
     }
   });
+
+  it("weights weekly power only across runs with real watts", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.activities).values([
+        {
+          stravaId: 3001,
+          source: "strava",
+          sportType: "Run",
+          name: "Power Run",
+          startDate: "2026-05-11T12:00:00.000Z",
+          startDateLocal: "2026-05-11T08:00:00.000-04:00",
+          movingTimeSeconds: 1800,
+          averageWatts: 250,
+        },
+        {
+          stravaId: 3002,
+          source: "strava",
+          sportType: "Run",
+          name: "No Power Run",
+          startDate: "2026-05-12T12:00:00.000Z",
+          startDateLocal: "2026-05-12T08:00:00.000-04:00",
+          movingTimeSeconds: 3600,
+        },
+      ]);
+
+      const snapshot = await getDashboardRunningSnapshot(
+        database,
+        new Date("2026-05-13T12:00:00.000Z"),
+      );
+
+      expect(snapshot.averagePowerWatts).toBe(250);
+      expect(snapshot.powerSeries).toEqual([]);
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("excludes zero-time power rows from weekly power", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.activities).values({
+        stravaId: 3101,
+        source: "strava",
+        sportType: "Run",
+        name: "Zero Time Power",
+        startDate: "2026-05-11T12:00:00.000Z",
+        startDateLocal: "2026-05-11T08:00:00.000-04:00",
+        movingTimeSeconds: 0,
+        averageWatts: 300,
+      });
+
+      const snapshot = await getDashboardRunningSnapshot(
+        database,
+        new Date("2026-05-13T12:00:00.000Z"),
+      );
+
+      expect(snapshot.averagePowerWatts).toBeNull();
+      expect(snapshot.powerSeries).toEqual([]);
+    } finally {
+      sqlite.close();
+    }
+  });
 });
 
 function createTestDatabase(): {

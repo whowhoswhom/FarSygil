@@ -247,6 +247,7 @@ function buildDailyBatteryInputs(
       label: "Daily Stress",
       source: "Derived",
       available: dailyStress != null,
+      href: "/training-load",
       detail: dailyStress
         ? `Computed local stress exists for ${dailyStress.date}.`
         : "Missing computed daily stress from /training-load.",
@@ -267,6 +268,7 @@ function buildHealthInput(
     label,
     source: "Apple Health",
     available: hasValue,
+    href: "/health",
     detail: hasValue
       ? `Latest Apple Health ${label} exists for ${metric.date}.`
       : `Missing Apple Health ${label} in local SQLite.`,

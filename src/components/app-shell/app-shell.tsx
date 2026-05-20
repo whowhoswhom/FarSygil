@@ -4,7 +4,7 @@ import { DesktopSidebar } from "@/components/app-shell/desktop-sidebar";
 import { MobileBottomNav } from "@/components/app-shell/mobile-bottom-nav";
 import { TopStatusStrip } from "@/components/app-shell/top-status-strip";
 
-const DESKTOP_ITEMS = [
+export const DESKTOP_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" as const },
   { href: "/runs", label: "Runs", icon: "runs" as const },
   { href: "/archive", label: "Archive", icon: "archive" as const },
@@ -14,7 +14,7 @@ const DESKTOP_ITEMS = [
   { href: "/settings", label: "Settings", icon: "settings" as const },
 ];
 
-const MOBILE_ITEMS = DESKTOP_ITEMS.filter(
+export const MOBILE_ITEMS = DESKTOP_ITEMS.filter(
   (item) => item.href !== "/settings" && item.href !== "/archive",
 );
 

@@ -237,7 +237,7 @@ function latestTimestamp(values: Array<string | null>): string | null {
       continue;
     }
 
-    const time = new Date(value).getTime();
+    const time = parseArchiveTimestamp(value);
 
     if (Number.isNaN(time)) {
       continue;
@@ -249,4 +249,19 @@ function latestTimestamp(values: Array<string | null>): string | null {
   }
 
   return latest?.value ?? null;
+}
+
+function parseArchiveTimestamp(value: string): number {
+  const trimmed = value.trim();
+  const sqliteDateTime = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/;
+  const sqliteDate = /^\d{4}-\d{2}-\d{2}$/;
+  let normalized = trimmed;
+
+  if (sqliteDateTime.test(trimmed)) {
+    normalized = trimmed.replace(" ", "T") + "Z";
+  } else if (sqliteDate.test(trimmed)) {
+    normalized = `${trimmed}T00:00:00Z`;
+  }
+
+  return new Date(normalized).getTime();
 }

@@ -7,6 +7,7 @@ export interface DailyBatteryInput {
   source: string;
   available: boolean;
   detail: string;
+  href?: string;
 }
 
 export function DailyBatteryDeferredCard({
@@ -57,15 +58,7 @@ export function DailyBatteryDeferredCard({
                   {input.detail}
                 </p>
               </div>
-              <span
-                className={`inline-flex flex-none rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                  input.available
-                    ? "border-[rgba(168,226,108,0.2)] bg-[rgba(123,194,65,0.1)] text-[var(--accent-bright)]"
-                    : "border-white/10 bg-white/[0.035] text-[var(--ink-3)]"
-                }`.trim()}
-              >
-                {input.available ? "Present" : "Absent"}
-              </span>
+              <InputStatusBadge input={input} />
             </div>
           ))}
         </div>
@@ -77,4 +70,27 @@ export function DailyBatteryDeferredCard({
       </div>
     </article>
   );
+}
+
+function InputStatusBadge({ input }: { input: DailyBatteryInput }) {
+  const className = `inline-flex flex-none rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+    input.available
+      ? "border-[rgba(168,226,108,0.2)] bg-[rgba(123,194,65,0.1)] text-[var(--accent-bright)]"
+      : "border-white/10 bg-white/[0.035] text-[var(--ink-3)]"
+  }`.trim();
+  const label = input.available ? "Present" : "Absent";
+
+  if (!input.available && input.href) {
+    return (
+      <Link
+        href={input.href}
+        className={`${className} hover:border-white/20 hover:text-[var(--ink-1)]`}
+        aria-label={`Open ${input.source} for ${input.label}`}
+      >
+        {label}
+      </Link>
+    );
+  }
+
+  return <span className={className}>{label}</span>;
 }
