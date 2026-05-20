@@ -61,7 +61,8 @@ export async function recomputeDailyTrainingStress(
   let endDate: string | null = null;
 
   for (const row of activityRows) {
-    const date = getLocalDateKey(row.startDateLocal ?? row.startDate);
+    const date =
+      getDatePrefix(row.startDateLocal) ?? getDatePrefix(row.startDate);
     const stress = calculateActivityTrainingStress(row);
 
     if (!date || stress === null) {
@@ -185,22 +186,12 @@ export function calculateActivityTrainingStress(
   return stress > 0 ? roundStress(stress) : null;
 }
 
-function getLocalDateKey(value: string | null): string | null {
-  if (!value) {
+function getDatePrefix(value: string | null): string | null {
+  if (!value || !/^\d{4}-\d{2}-\d{2}/.test(value)) {
     return null;
   }
 
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+  return value.slice(0, 10);
 }
 
 function isPositiveNumber(value: number | null): value is number {
