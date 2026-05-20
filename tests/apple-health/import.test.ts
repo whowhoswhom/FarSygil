@@ -8,6 +8,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { deflateRawSync } from "node:zlib";
 import Database from "better-sqlite3";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -167,6 +168,101 @@ describe("Apple Health import", () => {
 
       expect(result.metricsWritten).toBe(260);
       expect(metricRows).toHaveLength(260);
+    } finally {
+      sqlite.close();
+      rmSync(fixtureDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("reads export.xml directly from an Apple Health ZIP file", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fixtureDirectory = mkdtempSync(path.join(tmpdir(), "farsygil-health-"));
+    const zipPath = path.join(fixtureDirectory, "apple_health_export.zip");
+
+    try {
+      writeZipFile(zipPath, [
+        {
+          name: "apple_health_export/export.xml",
+          contents: readFileSync(readFixturePath("export.xml")),
+        },
+      ]);
+
+      const result = await importAppleHealthExport({
+        database,
+        filePath: zipPath,
+      });
+
+      expect(result).toEqual({
+        fileName: "apple_health_export.zip",
+        recordsScanned: 11,
+        recordsMatched: 9,
+        metricsWritten: 7,
+        startDate: "2026-05-14",
+        endDate: "2026-05-15",
+      });
+
+      const metricRows = await database.select().from(testSchema.healthMetrics);
+      expect(metricRows).toHaveLength(7);
+    } finally {
+      sqlite.close();
+      rmSync(fixtureDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects ZIP files without the Apple Health export XML entry", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fixtureDirectory = mkdtempSync(path.join(tmpdir(), "farsygil-health-"));
+    const zipPath = path.join(fixtureDirectory, "apple_health_export.zip");
+
+    try {
+      writeZipFile(zipPath, [
+        {
+          name: "apple_health_export/not-export.xml",
+          contents: Buffer.from("<HealthData />"),
+        },
+      ]);
+
+      await expect(
+        importAppleHealthExport({
+          database,
+          filePath: zipPath,
+        }),
+      ).rejects.toMatchObject({
+        name: "AppleHealthImportError",
+        code: "invalid_zip",
+      } satisfies Partial<AppleHealthImportError>);
+    } finally {
+      sqlite.close();
+      rmSync(fixtureDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects ZIP files with unsafe entry paths", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fixtureDirectory = mkdtempSync(path.join(tmpdir(), "farsygil-health-"));
+    const zipPath = path.join(fixtureDirectory, "apple_health_export.zip");
+
+    try {
+      writeZipFile(zipPath, [
+        {
+          name: "../escape.xml",
+          contents: Buffer.from("<HealthData />"),
+        },
+        {
+          name: "apple_health_export/export.xml",
+          contents: readFileSync(readFixturePath("export.xml")),
+        },
+      ]);
+
+      await expect(
+        importAppleHealthExport({
+          database,
+          filePath: zipPath,
+        }),
+      ).rejects.toMatchObject({
+        name: "AppleHealthImportError",
+        code: "invalid_zip",
+      } satisfies Partial<AppleHealthImportError>);
     } finally {
       sqlite.close();
       rmSync(fixtureDirectory, { recursive: true, force: true });
@@ -441,4 +537,72 @@ function readCommittedMigrations(): string {
       readFileSync(new URL(fileName, migrationsDirectory), "utf8"),
     )
     .join("\n");
+}
+
+function writeZipFile(
+  filePath: string,
+  entries: Array<{
+    name: string;
+    contents: Buffer;
+  }>,
+): void {
+  const localParts: Buffer[] = [];
+  const centralParts: Buffer[] = [];
+  let localOffset = 0;
+
+  for (const entry of entries) {
+    const fileName = Buffer.from(entry.name);
+    const compressed = deflateRawSync(entry.contents);
+    const localHeader = Buffer.alloc(30);
+
+    localHeader.writeUInt32LE(0x04034b50, 0);
+    localHeader.writeUInt16LE(20, 4);
+    localHeader.writeUInt16LE(0, 6);
+    localHeader.writeUInt16LE(8, 8);
+    localHeader.writeUInt32LE(0, 10);
+    localHeader.writeUInt32LE(0, 14);
+    localHeader.writeUInt32LE(compressed.length, 18);
+    localHeader.writeUInt32LE(entry.contents.length, 22);
+    localHeader.writeUInt16LE(fileName.length, 26);
+    localHeader.writeUInt16LE(0, 28);
+
+    localParts.push(localHeader, fileName, compressed);
+
+    const centralHeader = Buffer.alloc(46);
+    centralHeader.writeUInt32LE(0x02014b50, 0);
+    centralHeader.writeUInt16LE(20, 4);
+    centralHeader.writeUInt16LE(20, 6);
+    centralHeader.writeUInt16LE(0, 8);
+    centralHeader.writeUInt16LE(8, 10);
+    centralHeader.writeUInt32LE(0, 12);
+    centralHeader.writeUInt32LE(0, 16);
+    centralHeader.writeUInt32LE(compressed.length, 20);
+    centralHeader.writeUInt32LE(entry.contents.length, 24);
+    centralHeader.writeUInt16LE(fileName.length, 28);
+    centralHeader.writeUInt16LE(0, 30);
+    centralHeader.writeUInt16LE(0, 32);
+    centralHeader.writeUInt16LE(0, 34);
+    centralHeader.writeUInt16LE(0, 36);
+    centralHeader.writeUInt32LE(0, 38);
+    centralHeader.writeUInt32LE(localOffset, 42);
+    centralParts.push(centralHeader, fileName);
+
+    localOffset += localHeader.length + fileName.length + compressed.length;
+  }
+
+  const centralDirectory = Buffer.concat(centralParts);
+  const endOfCentralDirectory = Buffer.alloc(22);
+  endOfCentralDirectory.writeUInt32LE(0x06054b50, 0);
+  endOfCentralDirectory.writeUInt16LE(0, 4);
+  endOfCentralDirectory.writeUInt16LE(0, 6);
+  endOfCentralDirectory.writeUInt16LE(entries.length, 8);
+  endOfCentralDirectory.writeUInt16LE(entries.length, 10);
+  endOfCentralDirectory.writeUInt32LE(centralDirectory.length, 12);
+  endOfCentralDirectory.writeUInt32LE(localOffset, 16);
+  endOfCentralDirectory.writeUInt16LE(0, 20);
+
+  writeFileSync(
+    filePath,
+    Buffer.concat([...localParts, centralDirectory, endOfCentralDirectory]),
+  );
 }

@@ -121,9 +121,9 @@ Started after the reboot:
 - latest real Apple Health metric population on `/health`
 - latest real Apple Health metric population in the dashboard health cluster
 - Apple Health trend surfaces from imported local metric rows
+- direct Apple Health ZIP extraction for `apple_health_export.zip`
 
 Still deferred after the reboot:
-- direct Apple Health ZIP extraction
 - training-load analytics
 - grounded AI chat
 

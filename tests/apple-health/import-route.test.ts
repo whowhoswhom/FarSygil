@@ -96,6 +96,41 @@ describe("Apple Health import route", () => {
     );
   });
 
+  it("allows the local Apple Health ZIP path", async () => {
+    const importAppleHealthExportMock = vi.mocked(
+      importModule.importAppleHealthExport,
+    );
+    importAppleHealthExportMock.mockResolvedValue({
+      fileName: "apple_health_export.zip",
+      recordsScanned: 11,
+      recordsMatched: 9,
+      metricsWritten: 7,
+      startDate: "2026-05-14",
+      endDate: "2026-05-15",
+    });
+
+    const { POST } = await import("../../src/app/api/apple-health/import/route");
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/apple-health/import", {
+        method: "POST",
+        body: JSON.stringify({
+          filePath: "apple_health_data/apple_health_export.zip",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(importAppleHealthExportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filePath: path.resolve(
+          process.cwd(),
+          "apple_health_data",
+          "apple_health_export.zip",
+        ),
+      }),
+    );
+  });
+
   it("rejects paths outside local Apple Health export directories", async () => {
     const importAppleHealthExportMock = vi.mocked(
       importModule.importAppleHealthExport,
@@ -144,6 +179,36 @@ describe("Apple Health import route", () => {
       error: "file_not_found",
       message:
         "Apple Health export file was not found at apple_health_data/apple_health_export/export.xml",
+    });
+  });
+
+  it("maps invalid ZIP files to 400", async () => {
+    const importAppleHealthExportMock = vi.mocked(
+      importModule.importAppleHealthExport,
+    );
+    importAppleHealthExportMock.mockRejectedValue(
+      new importModule.AppleHealthImportError(
+        "Apple Health ZIP did not contain apple_health_export/export.xml",
+        "invalid_zip",
+      ),
+    );
+
+    const { POST } = await import("../../src/app/api/apple-health/import/route");
+    const response = await POST(
+      new NextRequest("http://localhost:3000/api/apple-health/import", {
+        method: "POST",
+        body: JSON.stringify({
+          filePath: "apple_health_data/apple_health_export.zip",
+        }),
+      }),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(payload).toEqual({
+      error: "invalid_zip",
+      message: "Apple Health ZIP did not contain apple_health_export/export.xml",
     });
   });
 

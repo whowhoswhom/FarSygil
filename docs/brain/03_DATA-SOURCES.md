@@ -28,8 +28,10 @@ Both sources are **read-only** — FarSygil imports data from them but never wri
 ## Apple Health
 
 - Apple Health is the **authoritative source for all physiology data**.
-- Data is exported from the Health app as a ZIP containing `export.xml`.
-- FarSygil parses the XML and imports it into the local database.
+- Data is exported from the Health app as a ZIP containing
+  `apple_health_export/export.xml`.
+- FarSygil can import either the ZIP or an extracted `export.xml`, then parses
+  the XML into the local database.
 - Apple Health exports are large files and must never be committed to Git.
 - See [[05_APPLE-HEALTH-INGESTION]] for implementation details.
 

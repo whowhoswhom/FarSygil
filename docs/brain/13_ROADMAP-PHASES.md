@@ -52,7 +52,7 @@ Delivered or active in the reboot program:
 - [x] latest Apple Health metric cards on `/health`
 - [x] latest Apple Health values in the dashboard health cluster
 - [x] Apple Health trend charts from imported local metric rows
-- [ ] direct Apple Health ZIP extraction
+- [x] direct Apple Health ZIP extraction
 
 Notes:
 - Health and training-load routes are real shell pages now, but they remain

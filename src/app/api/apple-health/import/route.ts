@@ -168,6 +168,7 @@ function getStatusCode(code: AppleHealthImportError["code"]): number {
   switch (code) {
     case "file_not_found":
       return 404;
+    case "invalid_zip":
     case "invalid_xml":
       return 400;
     case "storage_failed":

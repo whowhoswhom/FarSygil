@@ -24,7 +24,7 @@ disconnected onboarding surface otherwise.
 | `/runs/[id]` | implemented | premium run-detail route with faux-map, splits, and chart tiles |
 | `/connect` | implemented | Strava auth and sync management, including detail sync |
 | `/settings` | implemented | local-first system surface and future preference placeholder |
-| `/health` | implemented | shell route with Apple Health import control and latest local metric cards |
+| `/health` | implemented | shell route with Apple Health ZIP/XML import control and latest local metric cards |
 | `/training-load` | implemented scaffold | shell route with honest empty body until analytics land |
 | `/activities` | compatibility redirect | temporary redirect to `/runs` |
 | `/activities/[id]` | compatibility redirect | temporary redirect to `/runs/[id]` |
@@ -116,7 +116,7 @@ data reality.
 ### `/health`
 
 - Real route now.
-- Imports an extracted Apple Health
+- Imports either `apple_health_data/apple_health_export.zip` or an extracted
   `apple_health_data/apple_health_export/export.xml` through the local API.
 - Renders latest local VO2 Max, resting HR, HRV, sleep, and steps values when
   real `health_metrics` rows with `source = "AppleHealth"` exist.

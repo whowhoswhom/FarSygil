@@ -42,8 +42,8 @@ export default async function HealthPage() {
               Apple Health
             </h2>
             <p className="mt-2 max-w-2xl text-base leading-relaxed text-[var(--ink-2)]">
-              Daily health metrics render only after a local Apple Health export
-              has been imported into SQLite.
+              Daily health metrics render only after a local Apple Health ZIP or
+              extracted export XML has been imported into SQLite.
             </p>
           </div>
         </div>

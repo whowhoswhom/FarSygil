@@ -74,6 +74,7 @@ Relevant files:
 - [x] Detail-sync route behavior
 - [x] Malformed stream degradation
 - [x] Apple Health XML import aggregation and route behavior
+- [x] Apple Health ZIP import extraction and unsafe-entry rejection
 - [x] Apple Health latest-metric queries, trend queries, and shell-status summaries
 
 Relevant files:
@@ -103,6 +104,9 @@ Current Phase 2 assertions cover:
 - Apple Health extracted XML imports for daily steps, resting HR, HRV, VO2 Max,
   active energy, and sleep-hours rows, including upsert, source ownership,
   missing-file handling, invalid-XML handling, and error logging
+- Apple Health ZIP imports, including direct `apple_health_export/export.xml`
+  extraction, missing-entry rejection, unsafe ZIP path rejection, and route
+  status mapping for invalid ZIP files
 - Apple Health latest-metric and trend queries, including sparse metrics such as
   VO2 Max, bounded latest-point series, and import summaries used by shell status
 - Apple Health dashboard display helpers, including the shared metric order,

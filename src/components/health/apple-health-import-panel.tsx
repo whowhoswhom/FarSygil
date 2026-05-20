@@ -3,7 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { APPLE_HEALTH_DEFAULT_RELATIVE_PATH } from "@/lib/apple-health/constants";
+import {
+  APPLE_HEALTH_DEFAULT_RELATIVE_PATH,
+  APPLE_HEALTH_DEFAULT_ZIP_RELATIVE_PATH,
+} from "@/lib/apple-health/constants";
 
 interface AppleHealthImportPanelProps {
   metricRows: number;
@@ -42,7 +45,7 @@ export function AppleHealthImportPanel({
   const [isImporting, setIsImporting] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  async function runImport() {
+  async function runImport(filePath?: string) {
     setFeedback(null);
     setIsImporting(true);
 
@@ -50,6 +53,7 @@ export function AppleHealthImportPanel({
       const response = await fetch("/api/apple-health/import", {
         method: "POST",
         cache: "no-store",
+        body: filePath ? JSON.stringify({ filePath }) : undefined,
       });
       const payload = (await response.json().catch(() => null)) as
         | {
@@ -98,18 +102,29 @@ export function AppleHealthImportPanel({
             Apple Health export
           </h2>
         </div>
-        <button
-          type="button"
-          onClick={() => void runImport()}
-          disabled={isImporting || isPending}
-          className="accent-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isImporting || isPending ? "Importing..." : "Import local export"}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => void runImport()}
+            disabled={isImporting || isPending}
+            className="accent-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isImporting || isPending ? "Importing..." : "Import extracted XML"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void runImport(APPLE_HEALTH_DEFAULT_ZIP_RELATIVE_PATH)}
+            disabled={isImporting || isPending}
+            className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-[var(--ink-1)] transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Import ZIP
+          </button>
+        </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-4">
-        <MetricCell label="Source file" value={APPLE_HEALTH_DEFAULT_RELATIVE_PATH} />
+      <div className="mt-4 grid gap-3 md:grid-cols-5">
+        <MetricCell label="XML file" value={APPLE_HEALTH_DEFAULT_RELATIVE_PATH} />
+        <MetricCell label="ZIP file" value={APPLE_HEALTH_DEFAULT_ZIP_RELATIVE_PATH} />
         <MetricCell label="Metric rows" value={String(metricRows)} />
         <MetricCell label="Latest metric" value={latestMetricDate ?? "--"} />
         <MetricCell
