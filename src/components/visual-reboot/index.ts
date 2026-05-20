@@ -1,3 +1,6 @@
+export * from "@/components/visual-reboot/archive-status-card";
+export * from "@/components/visual-reboot/daily-battery-deferred-card";
+export * from "@/components/visual-reboot/dashboard-daily-stress-card";
 export * from "@/components/visual-reboot/dashboard-health-cluster-card";
 export * from "@/components/visual-reboot/dashboard-metric-tile";
 export * from "@/components/visual-reboot/dashboard-recent-run-card";

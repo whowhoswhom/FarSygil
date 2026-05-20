@@ -5,6 +5,7 @@ export type AppIconName =
   | "runs"
   | "health"
   | "load"
+  | "archive"
   | "connect"
   | "settings"
   | "distance"
@@ -89,6 +90,14 @@ export function AppIcon({ name, className = "", ...props }: AppIconProps) {
       return (
         <svg viewBox="0 0 24 24" fill="none" className={iconClassName} aria-hidden="true" {...props}>
           <path d="M3 13H6L8.5 8L11.5 17L14 11L16.5 14H21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "archive":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={iconClassName} aria-hidden="true" {...props}>
+          <ellipse cx="12" cy="5.5" rx="7" ry="2.8" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M5 5.5v6c0 1.55 3.13 2.8 7 2.8s7-1.25 7-2.8v-6" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M5 11.5v6c0 1.55 3.13 2.8 7 2.8s7-1.25 7-2.8v-6" stroke="currentColor" strokeWidth="1.8" />
         </svg>
       );
     case "connect":

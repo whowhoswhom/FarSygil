@@ -112,6 +112,7 @@ describe("dashboard Strava snapshots", () => {
           totalElevationGain: 304.8,
           averageCadence: 170,
           averageHeartrate: 150,
+          averageWatts: 220,
         },
         {
           stravaId: 1003,
@@ -125,6 +126,7 @@ describe("dashboard Strava snapshots", () => {
           totalElevationGain: 152.4,
           averageCadence: 176,
           averageHeartrate: 158,
+          averageWatts: 200,
         },
         {
           stravaId: 1004,
@@ -165,12 +167,14 @@ describe("dashboard Strava snapshots", () => {
       expect(snapshot.averagePaceSecondsPerMile).toBeCloseTo(406.667, 3);
       expect(snapshot.averageCadence).toBeCloseTo(172.211, 3);
       expect(snapshot.averageHeartrate).toBeCloseTo(152.947, 3);
+      expect(snapshot.averagePowerWatts).toBeCloseTo(212.632, 3);
       expect(snapshot.distanceSeriesMiles).toEqual([3, 10, 5, 0, 0, 0, 0]);
       expect(snapshot.movingTimeSeriesMinutes).toEqual([27, 60, 35, 0, 0, 0, 0]);
       expect(snapshot.elevationSeriesFeet).toEqual([100, 1000, 500, 0, 0, 0, 0]);
       expect(snapshot.paceSeriesSecondsPerMile).toEqual([540, 360, 420]);
       expect(snapshot.cadenceSeries).toEqual([170, 176]);
       expect(snapshot.heartrateSeries).toEqual([150, 158]);
+      expect(snapshot.powerSeries).toEqual([220, 200]);
       expect(snapshot.recentRun).toMatchObject({
         id: expect.any(Number),
         name: "Wednesday Hills",
@@ -215,12 +219,14 @@ describe("dashboard Strava snapshots", () => {
       expect(snapshot.averagePaceSecondsPerMile).toBeNull();
       expect(snapshot.averageCadence).toBeNull();
       expect(snapshot.averageHeartrate).toBeNull();
+      expect(snapshot.averagePowerWatts).toBeNull();
       expect(snapshot.distanceSeriesMiles).toEqual([]);
       expect(snapshot.movingTimeSeriesMinutes).toEqual([]);
       expect(snapshot.elevationSeriesFeet).toEqual([]);
       expect(snapshot.paceSeriesSecondsPerMile).toEqual([]);
       expect(snapshot.cadenceSeries).toEqual([]);
       expect(snapshot.heartrateSeries).toEqual([]);
+      expect(snapshot.powerSeries).toEqual([]);
       expect(snapshot.recentRun).toMatchObject({
         name: "Previous Week Run",
       });

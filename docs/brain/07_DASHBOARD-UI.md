@@ -7,10 +7,10 @@
 ## Status
 
 Phase 2 now uses a unified app shell instead of the old page-by-page Phase 1
-composition. `/dashboard`, `/runs`, `/runs/[id]`, `/connect`, `/settings`,
-`/health`, and `/training-load` all live inside the reboot shell. `/` is now a
-smart entry that redirects connected users to `/dashboard` and renders a
-disconnected onboarding surface otherwise.
+composition. `/dashboard`, `/runs`, `/runs/[id]`, `/archive`, `/connect`,
+`/settings`, `/health`, and `/training-load` all live inside the reboot shell.
+`/` is now a smart entry that redirects connected users to `/dashboard` and
+renders a disconnected onboarding surface otherwise.
 
 ---
 
@@ -22,10 +22,12 @@ disconnected onboarding surface otherwise.
 | `/dashboard` | implemented | primary connected landing with real Strava-backed Running cards |
 | `/runs` | implemented | run-first archive route inside the shell |
 | `/runs/[id]` | implemented | premium run-detail route with faux-map, splits, and chart tiles |
+| `/archive` | implemented | read-only local SQLite provenance, counts, latest writes, and detail/stream coverage |
 | `/connect` | implemented | Strava auth and sync management, including detail sync |
 | `/settings` | implemented | local-first system surface and future preference placeholder |
 | `/health` | implemented | shell route with Apple Health ZIP/XML import control and latest local metric cards |
 | `/training-load` | implemented scaffold | shell route with honest empty body until analytics land |
+| `/trends` | deferred | no route until trend analytics are mature enough to be real |
 | `/activities` | compatibility redirect | temporary redirect to `/runs` |
 | `/activities/[id]` | compatibility redirect | temporary redirect to `/runs/[id]` |
 
@@ -44,13 +46,17 @@ disconnected onboarding surface otherwise.
 - No fake geographic maps
 - No Apple-style rings
 - No motivational copy
+- Decorative orbs/glows are allowed only when the tone maps directly to the
+  card's data domain. Neutral provenance cards such as Archive Status and Daily
+  Battery use the base glass surface without decorative orbs.
 
 ---
 
 ## Implemented shell pieces
 
-- Desktop left rail
-- Mobile bottom navigation
+- Desktop left rail, including Archive
+- Mobile bottom navigation stays at five items; Archive is reached from
+  dashboard/contextual links on mobile
 - Top status strip with local Strava state, Apple Health import state, and
   last-sync context
 - Specialized dashboard cards and run-detail tiles
@@ -69,10 +75,11 @@ data reality.
 | Surface | Data status | Rendering policy | Unlock condition |
 |---|---|---|---|
 | Dashboard weekly distance, time, pace, elevation, cadence, HR, recent run, longest run | real today from Strava archive rows | render fully with real values and charts | none |
-| Dashboard power tile | partially available; depends on real `averageWatts` data | render mockup-style frame; show honest empty body when data is missing | real power values on local activities |
+| Dashboard power tile | partially available; depends on real `averageWatts` data | render time-weighted average across current-week runs with real `averageWatts` and positive moving time; empty body when zero qualifying runs | real power values on current-week local Strava runs |
+| Dashboard daily stress card | partial | render latest persisted daily stress and trend only from real local `training_load.daily_training_stress` rows | `/training-load` recompute writes daily stress |
 | Dashboard health cluster | real today when imported rows exist | render latest values and trend sparklines where Apple Health-sourced `health_metrics` rows exist; missing values remain `--`; trend lines require at least two real points | Apple Health importer writes local metric rows |
-| Dashboard training-load card | deferred | render mockup-style frame with honest empty body | analytics engine computes load rows |
-| Dashboard recovery card | deferred | render mockup-style frame with honest empty body | real health import plus analytics output |
+| Dashboard archive-status card | real today | render local SQLite path when known, counts, latest source writes, and detail/stream coverage; no action buttons | none |
+| Dashboard Daily Battery card | deferred | render only a real/absent input checklist for HRV, resting HR, sleep, and daily stress; no score slot and no numeric placeholder | future deterministic Daily Battery formula |
 | `/training-load` daily stress panel | partial | render only persisted daily stress computed from real local Strava runs; show `--` when nothing can be computed | user runs the local daily-stress recompute |
 | Run-detail faux-map | real polyline today | render abstract faux-map backdrop plus real route only | none |
 | Run-detail splits table | real only after detail sync populates split rows | render premium frame; empty body until rows exist | detail sync writes `activity_splits` |
@@ -90,13 +97,28 @@ data reality.
 
 - Uses the reboot shell and multicolor card system.
 - Running renders from real local Strava-derived aggregates.
+- Default range is This Week, using the current Monday-to-Sunday aggregate
+  window.
+- Wide layout order: weekly hero, Recent Run + Daily Stress, Health + Archive
+  Status, then Power/Cadence/HR/Longest Run + Daily Battery.
+- Tablet and phone stack in the same importance order.
 - Health renders latest local Apple Health values and trend sparklines where
   imported rows exist.
-- Training Load keeps an honest empty body for now.
-- Daily stress appears on `/training-load`, not the dashboard card, until the
-  broader load analytics pass lands.
+- Daily Stress appears on the dashboard only from already persisted local
+  training-load rows. Recompute remains owned by `/training-load`.
+- Avg Power is the time-weighted current-week average across runs with real
+  `averageWatts`; no qualifying runs means an honest empty body.
+- Archive Status links to `/archive` and is read-only.
+- Daily Battery is deferred and shows only input provenance.
 - Time-range and other future controls may exist visually before they become
   data-driven, but they must not imply unavailable data exists.
+
+### Action ownership
+
+- `/connect`: Strava OAuth, summary sync, detail sync.
+- `/health`: Apple Health ZIP/XML import.
+- `/training-load`: daily stress recompute.
+- `/archive`: read-only provenance only.
 
 ### `/runs`
 
