@@ -76,6 +76,7 @@ Relevant files:
 - [x] Apple Health XML import aggregation and route behavior
 - [x] Apple Health ZIP import extraction and unsafe-entry rejection
 - [x] Apple Health latest-metric queries, trend queries, and shell-status summaries
+- [x] Training-load daily stress recompute and route behavior
 
 Relevant files:
 - `tests/dashboard/strava.test.ts`
@@ -88,6 +89,8 @@ Relevant files:
 - `tests/apple-health/import-route.test.ts`
 - `tests/apple-health/display.test.ts`
 - `tests/apple-health/queries.test.ts`
+- `tests/training-load/daily-stress.test.ts`
+- `tests/training-load/recompute-route.test.ts`
 
 Current Phase 2 assertions cover:
 - dashboard weekly running rollups, pace/cadence/HR weighting, recent-run and
@@ -112,6 +115,9 @@ Current Phase 2 assertions cover:
 - Apple Health dashboard display helpers, including the shared metric order,
   `VO₂ Max` label, no unit suffix beside inline missing values, and chart values
   only when at least two real trend points exist
+- training-load daily stress recompute, including Strava suffer-score priority,
+  HR-duration fallback, no fake zero rows when inputs are missing, preservation
+  of future ATL / CTL / TSB columns, and no-store route behavior
 
 ### Phase 3 / future analytics
 

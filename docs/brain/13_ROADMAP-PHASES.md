@@ -67,12 +67,12 @@ Notes:
 Goal: compute deterministic analytics from real local history.
 
 Planned deliverables:
-- [ ] TSS / TRIMP computation
+- [x] daily training-stress foundation from Strava suffer score or HR-duration fallback
 - [ ] ATL / CTL / TSB
 - [ ] ACWR and related warnings
 - [ ] training-load charts
 - [ ] recovery/readiness derivations grounded in real inputs only
-- [ ] real data inside `/training-load`
+- [x] first real data inside `/training-load`
 
 ---
 
