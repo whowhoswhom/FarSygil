@@ -31,8 +31,9 @@ Phase 2 is now the visual reboot + detail-sync program:
   and show latest local daily metrics and trend sparklines once rows exist
 - `/dashboard` shows latest local Apple Health values and trend sparklines in
   the Health & Wellness cluster when imported rows exist
-- Training Load still remains an honest empty state until its analytics system
-  lands
+- `/training-load` can compute daily training stress from real local Strava runs
+- ATL / CTL / TSB and recovery still remain honest empty states until their
+  analytics systems land
 
 See [[13_ROADMAP-PHASES|Roadmap]] and
 [[17_VISUAL-REBOOT-PLAN|Visual Reboot Plan]] for the active breakdown.

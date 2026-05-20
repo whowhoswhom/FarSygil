@@ -184,16 +184,16 @@ Precomputed daily rollups.
 ---
 
 ### `training_load`
-Computed ATL / CTL / TSB values.
+Computed daily stress and future ATL / CTL / TSB values.
 
 | Column | Type | Notes |
 |---|---|---|
 | id | INTEGER PK | |
 | date | TEXT UNIQUE | YYYY-MM-DD |
-| acute_load | REAL | ATL — 7-day EMA |
-| chronic_load | REAL | CTL — 42-day EMA |
-| training_stress_balance | REAL | TSB = CTL - ATL |
-| daily_training_stress | REAL | |
+| acute_load | REAL | ATL — 7-day EMA; deferred |
+| chronic_load | REAL | CTL — 42-day EMA; deferred |
+| training_stress_balance | REAL | TSB = CTL - ATL; deferred |
+| daily_training_stress | REAL | computed from real Strava suffer score or HR-duration fallback |
 | updated_at | TEXT | |
 
 ---

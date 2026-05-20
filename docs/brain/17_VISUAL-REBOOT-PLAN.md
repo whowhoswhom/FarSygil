@@ -122,9 +122,10 @@ Started after the reboot:
 - latest real Apple Health metric population in the dashboard health cluster
 - Apple Health trend surfaces from imported local metric rows
 - direct Apple Health ZIP extraction for `apple_health_export.zip`
+- daily training-stress foundation from real local Strava runs
 
 Still deferred after the reboot:
-- training-load analytics
+- ATL / CTL / TSB, ACWR, recovery, and broader training-load analytics
 - grounded AI chat
 
 ---

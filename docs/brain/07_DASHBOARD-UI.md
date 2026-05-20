@@ -73,6 +73,7 @@ data reality.
 | Dashboard health cluster | real today when imported rows exist | render latest values and trend sparklines where Apple Health-sourced `health_metrics` rows exist; missing values remain `--`; trend lines require at least two real points | Apple Health importer writes local metric rows |
 | Dashboard training-load card | deferred | render mockup-style frame with honest empty body | analytics engine computes load rows |
 | Dashboard recovery card | deferred | render mockup-style frame with honest empty body | real health import plus analytics output |
+| `/training-load` daily stress panel | partial | render only persisted daily stress computed from real local Strava runs; show `--` when nothing can be computed | user runs the local daily-stress recompute |
 | Run-detail faux-map | real polyline today | render abstract faux-map backdrop plus real route only | none |
 | Run-detail splits table | real only after detail sync populates split rows | render premium frame; empty body until rows exist | detail sync writes `activity_splits` |
 | Run-detail HR / cadence / pace / elevation tiles | partial today; strongest after detail sync | render only when real series exists, otherwise honest empty body | detail sync writes usable stream rows or split fallback rows |
@@ -92,6 +93,8 @@ data reality.
 - Health renders latest local Apple Health values and trend sparklines where
   imported rows exist.
 - Training Load keeps an honest empty body for now.
+- Daily stress appears on `/training-load`, not the dashboard card, until the
+  broader load analytics pass lands.
 - Time-range and other future controls may exist visually before they become
   data-driven, but they must not imply unavailable data exists.
 
@@ -128,7 +131,10 @@ data reality.
 ### `/training-load`
 
 - Real route now.
-- Honest shell-integrated scaffold only.
+- Computes and renders daily training stress from real local Strava runs.
+- Uses Strava suffer score when present, otherwise a documented HR-duration
+  fallback when average HR and moving time are available.
+- Missing inputs do not create fake zero rows.
 - No fake ATL / CTL / TSB / recovery scores.
 
 ### `/settings`
