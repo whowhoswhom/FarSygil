@@ -13,10 +13,10 @@ export function MetricIconBadge({
 }) {
   const sizeClass =
     size === "sm"
-      ? "h-10 w-10 text-[1rem]"
+      ? "h-7 w-7 text-[0.8rem]"
       : size === "lg"
-        ? "h-14 w-14 text-[1.3rem]"
-        : "h-12 w-12 text-[1.1rem]";
+        ? "h-12 w-12 text-[1.15rem]"
+        : "h-9 w-9 text-[0.95rem]";
 
   return (
     <span

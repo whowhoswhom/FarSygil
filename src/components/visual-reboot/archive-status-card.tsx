@@ -27,21 +27,21 @@ export function ArchiveStatusCard({
   );
 
   return (
-    <article className="dashboard-shell-card p-5 md:p-6">
-      <div className="relative flex h-full flex-col gap-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
+    <article className="dashboard-shell-card p-4 md:p-5">
+      <div className="relative flex h-full flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
             <span
               aria-hidden="true"
-              className="inline-flex h-12 w-12 flex-none items-center justify-center rounded-[18px] border border-white/10 bg-white/[0.035] text-[var(--ink-2)]"
+              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-[14px] border border-white/10 bg-white/[0.035] text-[var(--ink-2)]"
             >
-              <AppIcon name="archive" className="text-[1.2rem]" />
+              <AppIcon name="archive" className="text-base" />
             </span>
             <div className="min-w-0">
-              <h3 className="text-[2rem] font-semibold tracking-[-0.045em] text-white">
+              <h3 className="text-[1.45rem] font-semibold tracking-[-0.04em] text-white">
                 Archive Status
               </h3>
-              <p className="mt-1 text-sm text-[var(--ink-2)]">
+              <p className="mt-1 text-xs text-[var(--ink-2)]">
                 Local SQLite provenance
               </p>
             </div>
@@ -49,10 +49,10 @@ export function ArchiveStatusCard({
           {href ? (
             <Link
               href={href}
-              className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[var(--ink-2)] hover:text-white"
+              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[var(--ink-2)] hover:text-white"
               aria-label="Open Archive"
             >
-              <AppIcon name="arrow-right" className="text-xl" />
+              <AppIcon name="arrow-right" className="text-base" />
             </Link>
           ) : null}
         </div>
@@ -73,7 +73,7 @@ export function ArchiveStatusCard({
           <ArchiveStatusMetric label="Latest Write" value={latestWrite ?? "--"} />
         </div>
 
-        <div className="rounded-[20px] border border-white/6 bg-black/10 px-4 py-4">
+        <div className="rounded-[16px] border border-white/6 bg-black/10 px-3 py-3">
           <p className="section-kicker mb-2">Database</p>
           <p className="break-all text-sm text-[var(--ink-2)]">
             {snapshot.databasePath ?? "Local SQLite"}
@@ -117,9 +117,9 @@ function ArchiveStatusMetric({
   detail?: string;
 }) {
   return (
-    <div className="rounded-[20px] border border-white/6 bg-black/10 px-4 py-4">
+    <div className="rounded-[16px] border border-white/6 bg-black/10 px-3 py-3">
       <p className="section-kicker mb-2">{label}</p>
-      <p className="dashboard-tile-value text-[2rem] font-semibold text-white">
+      <p className="dashboard-tile-value text-[1.45rem] font-semibold text-white">
         {value}
       </p>
       {detail ? (
