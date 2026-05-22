@@ -72,7 +72,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="page-shell flex flex-col gap-3 pb-5 text-[var(--ink-1)]">
-      <section className="px-1">
+      <section className="px-1 lg:-mt-[3.55rem] lg:max-w-[20rem]">
         <h1 className="text-[2rem] font-semibold tracking-[-0.065em] text-white md:text-[2.45rem]">
           Dashboard
         </h1>

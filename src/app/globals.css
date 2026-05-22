@@ -787,4 +787,10 @@ select:focus-visible {
   .app-shell-content {
     gap: 1rem;
   }
+
+  .app-top-strip {
+    align-self: flex-end;
+    width: fit-content;
+    max-width: calc(100% - 22rem);
+  }
 }

@@ -29,7 +29,7 @@ export function TopStatusStrip({
           />
           <LastSyncedBadge label="Last synced" value={lastSyncedLabel} />
         </div>
-        <div className="hidden flex-none items-center gap-2 md:flex">
+        <div className="hidden flex-none items-center gap-2 2xl:flex">
           <Link
             href="/connect"
             className="ghost-button inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium"
