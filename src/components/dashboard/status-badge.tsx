@@ -23,15 +23,15 @@ export function StatusBadge({
 }: StatusBadgeProps) {
   return (
     <span
-      className={`liquid-pill inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-sm font-medium text-[var(--ink-1)] ${className}`.trim()}
+      className={`liquid-pill inline-flex flex-none items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-[var(--ink-1)] ${className}`.trim()}
       style={dashboardToneVars(STATE_TO_TONE[state])}
     >
       <span
         aria-hidden="true"
-        className="h-2.5 w-2.5 rounded-full"
+        className="h-2 w-2 rounded-full"
         style={{
           background: "var(--dashboard-tone)",
-          boxShadow: "0 0 0 6px var(--dashboard-tone-wash)",
+          boxShadow: "0 0 0 5px var(--dashboard-tone-wash)",
         }}
       />
       <span>{label}</span>

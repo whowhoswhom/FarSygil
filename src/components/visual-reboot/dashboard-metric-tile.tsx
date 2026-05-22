@@ -32,13 +32,13 @@ export function DashboardMetricTile({
   chartValues?: number[];
 }) {
   return (
-    <article className="dashboard-shell-card p-5" style={dashboardToneVars(tone)}>
-      <div className="relative flex h-full flex-col gap-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
+    <article className="dashboard-shell-card p-4" style={dashboardToneVars(tone)}>
+      <div className="relative flex h-full flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5">
             <MetricIconBadge tone={tone} icon={icon} />
             <div>
-              <h3 className="text-[1.55rem] font-medium tracking-[-0.035em] text-white">
+              <h3 className="text-[1.05rem] font-medium tracking-[-0.02em] text-white">
                 {title}
               </h3>
               {source ? <SourceLabel source={source} tone={tone} compact /> : null}
@@ -47,36 +47,34 @@ export function DashboardMetricTile({
           {href ? (
             <Link
               href={href}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[var(--ink-2)] hover:text-white"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[var(--ink-2)] hover:text-white"
               aria-label={`Open ${title}`}
             >
-              <AppIcon name="arrow-right" className="text-xl" />
+              <AppIcon name="arrow-right" className="text-base" />
             </Link>
           ) : null}
         </div>
 
         {value ? (
           <>
-            <div className="mt-auto flex items-end gap-2">
+            <div className="mt-auto flex items-end gap-1.5">
               <span
-                className="dashboard-tile-value text-[3rem] font-semibold"
+                className="dashboard-tile-value text-[2.15rem] font-semibold"
                 style={{ color: "var(--dashboard-tone)" }}
               >
                 {value}
               </span>
               {unit ? (
-                <span className="pb-1 text-[1.2rem] font-medium text-[var(--ink-2)]">
+                <span className="pb-1 text-sm font-medium text-[var(--ink-2)]">
                   {unit}
                 </span>
               ) : null}
             </div>
-            <div className="mt-auto rounded-[16px] border border-white/6 bg-black/10 px-2 py-2">
-              {chartValues.length > 0 ? (
+            {chartValues.length > 0 ? (
+              <div className="mt-auto h-11 rounded-[12px] border border-white/6 bg-black/10 px-1.5 py-1.5">
                 <MiniLineChart values={chartValues} tone={tone} />
-              ) : (
-                <div className="h-[3.75rem]" />
-              )}
-            </div>
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="my-auto">

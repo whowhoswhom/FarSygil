@@ -71,10 +71,9 @@ export default async function DashboardPage() {
   );
 
   return (
-    <main className="page-shell flex flex-col gap-6 pb-6 text-[var(--ink-1)]">
-      <section className="px-1 pt-1">
-        <p className="section-kicker mb-3">Dashboard</p>
-        <h1 className="text-[2.9rem] font-semibold tracking-[-0.07em] text-white md:text-[4rem]">
+    <main className="page-shell flex flex-col gap-3 pb-5 text-[var(--ink-1)]">
+      <section className="px-1 lg:-mt-[3.55rem] lg:max-w-[20rem]">
+        <h1 className="text-[2rem] font-semibold tracking-[-0.065em] text-white md:text-[2.45rem]">
           Dashboard
         </h1>
       </section>
@@ -130,7 +129,7 @@ export default async function DashboardPage() {
         ]}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
         <DashboardRecentRunCard
           title="Recent Run"
           href={
@@ -158,7 +157,7 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.75fr)]">
+      <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
         <DashboardHealthClusterCard
           title="Health & Wellness"
           sourceLabel="Apple Health"
@@ -177,8 +176,8 @@ export default async function DashboardPage() {
         <ArchiveStatusCard snapshot={archiveStatus} href="/archive" compact />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.75fr)]">
-        <div className="grid gap-6 sm:grid-cols-2 2xl:grid-cols-4">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.75fr)]">
+        <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
           <DashboardMetricTile
             title="Avg Power"
             tone="recovery"

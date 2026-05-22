@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   ArchiveStatusCard,
   DailyBatteryDeferredCard,
+  DashboardWeeklySummaryCard,
 } from "../../src/components/visual-reboot";
 import type { ArchiveStatusSnapshot } from "../../src/server/archive/status";
 
@@ -193,6 +194,29 @@ describe("dashboard deferred and provenance cards", () => {
     const html = renderToStaticMarkup(<ArchiveStatusCard snapshot={snapshot} />);
 
     expect(html).toContain("Local SQLite");
+  });
+
+  it("renders weekly summary missing metrics as compact inline values", () => {
+    const html = renderToStaticMarkup(
+      <DashboardWeeklySummaryCard
+        title="This Week"
+        subtitle="May 18 - 24"
+        items={[
+          {
+            label: "Avg Pace",
+            value: null,
+            tone: "distance",
+            icon: "pace",
+            emptyHint:
+              "Requires at least one real run with distance and moving time.",
+          },
+        ]}
+      />,
+    );
+
+    expect(html).toMatch(/>--<\/p>/);
+    expect(html).toContain("Requires at least one real run");
+    expect(html).not.toContain("Data not available");
   });
 });
 
