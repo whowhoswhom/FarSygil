@@ -59,12 +59,14 @@ export function DashboardHealthClusterCard({
                     {metric.label}
                   </span>
                 </div>
-                <div className="flex items-end gap-1 pl-1">
-                  <span className="dashboard-tile-value text-[1.35rem] font-semibold text-white/80 md:text-[1.65rem]">
+                <div className="flex min-w-0 flex-col items-start gap-0 pl-1">
+                  <span className="dashboard-tile-value min-w-0 whitespace-nowrap text-[1.2rem] font-semibold leading-none text-white/80 md:text-[1.45rem] 2xl:text-[1.65rem]">
                     {metric.value ?? "--"}
                   </span>
                   {metric.unit ? (
-                    <span className="pb-0.5 text-[0.65rem] text-[var(--ink-3)] md:text-xs">{metric.unit}</span>
+                    <span className="max-w-full truncate text-[0.52rem] leading-none text-[var(--ink-3)] md:text-[0.62rem]">
+                      {metric.unit}
+                    </span>
                   ) : null}
                 </div>
                 {hasChart ? (
