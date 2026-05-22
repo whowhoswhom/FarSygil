@@ -22,12 +22,16 @@ It replaced the earlier dashboard-only rollout plan once the project moved to:
 - Desktop left rail and mobile bottom nav
 - `/` redirects connected users to `/dashboard`
 - `/` renders disconnected onboarding otherwise
+- `/archive` is the read-only local SQLite provenance surface
+- `/trends` remains deferred
 - Brand stays green-led, but metric surfaces use multicolor tones
 - Run-detail maps use a local faux-map only
 - Mockup frame, honest empty body
 - Detail sync comes before the visual route rebuilds
 - Apple Health import is a completed follow-on data program; training-load
   analytics remains separate and deferred
+- Dashboard sync/import/recompute cards link to owner routes instead of
+  performing actions inline
 
 ---
 
@@ -46,6 +50,7 @@ No fake:
 - calories
 - recovery scores
 - ATL / CTL / TSB
+- Daily Battery scores
 - Apple Health values without imported local rows
 - geocoded place labels
 - tile-based maps
@@ -123,9 +128,16 @@ Started after the reboot:
 - Apple Health trend surfaces from imported local metric rows
 - direct Apple Health ZIP extraction for `apple_health_export.zip`
 - daily training-stress foundation from real local Strava runs
+- read-only `/archive` route for local SQLite provenance
+- dashboard archive-status card
+- current-week Avg Power tile from time-weighted real `averageWatts`
+- dashboard Daily Stress card from persisted daily-stress rows
+- Daily Battery deferred checklist showing real/absent inputs only
 
 Still deferred after the reboot:
 - ATL / CTL / TSB, ACWR, recovery, and broader training-load analytics
+- Daily Battery formula
+- `/trends`
 - grounded AI chat
 
 ---

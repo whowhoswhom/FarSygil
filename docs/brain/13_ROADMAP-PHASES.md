@@ -42,6 +42,7 @@ Delivered or active in the reboot program:
 - [x] connected landing dashboard (`/dashboard`)
 - [x] run archive (`/runs`)
 - [x] run detail (`/runs/[id]`)
+- [x] local data provenance route (`/archive`)
 - [x] Strava detail sync for splits and streams
 - [x] connect management route (`/connect`) with detail-sync controls
 - [x] settings route (`/settings`)
@@ -53,12 +54,18 @@ Delivered or active in the reboot program:
 - [x] latest Apple Health values in the dashboard health cluster
 - [x] Apple Health trend charts from imported local metric rows
 - [x] direct Apple Health ZIP extraction
+- [x] archive-status dashboard card backed by local SQLite provenance
+- [x] current-week Avg Power dashboard tile from real Strava `averageWatts`
+- [x] dashboard Daily Stress card from persisted local training-load rows
+- [x] Daily Battery deferred checklist with no score placeholder
 
 Notes:
 - Health and training-load routes are real shell pages now, but they remain
   honest where source data or computed analytics are missing.
 - Phase 2 no longer uses the old green-only dashboard palette. The active
   contract is now the visual reboot contract in `docs/design/DESIGN_CONTRACT.md`.
+- `/trends` is deferred until trend analytics are mature enough to justify a
+  real route.
 
 ---
 
@@ -73,6 +80,7 @@ Planned deliverables:
 - [ ] training-load charts
 - [ ] recovery/readiness derivations grounded in real inputs only
 - [x] first real data inside `/training-load`
+- [ ] Daily Battery formula
 
 ---
 

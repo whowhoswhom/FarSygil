@@ -30,6 +30,7 @@ interface DashboardRunRow {
   totalElevationGain: number | null;
   averageHeartrate: number | null;
   averageCadence: number | null;
+  averageWatts: number | null;
 }
 
 export interface DashboardHeaderSnapshot {
@@ -61,12 +62,14 @@ export interface DashboardRunningSnapshot {
   averagePaceSecondsPerMile: number | null;
   averageCadence: number | null;
   averageHeartrate: number | null;
+  averagePowerWatts: number | null;
   distanceSeriesMiles: number[];
   movingTimeSeriesMinutes: number[];
   elevationSeriesFeet: number[];
   paceSeriesSecondsPerMile: number[];
   cadenceSeries: number[];
   heartrateSeries: number[];
+  powerSeries: number[];
   recentRun: DashboardRunSnapshot | null;
   longestRun: DashboardRunSnapshot | null;
 }
@@ -124,6 +127,7 @@ export async function getDashboardRunningSnapshot(
       totalElevationGain: activities.totalElevationGain,
       averageHeartrate: activities.averageHeartrate,
       averageCadence: activities.averageCadence,
+      averageWatts: activities.averageWatts,
     })
     .from(activities)
     .where(
@@ -160,6 +164,11 @@ export async function getDashboardRunningSnapshot(
   const averageHeartrate = weightedAverage(
     weeklyRows,
     (row) => row.averageHeartrate,
+    (row) => row.movingTimeSeconds,
+  );
+  const averagePowerWatts = weightedAverage(
+    weeklyRows,
+    (row) => row.averageWatts,
     (row) => row.movingTimeSeconds,
   );
 
@@ -199,6 +208,11 @@ export async function getDashboardRunningSnapshot(
       bucket.heartrateWeighted += row.averageHeartrate * row.movingTimeSeconds;
       bucket.heartrateWeight += row.movingTimeSeconds;
     }
+
+    if (isNumber(row.averageWatts) && isPositiveNumber(row.movingTimeSeconds)) {
+      bucket.powerWeighted += row.averageWatts * row.movingTimeSeconds;
+      bucket.powerWeight += row.movingTimeSeconds;
+    }
   }
 
   const orderedBuckets = [...dailyBuckets.values()];
@@ -218,6 +232,12 @@ export async function getDashboardRunningSnapshot(
       weight: bucket.heartrateWeight,
     })),
   );
+  const powerSeries = buildWeightedSeries(
+    orderedBuckets.map((bucket) => ({
+      weighted: bucket.powerWeighted,
+      weight: bucket.powerWeight,
+    })),
+  );
 
   return {
     weekStartDate,
@@ -229,12 +249,14 @@ export async function getDashboardRunningSnapshot(
     averagePaceSecondsPerMile,
     averageCadence,
     averageHeartrate,
+    averagePowerWatts,
     distanceSeriesMiles,
     movingTimeSeriesMinutes,
     elevationSeriesFeet,
     paceSeriesSecondsPerMile,
     cadenceSeries,
     heartrateSeries,
+    powerSeries,
     recentRun,
     longestRun,
   };
@@ -255,6 +277,7 @@ async function getMostRecentRun(
       totalElevationGain: activities.totalElevationGain,
       averageHeartrate: activities.averageHeartrate,
       averageCadence: activities.averageCadence,
+      averageWatts: activities.averageWatts,
     })
     .from(activities)
     .where(
@@ -324,6 +347,8 @@ function createDailyBuckets(start: Date) {
       cadenceWeight: number;
       heartrateWeighted: number;
       heartrateWeight: number;
+      powerWeighted: number;
+      powerWeight: number;
       totalElevationGain: number;
     }
   >();
@@ -341,6 +366,8 @@ function createDailyBuckets(start: Date) {
       cadenceWeight: 0,
       heartrateWeighted: 0,
       heartrateWeight: 0,
+      powerWeighted: 0,
+      powerWeight: 0,
       totalElevationGain: 0,
     });
   }

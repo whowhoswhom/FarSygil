@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { db } from "@/db/client";
+import { databasePath, db } from "@/db/client";
 import {
   buildAppleHealthDashboardMetrics,
   getAppleHealthDashboardMetricTypes,
@@ -15,22 +15,27 @@ import {
   formatWeekRangeLabel,
 } from "@/lib/dashboard/format";
 import {
+  ArchiveStatusCard,
+  DailyBatteryDeferredCard,
+  type DailyBatteryInput,
+  DashboardDailyStressCard,
   DashboardHealthClusterCard,
   DashboardMetricTile,
   DashboardRecentRunCard,
-  DashboardRecoveryCard,
-  DashboardTrainingLoadCard,
   DashboardWeeklySummaryCard,
 } from "@/components/visual-reboot";
 import {
   getAppleHealthImportSummary,
   getAppleHealthMetricTrendSeries,
   getLatestAppleHealthMetrics,
+  type AppleHealthMetricSnapshot,
 } from "@/server/apple-health/queries";
+import { getArchiveStatusSnapshot } from "@/server/archive/status";
 import {
   getDashboardRunningSnapshot,
   type DashboardRunSnapshot,
 } from "@/server/dashboard/strava";
+import { getDailyTrainingStressSnapshot } from "@/server/training-load/daily-stress";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,7 +43,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Dashboard | FarSygil",
   description:
-    "FarSygil command center with real Strava-backed running metrics and honest empty states for deferred health and training-load surfaces.",
+    "FarSygil command center with real Strava, Apple Health, daily stress, and local archive provenance surfaces.",
 };
 
 export default async function DashboardPage() {
@@ -48,14 +53,22 @@ export default async function DashboardPage() {
     latestHealthMetrics,
     healthTrendSeries,
     healthSummary,
+    dailyStress,
+    archiveStatus,
   ] = await Promise.all([
     getDashboardRunningSnapshot(db),
     getLatestAppleHealthMetrics(db, healthMetricTypes),
     getAppleHealthMetricTrendSeries(db, healthMetricTypes),
     getAppleHealthImportSummary(db),
+    getDailyTrainingStressSnapshot(db),
+    getArchiveStatusSnapshot(db, { databasePath }),
   ]);
   const recentRunMetric = buildRunMetric(runningSnapshot.recentRun);
   const longestRunMetric = buildRunMetric(runningSnapshot.longestRun);
+  const batteryInputs = buildDailyBatteryInputs(
+    latestHealthMetrics,
+    dailyStress.latest,
+  );
 
   return (
     <main className="page-shell flex flex-col gap-6 pb-6 text-[var(--ink-1)]">
@@ -117,7 +130,7 @@ export default async function DashboardPage() {
         ]}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(340px,0.85fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
         <DashboardRecentRunCard
           title="Recent Run"
           href={
@@ -139,51 +152,13 @@ export default async function DashboardPage() {
           hint={recentRunMetric.hint}
         />
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          <DashboardMetricTile
-            title="Longest Run"
-            tone="exercise"
-            icon="run"
-            source="Strava"
-            value={longestRunMetric.value}
-            unit={longestRunMetric.unit}
-            href={
-              runningSnapshot.longestRun
-                ? `/runs/${runningSnapshot.longestRun.id}`
-                : undefined
-            }
-            chartValues={runningSnapshot.distanceSeriesMiles}
-          />
-        </div>
+        <DashboardDailyStressCard
+          latest={dailyStress.latest}
+          series={dailyStress.series}
+        />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1.6fr)]">
-        <DashboardMetricTile
-          title="Avg Cadence"
-          tone="distance"
-          icon="cadence"
-          source="Strava"
-          value={formatRoundedMetric(runningSnapshot.averageCadence)}
-          unit={runningSnapshot.averageCadence != null ? "spm" : undefined}
-          chartValues={runningSnapshot.cadenceSeries}
-        />
-        <DashboardMetricTile
-          title="Avg HR"
-          tone="cardio"
-          icon="heartrate"
-          source="Strava"
-          value={formatRoundedMetric(runningSnapshot.averageHeartrate)}
-          unit={runningSnapshot.averageHeartrate != null ? "bpm" : undefined}
-          chartValues={runningSnapshot.heartrateSeries}
-        />
-        <DashboardMetricTile
-          title="Avg Power"
-          tone="recovery"
-          icon="spark"
-          source="Strava"
-          value={null}
-          hint="Data not available until real local runs include synced power or watt fields."
-        />
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.75fr)]">
         <DashboardHealthClusterCard
           title="Health & Wellness"
           sourceLabel="Apple Health"
@@ -199,18 +174,105 @@ export default async function DashboardPage() {
               : "Data not available until the Apple Health importer writes real physiology rows into local SQLite."
           }
         />
+        <ArchiveStatusCard snapshot={archiveStatus} href="/archive" compact />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_420px]">
-        <DashboardTrainingLoadCard
-          hint="Data not available until the training-load engine computes ATL, CTL, TSB, and related analytics from real local activity history."
-        />
-        <DashboardRecoveryCard
-          hint="Data not available until the recovery surface can be derived from imported health metrics and training-load computations."
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.75fr)]">
+        <div className="grid gap-6 sm:grid-cols-2 2xl:grid-cols-4">
+          <DashboardMetricTile
+            title="Avg Power"
+            tone="recovery"
+            icon="spark"
+            source="Strava"
+            value={formatRoundedMetric(runningSnapshot.averagePowerWatts)}
+            unit={runningSnapshot.averagePowerWatts != null ? "W" : undefined}
+            hint="Data not available until the current week has real Strava runs with average watts and moving time."
+            chartValues={runningSnapshot.powerSeries}
+          />
+          <DashboardMetricTile
+            title="Avg Cadence"
+            tone="distance"
+            icon="cadence"
+            source="Strava"
+            value={formatRoundedMetric(runningSnapshot.averageCadence)}
+            unit={runningSnapshot.averageCadence != null ? "spm" : undefined}
+            chartValues={runningSnapshot.cadenceSeries}
+          />
+          <DashboardMetricTile
+            title="Avg HR"
+            tone="cardio"
+            icon="heartrate"
+            source="Strava"
+            value={formatRoundedMetric(runningSnapshot.averageHeartrate)}
+            unit={runningSnapshot.averageHeartrate != null ? "bpm" : undefined}
+            chartValues={runningSnapshot.heartrateSeries}
+          />
+          <DashboardMetricTile
+            title="Longest Run"
+            tone="exercise"
+            icon="run"
+            source="Strava"
+            value={longestRunMetric.value}
+            unit={longestRunMetric.unit}
+            href={
+              runningSnapshot.longestRun
+                ? `/runs/${runningSnapshot.longestRun.id}`
+                : undefined
+            }
+            chartValues={runningSnapshot.distanceSeriesMiles}
+          />
+        </div>
+        <DailyBatteryDeferredCard
+          inputs={batteryInputs}
+          href="/training-load"
         />
       </div>
     </main>
   );
+}
+
+function buildDailyBatteryInputs(
+  healthMetrics: AppleHealthMetricSnapshot[],
+  dailyStress: { date: string; dailyTrainingStress: number } | null,
+): DailyBatteryInput[] {
+  const healthMetricByType = new Map(
+    healthMetrics.map((metric) => [metric.metricType, metric]),
+  );
+
+  return [
+    buildHealthInput("HRV", "hrv", healthMetricByType),
+    buildHealthInput("Resting HR", "resting_hr", healthMetricByType),
+    buildHealthInput("Sleep", "sleep_hours", healthMetricByType),
+    {
+      label: "Daily Stress",
+      source: "Derived",
+      available: dailyStress != null,
+      href: "/training-load",
+      detail: dailyStress
+        ? `Computed local stress exists for ${dailyStress.date}.`
+        : "Missing computed daily stress from /training-load.",
+    },
+  ];
+}
+
+function buildHealthInput(
+  label: string,
+  metricType: string,
+  metricsByType: Map<string, AppleHealthMetricSnapshot>,
+): DailyBatteryInput {
+  const metric = metricsByType.get(metricType);
+  const hasValue =
+    typeof metric?.value === "number" && Number.isFinite(metric.value);
+
+  return {
+    label,
+    source: "Apple Health",
+    available: hasValue,
+    href: "/health",
+    detail: hasValue
+      ? `Latest Apple Health ${label} exists for ${metric.date}.`
+      : `Missing Apple Health ${label} in local SQLite.`,
+  };
 }
 
 function buildRunMetric(run: DashboardRunSnapshot | null): {

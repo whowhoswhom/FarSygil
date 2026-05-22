@@ -111,6 +111,7 @@ The active product shell includes:
 Surface rules:
 - major surfaces use dark glass slabs with blur and inset highlights
 - cards may use a tone wash, icon badge, metric value, and mini-chart frame
+- neutral provenance cards use the base glass surface without decorative orbs
 - route shells and cards should feel tactile but restrained
 - motion is light and purposeful only
 
@@ -220,6 +221,7 @@ The active public route model is:
 - `/dashboard` connected landing
 - `/runs`
 - `/runs/[id]`
+- `/archive`
 - `/connect`
 - `/settings`
 - `/health`
