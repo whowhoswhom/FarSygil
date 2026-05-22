@@ -37,8 +37,10 @@ export interface ArchiveStatusSnapshot {
 /**
  * Reads the local archive provenance snapshot without triggering sync/import
  * work. Detail coverage is the share of Strava-sourced activity rows with a
- * stored `activity_raw_json` detailed payload; stream coverage is the share
- * with a stored `activity_raw_json` streams payload.
+ * stored `activity_raw_json` `detailed_activity` payload; summary-only
+ * payloads do not count. Stream coverage is the share with any stored
+ * `activity_raw_json` `streams` payload; it does not mean every individual
+ * stream type, such as heart rate or cadence, is present.
  */
 export async function getArchiveStatusSnapshot(
   database: FarSygilDatabase,
@@ -257,6 +259,8 @@ function parseArchiveTimestamp(value: string): number {
   const sqliteDate = /^\d{4}-\d{2}-\d{2}$/;
   let normalized = trimmed;
 
+  // SQLite defaults are unsuffixed. Treat them as UTC before comparing them
+  // with ISO timestamps that may already carry an explicit offset.
   if (sqliteDateTime.test(trimmed)) {
     normalized = trimmed.replace(" ", "T") + "Z";
   } else if (sqliteDate.test(trimmed)) {

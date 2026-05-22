@@ -301,6 +301,36 @@ describe("archive status snapshot", () => {
       sqlite.close();
     }
   });
+
+  it("normalizes SQLite and ISO timestamps before choosing latest local write", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.activities).values({
+        stravaId: 7201,
+        source: "strava",
+        sportType: "Run",
+        name: "SQLite Timestamp Run",
+        startDate: "2026-05-14T12:00:00.000Z",
+        updatedAt: "2026-05-14 09:30:00",
+      });
+      await database.insert(testSchema.dataImportLogs).values({
+        source: "strava",
+        eventType: "sync_complete",
+        message: "ISO timestamp",
+        startedAt: "2026-05-14T09:00:00.000Z",
+        completedAt: "2026-05-14T10:00:00.000Z",
+      });
+
+      const snapshot = await getArchiveStatusSnapshot(database);
+
+      expect(snapshot.latest.latestLocalWriteAt).toBe(
+        "2026-05-14T10:00:00.000Z",
+      );
+    } finally {
+      sqlite.close();
+    }
+  });
 });
 
 function createTestDatabase(): {

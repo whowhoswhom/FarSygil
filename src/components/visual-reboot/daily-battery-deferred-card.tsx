@@ -53,7 +53,12 @@ export function DailyBatteryDeferredCard({
               className="flex items-start justify-between gap-4 rounded-[18px] border border-white/6 bg-black/10 px-4 py-4"
             >
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">{input.label}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold text-white">{input.label}</p>
+                  <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-3)]">
+                    {input.source}
+                  </span>
+                </div>
                 <p className="mt-1 text-xs leading-relaxed text-[var(--ink-3)]">
                   {input.detail}
                 </p>

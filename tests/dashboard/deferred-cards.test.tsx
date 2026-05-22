@@ -87,6 +87,7 @@ describe("dashboard deferred and provenance cards", () => {
     expect(html.match(/Absent/g)).toHaveLength(4);
     expect(html).toContain('href="/health"');
     expect(html).toContain('href="/training-load"');
+    expect(html).toContain("No battery score is computed");
     expect(html).not.toContain(">--<");
     expect(html).not.toContain("72%");
   });

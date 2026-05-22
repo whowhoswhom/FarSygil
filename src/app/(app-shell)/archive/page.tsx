@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { ArchiveStatusCard } from "@/components/visual-reboot";
 import { databasePath, db } from "@/db/client";
@@ -31,46 +30,6 @@ export default async function ArchivePage() {
       </section>
 
       <ArchiveStatusCard snapshot={snapshot} />
-
-      <section className="dashboard-shell-card p-5 md:p-6">
-        <div className="relative grid gap-4 md:grid-cols-3">
-          <ArchiveRouteNote
-            title="Strava"
-            body="OAuth, summary sync, and detail sync are managed from Connect."
-            href="/connect"
-          />
-          <ArchiveRouteNote
-            title="Apple Health"
-            body="ZIP and XML imports are managed from Health."
-            href="/health"
-          />
-          <ArchiveRouteNote
-            title="Training Load"
-            body="Daily stress recompute is managed from Training Load."
-            href="/training-load"
-          />
-        </div>
-      </section>
     </main>
-  );
-}
-
-function ArchiveRouteNote({
-  title,
-  body,
-  href,
-}: {
-  title: string;
-  body: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="block rounded-[20px] border border-white/6 bg-black/10 px-4 py-4 text-left hover:border-white/12 hover:bg-white/[0.03]"
-    >
-      <p className="text-base font-semibold text-white">{title}</p>
-      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-3)]">{body}</p>
-    </Link>
   );
 }
