@@ -81,15 +81,15 @@ export function DailyStressPanel({
   }
 
   return (
-    <section className="dashboard-shell-card p-5 md:p-6">
-      <div className="relative flex flex-col gap-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <section className="dashboard-shell-card p-4 md:p-5">
+      <div className="relative flex flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="section-kicker mb-2">Daily stress</p>
-            <h2 className="text-[2rem] font-semibold tracking-[-0.045em] text-white">
+            <p className="section-kicker mb-1">Daily stress</p>
+            <h2 className="text-[1.6rem] font-semibold tracking-[-0.045em] text-white md:text-[2rem]">
               Real local load input
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--ink-2)]">
+            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--ink-2)] md:text-sm">
               Uses Strava suffer score when present. Otherwise, it uses a
               conservative heart-rate and duration fallback when both fields are
               available on a real local run.
@@ -99,17 +99,17 @@ export function DailyStressPanel({
             type="button"
             onClick={() => void recompute()}
             disabled={isRecomputing || isPending}
-            className="accent-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60 md:px-5 md:py-3 md:text-sm"
           >
             {isRecomputing || isPending ? "Computing..." : "Compute daily stress"}
           </button>
         </div>
 
-        <div className="dashboard-mock-empty grid gap-4 p-5 md:grid-cols-[280px_minmax(0,1fr)]">
-          <div className="rounded-[18px] border border-white/6 bg-black/10 px-4 py-4">
-            <p className="section-kicker mb-3">Latest</p>
+        <div className="dashboard-mock-empty grid gap-3 p-3 md:grid-cols-[220px_minmax(0,1fr)] md:p-4">
+          <div className="rounded-[16px] border border-white/6 bg-black/10 px-4 py-4">
+            <p className="section-kicker mb-2">Latest</p>
             <div className="flex items-end gap-2">
-              <span className="dashboard-tile-value text-[3rem] font-semibold text-white/82">
+              <span className="dashboard-tile-value text-[2.55rem] font-semibold text-white/82 md:text-[3rem]">
                 {latest ? formatStress(latest.dailyTrainingStress) : "--"}
               </span>
               {latest ? (
@@ -121,15 +121,15 @@ export function DailyStressPanel({
             </p>
           </div>
 
-          <div className="min-h-40 rounded-[18px] border border-white/6 bg-black/10 px-4 py-4">
+          <div className="min-h-36 rounded-[16px] border border-white/6 bg-black/10 px-3 py-3 md:px-4 md:py-4">
             {chartValues.length >= 2 ? (
               <MiniLineChart
                 values={chartValues}
                 tone="trend"
-                className="min-h-32"
+                className="min-h-28 md:min-h-32"
               />
             ) : (
-              <div className="flex min-h-32 items-center justify-center text-center text-sm leading-relaxed text-[var(--ink-3)]">
+              <div className="flex min-h-28 items-center justify-center text-center text-sm leading-relaxed text-[var(--ink-3)] md:min-h-32">
                 Data not available until at least two days have real computed
                 stress.
               </div>
@@ -137,7 +137,7 @@ export function DailyStressPanel({
           </div>
         </div>
 
-        <p className="text-sm leading-relaxed text-[var(--ink-3)]">
+        <p className="text-xs leading-relaxed text-[var(--ink-3)] md:text-sm">
           ATL, CTL, TSB, ACWR, and recovery remain unavailable until the next
           analytics pass computes them from this daily stress input.
         </p>
