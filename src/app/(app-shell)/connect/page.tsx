@@ -49,99 +49,136 @@ export default async function ConnectPage() {
     ]);
 
   return (
-    <main className="page-shell flex flex-col gap-6 pb-6 text-[var(--ink-1)]">
-      <section className="px-1 pt-1">
-        <p className="section-kicker mb-3">Connect</p>
-        <h1 className="text-[2.9rem] font-semibold tracking-[-0.07em] text-white md:text-[4rem]">
-          Connect
-        </h1>
-      </section>
-
-      <section className="dashboard-shell-card p-6 md:p-7">
-        <div className="relative flex flex-col gap-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-4">
-              <MetricIconBadge tone="exercise" icon="connect" size="lg" />
-              <div className="min-w-0">
-                <h2 className="text-[2.2rem] font-semibold tracking-[-0.05em] text-white md:text-[3rem]">
-                  Strava connection
-                </h2>
-                <p className="mt-2 max-w-2xl text-base leading-relaxed text-[var(--ink-2)]">
-                  OAuth credentials and sync history stay local. Only direct
-                  Strava requests leave this machine after you connect, either
-                  from sync controls or the local freshness check.
-                </p>
-              </div>
-            </div>
-            <StatusPill connected={status.connected} expired={status.expired} />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <ConnectMetric label="Athlete ID" value={status.athleteId ?? "--"} />
-            <ConnectMetric label="Scope" value={status.scope ?? "--"} />
-            <ConnectMetric
-              label="Token expires"
-              value={status.connected ? formatExpiry(status.expiresAt) : "--"}
-            />
-            <ConnectMetric label="Last updated" value={status.updatedAt ?? "--"} />
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <a
-              href="/api/strava/connect"
-              className="accent-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
-            >
-              {status.connected ? "Reconnect Strava" : "Connect Strava"}
-            </a>
-            <Link
-              href="/runs"
-              className="ghost-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
-            >
-              Open Runs
-            </Link>
-            <Link
-              href="/settings"
-              className="ghost-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
-            >
-              Open Settings
-            </Link>
-          </div>
-
-          <SyncPanel
-            connected={status.connected}
-            logs={syncLogs}
-            coverage={{
-              totalActivities: activityTotals,
-              detailActivities: detailTotals,
-              streamActivities: streamTotals,
-            }}
-          />
-
-          <div className="rounded-[22px] border border-white/6 bg-black/10 px-5 py-5">
-            <p className="section-kicker mb-2">Local archive</p>
-            <p className="text-sm text-[var(--ink-2)]">
-              Summary sync builds the archive first. Detail sync backfills split
-              rows and stream rows so `/runs/[id]` can render richer local run
-              detail without fabricating anything.
-            </p>
-            {latestActivity ? (
-              <p className="mt-3 text-sm text-[var(--ink-3)]">
-                Latest archived activity:{" "}
-                <span className="text-[var(--ink-1)]">
-                  {latestActivity.name ?? "Untitled effort"}
-                </span>
-                {latestActivity.startDate
-                  ? ` | ${new Date(latestActivity.startDate).toLocaleDateString()}`
-                  : ""}
-              </p>
-            ) : (
-              <p className="mt-3 text-sm text-[var(--ink-3)]">
-                No local activities yet. Connect Strava and run a sync to begin.
-              </p>
-            )}
-          </div>
+    <main className="page-shell flex flex-col gap-4 pb-6 text-[var(--ink-1)]">
+      <section className="flex flex-col gap-2 px-1 pt-1 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="section-kicker mb-2">Connect</p>
+          <h1 className="text-[2.3rem] font-semibold tracking-[-0.07em] text-white md:text-[2.95rem]">
+            Connect
+          </h1>
         </div>
+        <p className="max-w-xl text-sm leading-relaxed text-[var(--ink-3)] md:text-right">
+          OAuth, sync controls, and import provenance for the local Strava
+          archive.
+        </p>
       </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+        <article className="dashboard-shell-card p-4 md:p-5">
+          <div className="relative flex h-full flex-col gap-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <MetricIconBadge tone="exercise" icon="connect" />
+                <div className="min-w-0">
+                  <p className="section-kicker mb-1">Strava</p>
+                  <h2 className="text-[1.7rem] font-semibold tracking-[-0.05em] text-white md:text-[2.15rem]">
+                    Connection
+                  </h2>
+                </div>
+              </div>
+              <StatusPill connected={status.connected} expired={status.expired} />
+            </div>
+
+            <p className="max-w-2xl text-sm leading-relaxed text-[var(--ink-2)]">
+              OAuth credentials and sync history stay local. Only direct Strava
+              requests leave this machine after you connect, either from sync
+              controls or the local freshness check.
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <ConnectMetric label="Athlete" value={status.athleteId ?? "--"} />
+              <ConnectMetric label="Scope" value={status.scope ?? "--"} />
+              <ConnectMetric
+                label="Expires"
+                value={status.connected ? formatExpiry(status.expiresAt) : "--"}
+              />
+              <ConnectMetric label="Updated" value={status.updatedAt ?? "--"} />
+            </div>
+
+            <div className="mt-auto flex flex-wrap gap-2">
+              <a
+                href="/api/strava/connect"
+                className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold sm:text-sm"
+              >
+                {status.connected ? "Reconnect Strava" : "Connect Strava"}
+              </a>
+              <Link
+                href="/runs"
+                className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold sm:text-sm"
+              >
+                Open Runs
+              </Link>
+              <Link
+                href="/settings"
+                className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold sm:text-sm"
+              >
+                Settings
+              </Link>
+            </div>
+          </div>
+        </article>
+
+        <article className="dashboard-shell-card p-4 md:p-5">
+          <div className="relative flex h-full flex-col gap-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="section-kicker mb-1">Local archive</p>
+                <h2 className="text-[1.7rem] font-semibold tracking-[-0.05em] text-white md:text-[2.15rem]">
+                  Sync coverage
+                </h2>
+              </div>
+              <MetricIconBadge tone="distance" icon="archive" size="sm" />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <ArchiveMetric label="Runs" value={String(activityTotals)} />
+              <ArchiveMetric
+                label="Details"
+                value={formatCoverage(detailTotals, activityTotals)}
+              />
+              <ArchiveMetric
+                label="Streams"
+                value={formatCoverage(streamTotals, activityTotals)}
+              />
+            </div>
+
+            <div className="rounded-[18px] border border-white/6 bg-black/10 px-4 py-3">
+              <p className="section-kicker mb-2">Latest activity</p>
+              {latestActivity ? (
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <p className="max-w-[18rem] truncate text-base font-semibold text-white">
+                    {latestActivity.name ?? "Untitled effort"}
+                  </p>
+                  <p className="text-xs text-[var(--ink-3)]">
+                    {latestActivity.startDate
+                      ? formatShortDate(latestActivity.startDate)
+                      : "--"}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--ink-3)]">
+                  No local activities yet. Connect Strava and run a sync.
+                </p>
+              )}
+            </div>
+
+            <p className="mt-auto text-xs leading-relaxed text-[var(--ink-3)]">
+              Summary sync creates archive rows. Detail sync backfills split and
+              stream rows for richer local run detail.
+            </p>
+          </div>
+        </article>
+      </section>
+
+      <SyncPanel
+        connected={status.connected}
+        logs={syncLogs}
+        coverage={{
+          totalActivities: activityTotals,
+          detailActivities: detailTotals,
+          streamActivities: streamTotals,
+        }}
+      />
     </main>
   );
 }
@@ -184,11 +221,32 @@ function ConnectMetric({
   value: string | number;
 }) {
   return (
-    <div className="rounded-[20px] border border-white/6 bg-black/10 px-4 py-4">
-      <p className="section-kicker mb-2">{label}</p>
-      <p className="text-sm text-[var(--ink-1)]">{value}</p>
+    <div className="min-w-0 rounded-[18px] border border-white/6 bg-black/10 px-3 py-3">
+      <p className="section-kicker mb-1">{label}</p>
+      <p className="truncate text-xs text-[var(--ink-1)] sm:text-sm" title={String(value)}>
+        {value}
+      </p>
     </div>
   );
+}
+
+function ArchiveMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-white/6 bg-black/10 px-3 py-3">
+      <p className="section-kicker mb-2">{label}</p>
+      <p className="dashboard-tile-value text-[1.75rem] font-semibold text-white md:text-[2rem]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function formatCoverage(count: number, total: number): string {
+  if (total <= 0) {
+    return "--";
+  }
+
+  return `${Math.round((count / total) * 100)}%`;
 }
 
 function formatExpiry(expiresAt: number | null): string {
@@ -200,5 +258,17 @@ function formatExpiry(expiresAt: number | null): string {
     return new Date(expiresAt * 1000).toLocaleString();
   } catch {
     return "--";
+  }
+}
+
+function formatShortDate(value: string): string {
+  try {
+    return new Date(value).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return value;
   }
 }
