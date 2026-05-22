@@ -92,14 +92,11 @@ export function DashboardWeeklySummaryCard({
                       </div>
                     ) : (
                       <div className="mt-2">
-                        <p
-                          className="dashboard-tile-value text-[1.45rem] font-semibold md:text-[2.7rem]"
-                          style={{ color: "var(--dashboard-tone)" }}
-                        >
+                        <p className="dashboard-tile-value text-[1.45rem] font-semibold text-[var(--ink-3)] md:text-[2.7rem]">
                           --
                         </p>
                         {item.emptyHint ? (
-                          <p className="mt-1 line-clamp-1 text-[0.6rem] leading-relaxed text-[var(--ink-3)] md:text-[0.68rem]">
+                          <p className="mt-1 line-clamp-2 text-[0.7rem] leading-relaxed text-[var(--ink-3)] md:text-xs">
                             {item.emptyHint}
                           </p>
                         ) : null}

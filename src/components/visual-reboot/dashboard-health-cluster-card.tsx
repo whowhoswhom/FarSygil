@@ -51,7 +51,7 @@ export function DashboardHealthClusterCard({
             return (
               <div key={metric.label} className="relative flex min-w-0 flex-col gap-2">
                 {index < metrics.length - 1 ? (
-                  <div className="dashboard-stat-divider absolute right-0 top-0 hidden h-full md:block" />
+                  <div className="dashboard-stat-divider absolute right-0 top-0 h-full" />
                 ) : null}
                 <div className="flex items-center gap-1.5">
                   <MetricIconBadge tone={metric.tone} icon={metric.icon} size="sm" />
