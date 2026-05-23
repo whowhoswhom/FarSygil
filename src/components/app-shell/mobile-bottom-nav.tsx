@@ -29,7 +29,7 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
             href={item.href}
             className={`app-mobile-nav-link ${active ? "app-mobile-nav-link-active" : ""}`.trim()}
           >
-            <span className="text-lg">
+            <span className="text-[1.05rem]">
               <AppIcon name={item.icon} />
             </span>
             <span>{item.label}</span>
