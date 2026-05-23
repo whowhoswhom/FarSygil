@@ -22,6 +22,8 @@ import {
   DashboardHealthClusterCard,
   DashboardMetricTile,
   DashboardRecentRunCard,
+  DashboardRecoveryCard,
+  DashboardTrainingLoadCard,
   DashboardWeeklySummaryCard,
 } from "@/components/visual-reboot";
 import {
@@ -129,7 +131,7 @@ export default async function DashboardPage() {
         ]}
       />
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
         <DashboardRecentRunCard
           title="Recent Run"
           href={
@@ -151,43 +153,31 @@ export default async function DashboardPage() {
           hint={recentRunMetric.hint}
         />
 
-        <DashboardDailyStressCard
-          latest={dailyStress.latest}
-          series={dailyStress.series}
-        />
-      </div>
-
-      <div className="grid items-start gap-4 2xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-        <DashboardHealthClusterCard
-          title="Health & Wellness"
-          sourceLabel="Apple Health"
-          metrics={buildAppleHealthDashboardMetrics(
-            latestHealthMetrics,
-            healthTrendSeries,
-          )}
-          hint={
-            healthSummary.metricRows > 0
-              ? `Latest local Apple Health metric date: ${
-                  healthSummary.latestMetricDate ?? "--"
-                }.`
-              : "Data not available until the Apple Health importer writes real physiology rows into local SQLite."
-          }
-        />
-        <ArchiveStatusCard snapshot={archiveStatus} href="/archive" compact />
-      </div>
-
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.75fr)]">
-        <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
           <DashboardMetricTile
-            title="Avg Power"
-            tone="recovery"
-            icon="spark"
+            title="Longest Run"
+            tone="exercise"
+            icon="run"
             source="Strava"
-            value={formatRoundedMetric(runningSnapshot.averagePowerWatts)}
-            unit={runningSnapshot.averagePowerWatts != null ? "W" : undefined}
-            hint="Data not available until the current week has real Strava runs with average watts and moving time."
-            chartValues={runningSnapshot.powerSeries}
+            value={longestRunMetric.value}
+            unit={longestRunMetric.unit}
+            href={
+              runningSnapshot.longestRun
+                ? `/runs/${runningSnapshot.longestRun.id}`
+                : undefined
+            }
+            chartValues={runningSnapshot.distanceSeriesMiles}
           />
+
+          <DashboardDailyStressCard
+            latest={dailyStress.latest}
+            series={dailyStress.series}
+          />
+        </div>
+      </div>
+
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(360px,0.8fr)_minmax(0,1.55fr)]">
+        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
           <DashboardMetricTile
             title="Avg Cadence"
             tone="distance"
@@ -207,24 +197,49 @@ export default async function DashboardPage() {
             chartValues={runningSnapshot.heartrateSeries}
           />
           <DashboardMetricTile
-            title="Longest Run"
-            tone="exercise"
-            icon="run"
+            title="Avg Power"
+            tone="recovery"
+            icon="spark"
             source="Strava"
-            value={longestRunMetric.value}
-            unit={longestRunMetric.unit}
-            href={
-              runningSnapshot.longestRun
-                ? `/runs/${runningSnapshot.longestRun.id}`
-                : undefined
-            }
-            chartValues={runningSnapshot.distanceSeriesMiles}
+            value={formatRoundedMetric(runningSnapshot.averagePowerWatts)}
+            unit={runningSnapshot.averagePowerWatts != null ? "W" : undefined}
+            hint="Data not available until the current week has real Strava runs with average watts and moving time."
+            chartValues={runningSnapshot.powerSeries}
           />
         </div>
+
+        <DashboardHealthClusterCard
+          title="Health & Wellness"
+          sourceLabel="Apple Health"
+          metrics={buildAppleHealthDashboardMetrics(
+            latestHealthMetrics,
+            healthTrendSeries,
+          )}
+          hint={
+            healthSummary.metricRows > 0
+              ? `Latest local Apple Health metric date: ${
+                  healthSummary.latestMetricDate ?? "--"
+                }.`
+              : "Data not available until the Apple Health importer writes real physiology rows into local SQLite."
+          }
+        />
+      </div>
+
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <DashboardTrainingLoadCard
+          hint="Data not available until FarSygil computes ATL, CTL, TSB, and related load metrics from daily stress history."
+        />
+        <DashboardRecoveryCard
+          hint="Data not available until recovery can be derived from imported health signals and computed load values."
+        />
+      </div>
+
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.75fr)]">
         <DailyBatteryDeferredCard
           inputs={batteryInputs}
           href="/training-load"
         />
+        <ArchiveStatusCard snapshot={archiveStatus} href="/archive" compact />
       </div>
     </main>
   );
