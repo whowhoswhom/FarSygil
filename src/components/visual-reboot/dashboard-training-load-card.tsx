@@ -2,8 +2,10 @@ import { MetricIconBadge } from "@/components/visual-reboot/icon-badge";
 
 export function DashboardTrainingLoadCard({
   hint,
+  title = "Training Load",
 }: {
   hint: string;
+  title?: string;
 }) {
   return (
     <article className="dashboard-shell-card p-4 md:p-5">
@@ -12,7 +14,7 @@ export function DashboardTrainingLoadCard({
           <MetricIconBadge tone="trend" icon="load" />
           <div>
             <h3 className="text-[1.55rem] font-semibold tracking-[-0.045em] text-white md:text-[1.85rem]">
-              Training Load
+              {title}
             </h3>
             <p className="text-sm text-[var(--ink-2)]">Derived analytics</p>
           </div>

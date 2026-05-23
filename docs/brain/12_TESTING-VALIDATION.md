@@ -92,6 +92,7 @@ Relevant files:
 - `tests/apple-health/queries.test.ts`
 - `tests/dashboard/health-cluster-card.test.tsx`
 - `tests/training-load/daily-stress.test.ts`
+- `tests/training-load/daily-stress-panel.test.tsx`
 - `tests/training-load/recompute-route.test.ts`
 
 Current Phase 2 assertions cover:
@@ -124,6 +125,8 @@ Current Phase 2 assertions cover:
 - training-load daily stress recompute, including Strava suffer-score priority,
   HR-duration fallback, no fake zero rows when inputs are missing, preservation
   of future ATL / CTL / TSB columns, and no-store route behavior
+- training-load daily stress panel rendering, including recent computed-day bars
+  sourced only from real persisted daily stress rows and no fake readiness labels
 
 ### Phase 3 / future analytics
 
