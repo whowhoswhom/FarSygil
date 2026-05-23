@@ -57,6 +57,7 @@ export default async function TrainingLoadPage() {
 
         <div className="grid gap-4">
           <DashboardTrainingLoadCard
+            title="Load Status"
             hint="Data not available until FarSygil computes ATL, CTL, TSB, and related load metrics from daily stress history."
           />
           <DashboardRecoveryCard
