@@ -62,6 +62,7 @@ Relevant files:
 - `tests/activities/filters.test.ts`
 - `tests/activities/aggregates.test.ts`
 - `tests/activities/polyline.test.ts`
+- `tests/activities/route-preview.test.tsx`
 
 ### Phase 2 / visual reboot and detail sync
 
@@ -98,6 +99,8 @@ Current Phase 2 assertions cover:
 - run archive filtering and ordering
 - run-detail query reads from `activities`, `activity_splits`, and
   `activity_streams`
+- faux-map route previews keep distance-only chips and derive start/end markers
+  from the real normalized route path
 - split fallback behavior and malformed stream degradation
 - home smart-entry redirect for connected users and onboarding render for
   disconnected users
