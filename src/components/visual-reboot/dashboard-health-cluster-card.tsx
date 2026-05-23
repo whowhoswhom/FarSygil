@@ -25,6 +25,8 @@ export function DashboardHealthClusterCard({
   metrics: HealthClusterMetric[];
   hint: string;
 }) {
+  const columnCount = Math.max(metrics.length, 1);
+
   return (
     <article className="dashboard-shell-card p-4 md:p-5">
       <div className="relative flex flex-col gap-3">
@@ -43,7 +45,10 @@ export function DashboardHealthClusterCard({
           </span>
         </div>
 
-        <div className="dashboard-mock-empty grid grid-cols-5 gap-2 p-3">
+        <div
+          className="dashboard-mock-empty grid gap-2 p-3"
+          style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+        >
           {metrics.map((metric, index) => {
             const hasChart =
               Array.isArray(metric.chartValues) && metric.chartValues.length >= 2;

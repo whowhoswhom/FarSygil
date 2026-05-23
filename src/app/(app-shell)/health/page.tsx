@@ -21,6 +21,12 @@ export default async function HealthPage() {
     getLatestAppleHealthMetrics(db, metricTypes),
     getAppleHealthMetricTrendSeries(db, metricTypes),
   ]);
+  const healthMetrics = buildAppleHealthDashboardMetrics(
+    latestMetrics,
+    trendSeries,
+  );
+  const vitalsMetrics = healthMetrics.slice(0, 3);
+  const dailySignalMetrics = healthMetrics.slice(3);
 
   return (
     <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
@@ -46,16 +52,25 @@ export default async function HealthPage() {
       </section>
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
-        <DashboardHealthClusterCard
-          title="Vitals"
-          sourceLabel="Apple Health"
-          metrics={buildAppleHealthDashboardMetrics(latestMetrics, trendSeries)}
-          hint={
-            summary.metricRows > 0
-              ? `Latest local Apple Health metric date: ${summary.latestMetricDate ?? "--"}.`
-              : "Data not available until the Apple Health importer parses real exports and stores daily metric rows locally."
-          }
-        />
+        <div className="grid gap-4">
+          <DashboardHealthClusterCard
+            title="Vitals"
+            sourceLabel="Apple Health"
+            metrics={vitalsMetrics}
+            hint={
+              summary.metricRows > 0
+                ? `Latest local Apple Health metric date: ${summary.latestMetricDate ?? "--"}.`
+                : "Data not available until the Apple Health importer parses real exports and stores daily metric rows locally."
+            }
+          />
+
+          <DashboardHealthClusterCard
+            title="Daily Signals"
+            sourceLabel="Apple Health"
+            metrics={dailySignalMetrics}
+            hint="Sleep and steps render only when real Apple Health rows exist locally; missing signals stay --."
+          />
+        </div>
 
         <AppleHealthImportPanel
           metricRows={summary.metricRows}
