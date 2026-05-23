@@ -22,6 +22,8 @@ import {
   DashboardHealthClusterCard,
   DashboardMetricTile,
   DashboardRecentRunCard,
+  DashboardRecoveryCard,
+  DashboardTrainingLoadCard,
   DashboardWeeklySummaryCard,
 } from "@/components/visual-reboot";
 import {
@@ -223,12 +225,21 @@ export default async function DashboardPage() {
         />
       </div>
 
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <DashboardTrainingLoadCard
+          hint="Data not available until FarSygil computes ATL, CTL, TSB, and related load metrics from daily stress history."
+        />
+        <DashboardRecoveryCard
+          hint="Data not available until recovery can be derived from imported health signals and computed load values."
+        />
+      </div>
+
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.75fr)]">
-        <ArchiveStatusCard snapshot={archiveStatus} href="/archive" compact />
         <DailyBatteryDeferredCard
           inputs={batteryInputs}
           href="/training-load"
         />
+        <ArchiveStatusCard snapshot={archiveStatus} href="/archive" compact />
       </div>
     </main>
   );
