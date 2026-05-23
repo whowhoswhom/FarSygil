@@ -23,6 +23,7 @@ export function RoutePreview({
 }: RoutePreviewProps) {
   const gradientId = `route-gradient-${activityId}`;
   const glowId = `route-glow-${activityId}`;
+  const markers = pathData ? getRouteEndpointMarkers(pathData) : null;
   const frameClass = framed
     ? "faux-map-frame rounded-[22px]"
     : "rounded-[inherit] border-0 bg-transparent";
@@ -88,11 +89,42 @@ export function RoutePreview({
           pathLength={1}
           className={animate ? "route-draw" : undefined}
         />
-        <circle cx="32" cy="162" r={compact ? 5 : 6.5} fill="#071005" opacity="0.95" />
-        <circle cx="32" cy="162" r={compact ? 3 : 4.25} fill="var(--metric-exercise)" />
-        <circle cx="166" cy="42" r={compact ? 6 : 8} fill="#071005" opacity="0.92" />
-        <circle cx="166" cy="42" r={compact ? 4 : 5.5} fill="#F7FBF0" />
-        <circle cx="166" cy="42" r={compact ? 2.5 : 3.25} fill="var(--metric-exercise)" />
+        {markers ? (
+          <>
+            <circle
+              cx={markers.start.x}
+              cy={markers.start.y}
+              r={compact ? 5 : 6.5}
+              fill="#071005"
+              opacity="0.95"
+            />
+            <circle
+              cx={markers.start.x}
+              cy={markers.start.y}
+              r={compact ? 3 : 4.25}
+              fill="var(--metric-exercise)"
+            />
+            <circle
+              cx={markers.end.x}
+              cy={markers.end.y}
+              r={compact ? 6 : 8}
+              fill="#071005"
+              opacity="0.92"
+            />
+            <circle
+              cx={markers.end.x}
+              cy={markers.end.y}
+              r={compact ? 4 : 5.5}
+              fill="#F7FBF0"
+            />
+            <circle
+              cx={markers.end.x}
+              cy={markers.end.y}
+              r={compact ? 2.5 : 3.25}
+              fill="var(--metric-exercise)"
+            />
+          </>
+        ) : null}
       </svg>
       {chipLabel ? (
         <div className="faux-map-chip">
@@ -112,10 +144,37 @@ export function RoutePreview({
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="faux-map-chip-value">{chipLabel}</span>
-            <span className="faux-map-chip-label">Route detail</span>
           </div>
         </div>
       ) : null}
     </div>
   );
+}
+
+interface RouteMarkerPoint {
+  x: number;
+  y: number;
+}
+
+function getRouteEndpointMarkers(
+  pathData: string,
+): { start: RouteMarkerPoint; end: RouteMarkerPoint } | null {
+  const points = Array.from(
+    pathData.matchAll(/[ML]\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g),
+    ([, x, y]) => ({
+      x: Number(x),
+      y: Number(y),
+    }),
+  ).filter(
+    (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
+  );
+
+  if (points.length < 2) {
+    return null;
+  }
+
+  return {
+    start: points[0],
+    end: points[points.length - 1],
+  };
 }
