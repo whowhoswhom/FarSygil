@@ -143,8 +143,9 @@ data reality.
 - Real route now.
 - Imports either `apple_health_data/apple_health_export.zip` or an extracted
   `apple_health_data/apple_health_export/export.xml` through the local API.
-- Renders latest local VO2 Max, resting HR, HRV, sleep, and steps values when
-  real `health_metrics` rows with `source = "AppleHealth"` exist.
+- Renders latest local VO2 Max, resting HR, and HRV in a Vitals cluster, with
+  sleep and steps in a separate Daily Signals cluster, when real
+  `health_metrics` rows with `source = "AppleHealth"` exist.
 - Renders bounded trend sparklines only when a metric has at least two real
   local points.
 - Missing metrics continue to render as `--`.

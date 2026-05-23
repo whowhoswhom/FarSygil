@@ -90,6 +90,7 @@ Relevant files:
 - `tests/apple-health/import-route.test.ts`
 - `tests/apple-health/display.test.ts`
 - `tests/apple-health/queries.test.ts`
+- `tests/dashboard/health-cluster-card.test.tsx`
 - `tests/training-load/daily-stress.test.ts`
 - `tests/training-load/recompute-route.test.ts`
 
@@ -118,6 +119,8 @@ Current Phase 2 assertions cover:
 - Apple Health dashboard display helpers, including the shared metric order,
   `VO₂ Max` label, no unit suffix beside inline missing values, and chart values
   only when at least two real trend points exist
+- Health-page clusters support dense Vitals and Daily Signals sections without
+  adding fake Activity Rings, Move, or calorie surfaces
 - training-load daily stress recompute, including Strava suffer-score priority,
   HR-duration fallback, no fake zero rows when inputs are missing, preservation
   of future ATL / CTL / TSB columns, and no-store route behavior

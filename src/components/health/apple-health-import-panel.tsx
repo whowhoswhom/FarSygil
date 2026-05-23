@@ -94,20 +94,20 @@ export function AppleHealthImportPanel({
   }
 
   return (
-    <section className="rounded-[22px] border border-white/6 bg-black/10 px-5 py-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <section className="dashboard-shell-card p-4 md:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="section-kicker mb-2">Import control</p>
-          <h2 className="text-[2rem] font-semibold tracking-[-0.045em] text-white">
+          <p className="section-kicker mb-1">Import control</p>
+          <h2 className="text-[1.55rem] font-semibold tracking-[-0.045em] text-white md:text-[1.85rem]">
             Apple Health export
           </h2>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => void runImport()}
             disabled={isImporting || isPending}
-            className="accent-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isImporting || isPending ? "Importing..." : "Import extracted XML"}
           </button>
@@ -115,14 +115,14 @@ export function AppleHealthImportPanel({
             type="button"
             onClick={() => void runImport(APPLE_HEALTH_DEFAULT_ZIP_RELATIVE_PATH)}
             disabled={isImporting || isPending}
-            className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-[var(--ink-1)] transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-[var(--ink-1)] transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
           >
             Import ZIP
           </button>
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-5">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
         <MetricCell label="XML file" value={APPLE_HEALTH_DEFAULT_RELATIVE_PATH} />
         <MetricCell label="ZIP file" value={APPLE_HEALTH_DEFAULT_ZIP_RELATIVE_PATH} />
         <MetricCell label="Metric rows" value={String(metricRows)} />
@@ -134,7 +134,7 @@ export function AppleHealthImportPanel({
       </div>
 
       {latestImport ? (
-        <p className="mt-4 text-sm text-[var(--ink-3)]">
+        <p className="mt-4 text-xs leading-relaxed text-[var(--ink-3)] md:text-sm">
           Last file:{" "}
           <span className="text-[var(--ink-1)]">{latestImport.filename}</span>
           {typeof latestImport.recordCount === "number"
@@ -144,7 +144,7 @@ export function AppleHealthImportPanel({
       ) : null}
 
       {latestLog ? (
-        <p className="mt-2 text-sm text-[var(--ink-3)]">
+        <p className="mt-2 text-xs leading-relaxed text-[var(--ink-3)] md:text-sm">
           Last event:{" "}
           <span className="text-[var(--ink-1)]">
             {formatEventLabel(latestLog.eventType)}
@@ -171,9 +171,11 @@ export function AppleHealthImportPanel({
 
 function MetricCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[16px] border border-white/6 bg-black/10 px-3 py-3">
-      <p className="section-kicker mb-2">{label}</p>
-      <p className="break-words text-sm text-[var(--ink-1)]">{value}</p>
+    <div className="rounded-[14px] border border-white/6 bg-black/10 px-3 py-2.5">
+      <p className="section-kicker mb-1">{label}</p>
+      <p className="break-words text-xs leading-snug text-[var(--ink-1)] md:text-sm">
+        {value}
+      </p>
     </div>
   );
 }

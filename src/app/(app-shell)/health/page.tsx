@@ -1,7 +1,4 @@
-import {
-  DashboardHealthClusterCard,
-  MetricIconBadge,
-} from "@/components/visual-reboot";
+import { DashboardHealthClusterCard } from "@/components/visual-reboot";
 import { AppleHealthImportPanel } from "@/components/health/apple-health-import-panel";
 import { db } from "@/db/client";
 import {
@@ -24,48 +21,75 @@ export default async function HealthPage() {
     getLatestAppleHealthMetrics(db, metricTypes),
     getAppleHealthMetricTrendSeries(db, metricTypes),
   ]);
+  const healthMetrics = buildAppleHealthDashboardMetrics(
+    latestMetrics,
+    trendSeries,
+  );
+  const vitalsMetrics = healthMetrics.slice(0, 3);
+  const dailySignalMetrics = healthMetrics.slice(3);
 
   return (
-    <main className="page-shell flex flex-col gap-6 pb-6 text-[var(--ink-1)]">
-      <section className="px-1 pt-1">
-        <p className="section-kicker mb-3">Health</p>
-        <h1 className="text-[2.9rem] font-semibold tracking-[-0.07em] text-white md:text-[4rem]">
-          Health
-        </h1>
-      </section>
+    <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
+      <section className="grid items-end gap-4 px-1 pt-1 xl:grid-cols-[minmax(0,1fr)_minmax(260px,0.38fr)]">
+        <div>
+          <p className="section-kicker mb-2">Health & Wellness</p>
+          <h1 className="text-[2.35rem] font-semibold tracking-[-0.07em] text-white md:text-[3.35rem]">
+            Health
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--ink-2)] md:text-base">
+            Local Apple Health metrics only. Missing values stay empty until an
+            export writes real rows into SQLite.
+          </p>
+        </div>
 
-      <section className="dashboard-shell-card p-6 md:p-7">
-        <div className="relative flex items-center gap-4">
-          <MetricIconBadge tone="recovery" icon="health" size="lg" />
-          <div>
-            <h2 className="text-[2.2rem] font-semibold tracking-[-0.05em] text-white">
-              Apple Health
-            </h2>
-            <p className="mt-2 max-w-2xl text-base leading-relaxed text-[var(--ink-2)]">
-              Daily health metrics render only after a local Apple Health ZIP or
-              extracted export XML has been imported into SQLite.
-            </p>
+        <div className="dashboard-shell-card p-4">
+          <p className="section-kicker mb-2">Local source</p>
+          <div className="grid grid-cols-2 gap-3">
+            <StatusCell label="Metric rows" value={summary.metricRows.toLocaleString()} />
+            <StatusCell label="Latest metric" value={summary.latestMetricDate ?? "--"} />
           </div>
         </div>
       </section>
 
-      <AppleHealthImportPanel
-        metricRows={summary.metricRows}
-        latestMetricDate={summary.latestMetricDate}
-        latestImport={summary.latestImport}
-        latestLog={summary.latestLog}
-      />
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
+        <div className="grid gap-4">
+          <DashboardHealthClusterCard
+            title="Vitals"
+            sourceLabel="Apple Health"
+            metrics={vitalsMetrics}
+            hint={
+              summary.metricRows > 0
+                ? `Latest local Apple Health metric date: ${summary.latestMetricDate ?? "--"}.`
+                : "Data not available until the Apple Health importer parses real exports and stores daily metric rows locally."
+            }
+          />
 
-      <DashboardHealthClusterCard
-        title="Health & Wellness"
-        sourceLabel="Apple Health"
-        metrics={buildAppleHealthDashboardMetrics(latestMetrics, trendSeries)}
-        hint={
-          summary.metricRows > 0
-            ? `Latest local Apple Health metric date: ${summary.latestMetricDate ?? "--"}.`
-            : "Data not available until the Apple Health importer parses real exports and stores daily metric rows locally."
-        }
-      />
+          <DashboardHealthClusterCard
+            title="Daily Signals"
+            sourceLabel="Apple Health"
+            metrics={dailySignalMetrics}
+            hint="Sleep and steps render only when real Apple Health rows exist locally; missing signals stay --."
+          />
+        </div>
+
+        <AppleHealthImportPanel
+          metricRows={summary.metricRows}
+          latestMetricDate={summary.latestMetricDate}
+          latestImport={summary.latestImport}
+          latestLog={summary.latestLog}
+        />
+      </div>
     </main>
+  );
+}
+
+function StatusCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[16px] border border-white/6 bg-black/10 px-3 py-3">
+      <p className="section-kicker mb-1">{label}</p>
+      <p className="break-words text-sm font-semibold leading-snug text-white">
+        {value}
+      </p>
+    </div>
   );
 }
