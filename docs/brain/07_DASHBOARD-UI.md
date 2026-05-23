@@ -156,6 +156,7 @@ data reality.
 - Computes and renders daily training stress from real local Strava runs.
 - Uses Strava suffer score when present, otherwise a documented HR-duration
   fallback when average HR and moving time are available.
+- Shows recent computed daily-stress bars only from persisted daily stress rows.
 - Missing inputs do not create fake zero rows.
 - No fake ATL / CTL / TSB / recovery scores.
 

@@ -33,6 +33,11 @@ export function DailyStressPanel({
   const [isRecomputing, setIsRecomputing] = useState(false);
   const [isPending, startTransition] = useTransition();
   const chartValues = series.map((point) => point.dailyTrainingStress);
+  const recentStressPoints = series.slice(-5).reverse();
+  const maxRecentStress = Math.max(
+    ...recentStressPoints.map((point) => point.dailyTrainingStress),
+    0,
+  );
 
   async function recompute() {
     setFeedback(null);
@@ -119,6 +124,47 @@ export function DailyStressPanel({
             <p className="mt-3 text-sm text-[var(--ink-3)]">
               {latest?.date ?? "Data not available"}
             </p>
+
+            <div className="mt-5 grid gap-2">
+              <p className="section-kicker">Recent computed days</p>
+              {recentStressPoints.length > 0 ? (
+                <div className="grid gap-2">
+                  {recentStressPoints.map((point) => {
+                    const width =
+                      maxRecentStress > 0
+                        ? Math.max(
+                            12,
+                            (point.dailyTrainingStress / maxRecentStress) * 100,
+                          )
+                        : 0;
+
+                    return (
+                      <div
+                        key={point.date}
+                        className="grid grid-cols-[4.8rem_minmax(0,1fr)_3.2rem] items-center gap-2"
+                      >
+                        <span className="text-xs text-[var(--ink-3)]">
+                          {formatDateLabel(point.date)}
+                        </span>
+                        <span className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                          <span
+                            className="block h-full rounded-full bg-[var(--metric-trend)] shadow-[0_0_18px_-7px_var(--metric-trend)]"
+                            style={{ width: `${width}%` }}
+                          />
+                        </span>
+                        <span className="dashboard-tile-value text-right text-sm font-semibold text-[var(--metric-trend)]">
+                          {formatStress(point.dailyTrainingStress)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs leading-relaxed text-[var(--ink-3)]">
+                  No computed stress days yet.
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="min-h-36 rounded-[16px] border border-white/6 bg-black/10 px-3 py-3 md:px-4 md:py-4">
@@ -161,4 +207,14 @@ export function DailyStressPanel({
 
 function formatStress(value: number): string {
   return value >= 100 ? value.toFixed(0) : value.toFixed(1);
+}
+
+function formatDateLabel(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (!match) {
+    return value;
+  }
+
+  return `${Number(match[2])}/${Number(match[3])}`;
 }
