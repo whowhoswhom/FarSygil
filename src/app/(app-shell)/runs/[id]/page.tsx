@@ -73,21 +73,21 @@ export default async function RunDetailPage({
     dashboardSnapshot.longestRun?.id === detail.activity.id;
 
   return (
-    <main className="page-shell flex flex-col gap-6 pb-6 text-[var(--ink-1)]">
+    <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
       <div className="flex flex-wrap items-center justify-between gap-3 px-1 pt-1">
         <Link
           href="/runs"
-          className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[var(--ink-2)] hover:text-white"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[var(--ink-2)] hover:text-white"
           aria-label="Back to runs"
         >
-          <AppIcon name="arrow-left" className="text-xl" />
+          <AppIcon name="arrow-left" className="text-lg" />
         </Link>
         <Link
           href="/dashboard"
-          className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[var(--ink-2)] hover:text-white"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[var(--ink-2)] hover:text-white"
           aria-label="Return to dashboard"
         >
-          <AppIcon name="dashboard" className="text-xl" />
+          <AppIcon name="dashboard" className="text-lg" />
         </Link>
       </div>
 
@@ -146,7 +146,7 @@ export default async function RunDetailPage({
         hrefBuilder={(unit) => `/runs/${detail.activity.id}?splitUnit=${unit}`}
       />
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <RunChartTile
           title="Pace"
           tone="distance"
@@ -263,7 +263,7 @@ function formatDurationValue(value: number | null): string {
   const minutes = Math.floor((value % 3600) / 60);
 
   if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+    return `${hours}h${String(minutes).padStart(2, "0")}m`;
   }
 
   return `${minutes}m`;

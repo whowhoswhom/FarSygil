@@ -62,6 +62,7 @@ Relevant files:
 - `tests/activities/filters.test.ts`
 - `tests/activities/aggregates.test.ts`
 - `tests/activities/polyline.test.ts`
+- `tests/activities/route-preview.test.tsx`
 
 ### Phase 2 / visual reboot and detail sync
 
@@ -89,6 +90,7 @@ Relevant files:
 - `tests/apple-health/import-route.test.ts`
 - `tests/apple-health/display.test.ts`
 - `tests/apple-health/queries.test.ts`
+- `tests/dashboard/health-cluster-card.test.tsx`
 - `tests/training-load/daily-stress.test.ts`
 - `tests/training-load/daily-stress-panel.test.tsx`
 - `tests/training-load/recompute-route.test.ts`
@@ -99,6 +101,8 @@ Current Phase 2 assertions cover:
 - run archive filtering and ordering
 - run-detail query reads from `activities`, `activity_splits`, and
   `activity_streams`
+- faux-map route previews keep distance-only chips and derive start/end markers
+  from the real normalized route path
 - split fallback behavior and malformed stream degradation
 - home smart-entry redirect for connected users and onboarding render for
   disconnected users
@@ -116,6 +120,8 @@ Current Phase 2 assertions cover:
 - Apple Health dashboard display helpers, including the shared metric order,
   `VO₂ Max` label, no unit suffix beside inline missing values, and chart values
   only when at least two real trend points exist
+- Health-page clusters support dense Vitals and Daily Signals sections without
+  adding fake Activity Rings, Move, or calorie surfaces
 - training-load daily stress recompute, including Strava suffer-score priority,
   HR-duration fallback, no fake zero rows when inputs are missing, preservation
   of future ATL / CTL / TSB columns, and no-store route behavior

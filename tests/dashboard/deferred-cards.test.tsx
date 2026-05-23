@@ -5,6 +5,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   ArchiveStatusCard,
   DailyBatteryDeferredCard,
+  DashboardRecoveryCard,
+  DashboardTrainingLoadCard,
   DashboardWeeklySummaryCard,
 } from "../../src/components/visual-reboot";
 import type { ArchiveStatusSnapshot } from "../../src/server/archive/status";
@@ -217,6 +219,25 @@ describe("dashboard deferred and provenance cards", () => {
     expect(html).toMatch(/>--<\/p>/);
     expect(html).toContain("Requires at least one real run");
     expect(html).not.toContain("Data not available");
+  });
+
+  it("renders load and recovery dashboard frames without fake derived values", () => {
+    const loadHtml = renderToStaticMarkup(
+      <DashboardTrainingLoadCard hint="Derived load requires computed ATL, CTL, and TSB." />,
+    );
+    const recoveryHtml = renderToStaticMarkup(
+      <DashboardRecoveryCard hint="Recovery requires imported health signals and computed load." />,
+    );
+    const html = `${loadHtml}${recoveryHtml}`;
+
+    expect(html).toContain("Training Load");
+    expect(html).toContain("Recovery");
+    expect(html).toContain("Data not available");
+    expect(html).toContain(">--</p>");
+    expect(html).not.toContain("Steady");
+    expect(html).not.toContain("72%");
+    expect(html).not.toContain("Good");
+    expect(html).not.toContain("Body ready");
   });
 });
 

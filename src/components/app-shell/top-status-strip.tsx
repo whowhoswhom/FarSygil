@@ -19,8 +19,8 @@ export function TopStatusStrip({
 }: TopStatusStripProps) {
   return (
     <div className="surface-slab app-top-strip">
-      <div className="flex items-center justify-between gap-3 overflow-hidden">
-        <div className="flex min-w-0 items-center gap-2">
+      <div className="flex items-center justify-between gap-2 overflow-hidden">
+        <div className="flex min-w-0 items-center gap-1.5">
           <StatusBadge label={stravaLabel} state={stravaState} />
           <StatusBadge
             label={healthLabel}

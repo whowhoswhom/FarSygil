@@ -26,11 +26,11 @@ export function RunChartTile({
   hint?: string;
 }) {
   return (
-    <article className="dashboard-shell-card p-5" style={dashboardToneVars(tone)}>
-      <div className="relative flex h-full flex-col gap-4">
+    <article className="dashboard-shell-card p-4 md:p-5" style={dashboardToneVars(tone)}>
+      <div className="relative flex h-full flex-col gap-3">
         <div className="flex items-center gap-3">
           <MetricIconBadge tone={tone} icon={icon} />
-          <h3 className="text-[1.7rem] font-medium tracking-[-0.04em] text-white">
+          <h3 className="text-[1.45rem] font-medium tracking-[-0.04em] text-white md:text-[1.7rem]">
             {title}
           </h3>
         </div>
@@ -39,7 +39,7 @@ export function RunChartTile({
           <>
             <div className="flex items-end gap-2">
               <span
-                className="dashboard-tile-value text-[3rem] font-semibold"
+                className="dashboard-tile-value text-[2.45rem] font-semibold md:text-[3rem]"
                 style={{ color: "var(--dashboard-tone)" }}
               >
                 {value}
@@ -50,12 +50,12 @@ export function RunChartTile({
                 </span>
               ) : null}
             </div>
-            <div className="grid min-h-[6rem] gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <div className="grid min-h-[5.2rem] gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
               <div className="rounded-[16px] border border-white/6 bg-black/10 px-2 py-2">
                 {chartValues.length > 0 ? (
                   <MiniLineChart values={chartValues} tone={tone} />
                 ) : (
-                  <div className="h-[4rem]" />
+                  <div className="h-[3.5rem]" />
                 )}
               </div>
               {guideLabels.length > 0 ? (

@@ -19,10 +19,10 @@ export function RunSplitTable({
   hrefBuilder: (unit: SplitUnit) => string;
 }) {
   return (
-    <section className="dashboard-shell-card p-5 md:p-6">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+    <section className="dashboard-shell-card p-4 md:p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="section-kicker mb-2">Detail</p>
+          <p className="section-kicker mb-1">Detail</p>
           <h2 className="ink-safe text-[2rem] font-semibold tracking-[-0.05em] text-white">
             Splits
           </h2>
@@ -60,8 +60,8 @@ export function RunSplitTable({
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[22px] border border-white/6 bg-black/10">
-          <div className="grid grid-cols-[56px_minmax(0,1fr)_88px_72px] gap-4 border-b border-white/6 px-4 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--ink-3)] md:grid-cols-[72px_120px_minmax(0,1fr)_108px_88px]">
+        <div className="overflow-hidden rounded-[20px] border border-white/6 bg-black/10">
+          <div className="grid grid-cols-[44px_minmax(0,1fr)_76px_56px] gap-3 border-b border-white/6 px-3 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-3)] md:grid-cols-[64px_108px_minmax(0,1fr)_96px_76px]">
             <span>{unit === "km" ? "KM" : "Mile"}</span>
             <span className="hidden md:block">Pace</span>
             <span className="md:hidden">Pace</span>
@@ -79,7 +79,7 @@ export function RunSplitTable({
               return (
                 <div
                   key={split.splitIndex}
-                  className="grid grid-cols-[56px_minmax(0,1fr)_88px_72px] items-center gap-4 px-4 py-3 md:grid-cols-[72px_120px_minmax(0,1fr)_108px_88px]"
+                  className="grid grid-cols-[44px_minmax(0,1fr)_76px_56px] items-center gap-3 px-3 py-2.5 md:grid-cols-[64px_108px_minmax(0,1fr)_96px_76px]"
                 >
                   <span className="text-sm font-semibold text-[var(--ink-1)]">
                     {split.splitIndex}

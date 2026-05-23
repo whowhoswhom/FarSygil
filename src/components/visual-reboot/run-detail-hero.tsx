@@ -30,17 +30,17 @@ export function RunDetailHero({
   }>;
 }) {
   return (
-    <section className="flex flex-col gap-6">
-      <article className="dashboard-shell-card p-5 md:p-6">
-        <div className="relative flex flex-col gap-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-4">
+    <section className="flex flex-col gap-4">
+      <article className="dashboard-shell-card p-4 md:p-5">
+        <div className="relative flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3 md:gap-4">
               <MetricIconBadge tone="exercise" icon="run" size="lg" />
               <div className="min-w-0">
-                <h1 className="text-[2.8rem] font-semibold leading-[0.94] tracking-[-0.06em] text-white md:text-[4.2rem]">
+                <h1 className="text-[2.35rem] font-semibold leading-[0.94] tracking-[-0.06em] text-white md:text-[3.35rem]">
                   {title}
                 </h1>
-                <div className="mt-3 flex flex-wrap items-center gap-3">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(167,244,61,0.18)] bg-[rgba(167,244,61,0.1)] px-3 py-1 text-sm font-medium text-[var(--accent-bright)]">
                     <span className="h-2 w-2 rounded-full bg-[var(--accent-bright)]" />
                     {statusLabel}
@@ -49,9 +49,9 @@ export function RunDetailHero({
               </div>
             </div>
 
-            <div className="flex min-w-0 flex-col items-start gap-3 md:items-end">
+            <div className="flex min-w-0 flex-col items-start gap-2 md:items-end">
               <SourceLabel source="Strava" tone="exercise" />
-              <div className="text-left text-[1.1rem] leading-snug text-[var(--ink-2)] md:text-right">
+              <div className="text-left text-sm leading-snug text-[var(--ink-2)] md:text-right md:text-base">
                 <p>{sourceDateLabel}</p>
                 {sourceTimeLabel ? <p>{sourceTimeLabel}</p> : null}
               </div>
@@ -65,7 +65,7 @@ export function RunDetailHero({
       <RoutePreview
         activityId={activityId}
         pathData={pathData}
-        className="min-h-[320px] w-full rounded-[28px] md:min-h-[420px]"
+        className="min-h-[250px] w-full rounded-[26px] md:min-h-[320px]"
         chipLabel={distanceChipLabel}
       />
     </section>

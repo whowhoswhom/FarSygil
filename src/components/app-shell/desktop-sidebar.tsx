@@ -17,11 +17,11 @@ export function DesktopSidebar({ items }: DesktopSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="app-rail hidden lg:flex lg:w-[280px] lg:flex-col lg:justify-between">
+    <aside className="app-rail hidden lg:flex lg:w-[244px] lg:flex-col lg:justify-between 2xl:w-[264px]">
       <div className="app-rail-panel">
         <div className="app-brand-lockup">
-          <div className="flex items-center gap-4">
-            <AppLogoMark className="h-8 w-12 flex-none" />
+          <div className="flex items-center gap-3">
+            <AppLogoMark className="h-7 w-10 flex-none" />
             <div>
               <p className="app-wordmark">FarSygil</p>
               <p className="app-submark">Local-first running command center</p>
@@ -29,7 +29,7 @@ export function DesktopSidebar({ items }: DesktopSidebarProps) {
           </div>
         </div>
 
-        <nav className="mt-10 flex flex-col gap-3" aria-label="Primary">
+        <nav className="mt-8 flex flex-col gap-2" aria-label="Primary">
           {items.map((item) => {
             const active =
               pathname === item.href ||
@@ -52,8 +52,8 @@ export function DesktopSidebar({ items }: DesktopSidebarProps) {
       </div>
 
       <div className="app-rail-footer">
-        <p className="section-kicker mb-3">FarSygil</p>
-        <p className="text-sm text-[var(--ink-2)]">
+        <p className="section-kicker mb-2">FarSygil</p>
+        <p className="text-xs leading-relaxed text-[var(--ink-2)]">
           Single-user runtime. Local SQLite stays authoritative until you explicitly talk to Strava.
         </p>
       </div>

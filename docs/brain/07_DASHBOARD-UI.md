@@ -99,8 +99,9 @@ data reality.
 - Running renders from real local Strava-derived aggregates.
 - Default range is This Week, using the current Monday-to-Sunday aggregate
   window.
-- Wide layout order: weekly hero, Recent Run + Daily Stress, Health + Archive
-  Status, then Power/Cadence/HR/Longest Run + Daily Battery.
+- Wide layout order: weekly hero, Recent Run + Longest Run/Daily Stress,
+  Power/Cadence/HR + Health, Training Load + Recovery, then Daily Battery +
+  Archive Status.
 - Tablet and phone stack in the same importance order.
 - Health renders latest local Apple Health values and trend sparklines where
   imported rows exist.
@@ -109,7 +110,8 @@ data reality.
 - Avg Power is the time-weighted current-week average across runs with real
   `averageWatts`; no qualifying runs means an honest empty body.
 - Archive Status links to `/archive` and is read-only.
-- Daily Battery is deferred and shows only input provenance.
+- Training Load, Recovery, and Daily Battery are deferred and show only honest
+  empty/provenance bodies until their deterministic formulas land.
 - Time-range and other future controls may exist visually before they become
   data-driven, but they must not imply unavailable data exists.
 
@@ -143,8 +145,9 @@ data reality.
 - Real route now.
 - Imports either `apple_health_data/apple_health_export.zip` or an extracted
   `apple_health_data/apple_health_export/export.xml` through the local API.
-- Renders latest local VO2 Max, resting HR, HRV, sleep, and steps values when
-  real `health_metrics` rows with `source = "AppleHealth"` exist.
+- Renders latest local VO2 Max, resting HR, and HRV in a Vitals cluster, with
+  sleep and steps in a separate Daily Signals cluster, when real
+  `health_metrics` rows with `source = "AppleHealth"` exist.
 - Renders bounded trend sparklines only when a metric has at least two real
   local points.
 - Missing metrics continue to render as `--`.
