@@ -10,14 +10,20 @@ const LAST_ATTEMPT_KEY = "farsygil:last-auto-strava-fresh-sync-at";
 export function AutoStravaFreshSync({
   enabled,
   lastSyncedAt,
+  blockedUntil,
 }: {
   enabled: boolean;
   lastSyncedAt: string | null;
+  blockedUntil: string | null;
 }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!enabled || !isSyncStale(lastSyncedAt)) {
+    if (
+      !enabled ||
+      isAutoSyncBlocked(blockedUntil) ||
+      !isSyncStale(lastSyncedAt)
+    ) {
       return;
     }
 
@@ -48,9 +54,23 @@ export function AutoStravaFreshSync({
     return () => {
       cancelled = true;
     };
-  }, [enabled, lastSyncedAt, router]);
+  }, [blockedUntil, enabled, lastSyncedAt, router]);
 
   return null;
+}
+
+function isAutoSyncBlocked(blockedUntil: string | null): boolean {
+  if (!blockedUntil) {
+    return false;
+  }
+
+  const blockedUntilTime = new Date(blockedUntil).getTime();
+
+  if (Number.isNaN(blockedUntilTime)) {
+    return false;
+  }
+
+  return Date.now() < blockedUntilTime;
 }
 
 function isSyncStale(lastSyncedAt: string | null): boolean {

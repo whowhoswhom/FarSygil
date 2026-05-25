@@ -47,7 +47,7 @@ Delivered or active in the reboot program:
 - [x] local data provenance route (`/archive`)
 - [x] Strava detail sync for splits and streams
 - [x] combined Strava fresh-sync route, stale app-shell auto-refresh, overlap
-  guard, and capped Strava retry waits
+  guard, rate-limit cooldown, and capped Strava retry waits
 - [x] connect management route (`/connect`) with detail-sync controls
 - [x] settings route (`/settings`)
 - [x] health scaffold route (`/health`)

@@ -134,6 +134,11 @@ the app can keep daily summary data fresh without spending a full Strava read
 window on historical split/stream backfill. Manual detail controls on
 `/connect` remain available for explicit catch-up.
 
+The app-shell auto-refresh also reads recent Strava sync logs. If the newest
+relevant sync outcome is a rate-limit error, background freshness polling pauses
+for a server-backed cooldown window; the manual `/connect` controls remain
+visible and explicit.
+
 ---
 
 ## Rate limiting and retries

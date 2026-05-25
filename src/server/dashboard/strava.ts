@@ -11,7 +11,9 @@ import { RUN_SPORTS } from "@/lib/strava/run-sports";
 import { metersToFeet, metersToMiles } from "@/lib/units";
 import type { FarSygilDatabase } from "@/server/strava/oauth";
 import { getStravaConnectionStatus } from "@/server/strava/oauth";
+import { STRAVA_AUTO_SYNC_RATE_LIMIT_COOLDOWN_MS } from "@/server/strava/constants";
 import { getRecentStravaSyncLogs } from "@/server/strava/sync-logs";
+import type { StravaSyncLogEntry } from "@/server/strava/sync-logs";
 
 type DashboardStatusState =
   | "connected"
@@ -37,6 +39,8 @@ export interface DashboardHeaderSnapshot {
   statusLabel: string;
   statusState: DashboardStatusState;
   lastSyncedAt: string | null;
+  autoSyncBlockedUntil: string | null;
+  autoSyncBlockedReason: string | null;
 }
 
 export interface DashboardRunSnapshot {
@@ -82,6 +86,7 @@ export async function getDashboardHeaderSnapshot(
   const logs = await getRecentStravaSyncLogs(database, 8);
   const latestSuccessfulSync =
     logs.find((row) => row.eventType === "sync_complete") ?? null;
+  const autoSyncBlock = getAutoSyncRateLimitBlock(logs, nowUnix);
 
   if (!status.connected) {
     return {
@@ -89,6 +94,8 @@ export async function getDashboardHeaderSnapshot(
       statusState: "disconnected",
       lastSyncedAt:
         latestSuccessfulSync?.completedAt ?? latestSuccessfulSync?.startedAt ?? null,
+      autoSyncBlockedUntil: null,
+      autoSyncBlockedReason: null,
     };
   }
 
@@ -97,7 +104,65 @@ export async function getDashboardHeaderSnapshot(
     statusState: "connected",
     lastSyncedAt:
       latestSuccessfulSync?.completedAt ?? latestSuccessfulSync?.startedAt ?? null,
+    autoSyncBlockedUntil: autoSyncBlock?.blockedUntil ?? null,
+    autoSyncBlockedReason: autoSyncBlock?.reason ?? null,
   };
+}
+
+function getAutoSyncRateLimitBlock(
+  logs: StravaSyncLogEntry[],
+  nowUnix: number,
+): { blockedUntil: string; reason: string } | null {
+  const latestSuccess = logs.find((row) => row.eventType === "sync_complete");
+  const latestRateLimitError = logs.find(
+    (row) =>
+      row.eventType === "sync_error" &&
+      row.message != null &&
+      /rate limit/i.test(row.message),
+  );
+
+  if (!latestRateLimitError) {
+    return null;
+  }
+
+  if (latestSuccess && latestSuccess.id > latestRateLimitError.id) {
+    return null;
+  }
+
+  const errorTime = parseSyncLogTimestamp(
+    latestRateLimitError.completedAt ?? latestRateLimitError.startedAt,
+  );
+
+  if (errorTime === null) {
+    return null;
+  }
+
+  const blockedUntilMs = errorTime + STRAVA_AUTO_SYNC_RATE_LIMIT_COOLDOWN_MS;
+
+  if (blockedUntilMs <= nowUnix * 1000) {
+    return null;
+  }
+
+  return {
+    blockedUntil: new Date(blockedUntilMs).toISOString(),
+    reason: "Recent Strava rate-limit response",
+  };
+}
+
+function parseSyncLogTimestamp(value: string | null): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const sqliteDateTime = value.match(
+    /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/,
+  );
+  const normalized = sqliteDateTime
+    ? `${sqliteDateTime[1]}T${sqliteDateTime[2]}Z`
+    : value;
+  const timestamp = Date.parse(normalized);
+
+  return Number.isFinite(timestamp) ? timestamp : null;
 }
 
 export async function getDashboardRunningSnapshot(
