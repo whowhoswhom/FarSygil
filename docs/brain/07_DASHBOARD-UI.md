@@ -143,6 +143,8 @@ data reality.
 - Exposes fresh sync, summary sync, and detail sync.
 - Surfaces last successful sync, last sync error, local sync history, and the
   next actionable sync step.
+- Shows when background Strava auto-refresh is paused by a recent rate-limit
+  response; manual sync controls remain visible.
 
 ### `/health`
 

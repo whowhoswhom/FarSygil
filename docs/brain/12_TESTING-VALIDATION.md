@@ -81,7 +81,7 @@ Relevant files:
 - [x] Fresh-sync overlap guard and fail-soft daily-stress recompute behavior
 - [x] Fresh-sync detail-backfill cap for automatic rate-limit protection
 - [x] App-shell auto-sync cooldown after recent Strava rate-limit errors
-- [x] `/connect` sync-status summary rendering
+- [x] `/connect` sync-status summary and visible rate-limit cooldown rendering
 - [x] Malformed stream degradation
 - [x] Apple Health XML import aggregation and route behavior
 - [x] Apple Health ZIP import extraction and unsafe-entry rejection

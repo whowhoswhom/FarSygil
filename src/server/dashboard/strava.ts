@@ -118,7 +118,7 @@ function getAutoSyncRateLimitBlock(
     (row) =>
       row.eventType === "sync_error" &&
       row.message != null &&
-      /rate limit/i.test(row.message),
+      isStravaRateLimitMessage(row.message),
   );
 
   if (!latestRateLimitError) {
@@ -147,6 +147,10 @@ function getAutoSyncRateLimitBlock(
     blockedUntil: new Date(blockedUntilMs).toISOString(),
     reason: "Recent Strava rate-limit response",
   };
+}
+
+function isStravaRateLimitMessage(message: string): boolean {
+  return /rate limit|HTTP 429/i.test(message);
 }
 
 function parseSyncLogTimestamp(value: string | null): number | null {

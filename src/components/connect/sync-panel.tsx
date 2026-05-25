@@ -329,11 +329,13 @@ function SyncStatusOverview({
 }) {
   const latestSuccess = logs.find((log) => log.eventType === "sync_complete");
   const latestError = logs.find((log) => log.eventType === "sync_error");
+  const rateLimitCooldown = getRateLimitCooldown(latestError, latestSuccess);
   const nextAction = getNextSyncAction({
     connected,
     latestSuccess,
     latestError,
     coverage,
+    rateLimitCooldown,
   });
 
   return (
@@ -346,6 +348,18 @@ function SyncStatusOverview({
         label="Last error"
         value={latestError ? (latestError.message ?? "Sync error") : "--"}
       />
+      {rateLimitCooldown ? (
+        <div className="rounded-[14px] border border-[var(--danger-soft)] bg-[rgba(229,102,74,0.08)] px-3 py-3">
+          <p className="mb-1 truncate text-[0.55rem] font-semibold uppercase tracking-[0.18em] text-[var(--danger-ink)]">
+            Auto-refresh paused
+          </p>
+          <p className="text-xs leading-relaxed text-[var(--ink-1)]">
+            Strava returned a rate-limit response. Background freshness waits
+            until about {formatDateTime(rateLimitCooldown.blockedUntil)}; manual
+            refresh stays available.
+          </p>
+        </div>
+      ) : null}
       <div className="rounded-[14px] border border-white/6 bg-black/10 px-3 py-3">
         <p className="mb-1 truncate text-[0.55rem] font-semibold uppercase tracking-[0.18em] text-[var(--ink-3)]">
           Next action
@@ -376,14 +390,20 @@ function getNextSyncAction({
   latestSuccess,
   latestError,
   coverage,
+  rateLimitCooldown,
 }: {
   connected: boolean;
   latestSuccess: StravaSyncLogEntry | undefined;
   latestError: StravaSyncLogEntry | undefined;
   coverage: SyncPanelProps["coverage"];
+  rateLimitCooldown: { blockedUntil: string } | null;
 }): string {
   if (!connected) {
     return "Connect Strava first.";
+  }
+
+  if (rateLimitCooldown) {
+    return "Wait for the Strava rate-limit cooldown, then use Refresh latest. Background auto-refresh is paused until then.";
   }
 
   if (latestError && isLogNewerThan(latestError, latestSuccess)) {
@@ -402,6 +422,34 @@ function getNextSyncAction({
   }
 
   return "Fresh sync runs automatically when stale; use Refresh latest after a new run.";
+}
+
+function getRateLimitCooldown(
+  latestError: StravaSyncLogEntry | undefined,
+  latestSuccess: StravaSyncLogEntry | undefined,
+): { blockedUntil: string } | null {
+  if (
+    !latestError ||
+    !isLogNewerThan(latestError, latestSuccess) ||
+    !latestError.message ||
+    !isStravaRateLimitMessage(latestError.message)
+  ) {
+    return null;
+  }
+
+  const errorTime = getLogTimestamp(latestError);
+
+  if (!Number.isFinite(errorTime)) {
+    return null;
+  }
+
+  return {
+    blockedUntil: new Date(errorTime + 60 * 60 * 1000).toISOString(),
+  };
+}
+
+function isStravaRateLimitMessage(message: string): boolean {
+  return /rate limit|HTTP 429/i.test(message);
 }
 
 function isLogNewerThan(

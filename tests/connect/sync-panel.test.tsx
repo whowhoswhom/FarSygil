@@ -52,7 +52,10 @@ describe("SyncPanel", () => {
     expect(html).toContain("Last success");
     expect(html).toContain("Last error");
     expect(html).toContain("Strava activities fetch failed (HTTP 429)");
-    expect(html).toContain("Use Refresh latest");
+    expect(html).toContain("Auto-refresh paused");
+    expect(html).toContain("Background freshness waits");
+    expect(html).toContain("Background auto-refresh is paused");
+    expect(html).toContain("use Refresh latest");
     expect(html).not.toContain("Reconnect Strava");
   });
 
