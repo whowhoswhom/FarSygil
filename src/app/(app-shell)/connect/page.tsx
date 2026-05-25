@@ -68,8 +68,8 @@ export default async function ConnectPage() {
                 </h2>
                 <p className="mt-2 max-w-2xl text-base leading-relaxed text-[var(--ink-2)]">
                   OAuth credentials and sync history stay local. Only direct
-                  Strava requests leave this machine when you explicitly connect
-                  or sync.
+                  Strava requests leave this machine after you connect, either
+                  from sync controls or the local freshness check.
                 </p>
               </div>
             </div>
@@ -163,8 +163,8 @@ function StatusPill({
 
   if (expired) {
     return (
-      <span className="rounded-full border border-[var(--danger-soft)] bg-[rgba(229,102,74,0.12)] px-3 py-1 text-xs font-medium text-[var(--danger-ink)]">
-        Token expired
+      <span className="rounded-full border border-[rgba(168,226,108,0.22)] bg-[rgba(123,194,65,0.12)] px-3 py-1 text-xs font-medium text-[var(--accent-bright)]">
+        Auto-refresh ready
       </span>
     );
   }

@@ -3,6 +3,8 @@ import { activities, activityRawJson, dataImportLogs } from "@/db/schema";
 import {
   STRAVA_ACTIVITIES_PER_PAGE,
   STRAVA_ACTIVITIES_URL,
+  STRAVA_SUMMARY_SYNC_MAX_RETRIES,
+  STRAVA_SUMMARY_SYNC_RETRY_BASE_MS,
   STRAVA_SYNC_REFRESH_LEEWAY_SECONDS,
 } from "@/server/strava/constants";
 import {
@@ -13,6 +15,7 @@ import {
 } from "@/server/strava/oauth";
 
 type FetchImplementation = typeof fetch;
+type SleepImplementation = (milliseconds: number) => Promise<void>;
 
 interface StravaSummaryActivity {
   id: number;
@@ -68,6 +71,7 @@ export async function syncStravaActivities(options: {
   database: FarSygilDatabase;
   config: StravaOAuthConfig;
   fetchImplementation?: FetchImplementation;
+  sleepImplementation?: SleepImplementation;
   nowUnix?: number;
   errorLogger?: (message: string) => void;
 }): Promise<StravaSyncResult> {
@@ -75,6 +79,7 @@ export async function syncStravaActivities(options: {
     database,
     config,
     fetchImplementation = fetch,
+    sleepImplementation = sleep,
     nowUnix = Math.floor(Date.now() / 1000),
     errorLogger,
   } = options;
@@ -110,6 +115,7 @@ export async function syncStravaActivities(options: {
         page,
         afterUnix,
         fetchImplementation,
+        sleepImplementation,
       });
 
       if (summaries.length === 0) {
@@ -160,8 +166,10 @@ async function fetchStravaActivityPage(options: {
   page: number;
   afterUnix: number | null;
   fetchImplementation: FetchImplementation;
+  sleepImplementation: SleepImplementation;
 }): Promise<StravaSummaryActivity[]> {
-  const { accessToken, page, afterUnix, fetchImplementation } = options;
+  const { accessToken, page, afterUnix, fetchImplementation, sleepImplementation } =
+    options;
   const url = new URL(STRAVA_ACTIVITIES_URL);
   url.searchParams.set("per_page", String(STRAVA_ACTIVITIES_PER_PAGE));
   url.searchParams.set("page", String(page));
@@ -170,21 +178,48 @@ async function fetchStravaActivityPage(options: {
     url.searchParams.set("after", String(afterUnix));
   }
 
-  let response: Response;
+  let response: Response | null = null;
 
-  try {
-    response = await fetchImplementation(url.toString(), {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      cache: "no-store",
-    });
-  } catch (error) {
+  for (let attempt = 0; attempt < STRAVA_SUMMARY_SYNC_MAX_RETRIES; attempt += 1) {
+    try {
+      response = await fetchImplementation(url.toString(), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+      });
+    } catch (error) {
+      if (attempt === STRAVA_SUMMARY_SYNC_MAX_RETRIES - 1) {
+        throw new StravaSyncError(
+          "Failed to reach Strava activities endpoint",
+          "fetch_failed",
+          error,
+        );
+      }
+
+      await sleepImplementation(getRetryDelayMilliseconds(null, attempt));
+      continue;
+    }
+
+    if (
+      !response.ok &&
+      isRetryableStatus(response.status) &&
+      attempt < STRAVA_SUMMARY_SYNC_MAX_RETRIES - 1
+    ) {
+      await sleepImplementation(
+        getRetryDelayMilliseconds(response.headers.get("Retry-After"), attempt),
+      );
+      continue;
+    }
+
+    break;
+  }
+
+  if (!response) {
     throw new StravaSyncError(
       "Failed to reach Strava activities endpoint",
       "fetch_failed",
-      error,
     );
   }
 
@@ -216,6 +251,49 @@ async function fetchStravaActivityPage(options: {
   }
 
   return parseStravaActivityPage(payload);
+}
+
+function isRetryableStatus(status: number): boolean {
+  return (
+    status === 429 ||
+    status === 500 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504
+  );
+}
+
+function getRetryDelayMilliseconds(
+  retryAfterHeader: string | null,
+  attempt: number,
+): number {
+  const retryAfterSeconds = parseRetryAfterHeader(retryAfterHeader);
+
+  if (retryAfterSeconds !== null) {
+    return retryAfterSeconds * 1000;
+  }
+
+  return STRAVA_SUMMARY_SYNC_RETRY_BASE_MS * 2 ** attempt;
+}
+
+function parseRetryAfterHeader(value: string | null): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const seconds = Number(value);
+
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds;
+  }
+
+  const dateMilliseconds = Date.parse(value);
+
+  if (!Number.isNaN(dateMilliseconds)) {
+    return Math.max(0, Math.ceil((dateMilliseconds - Date.now()) / 1000));
+  }
+
+  return null;
 }
 
 async function upsertActivitySummaries(
@@ -489,4 +567,10 @@ function getErrorMessage(error: unknown): string {
   }
 
   return "Unknown error";
+}
+
+function sleep(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
 }

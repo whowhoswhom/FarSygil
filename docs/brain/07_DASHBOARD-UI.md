@@ -59,6 +59,8 @@ renders a disconnected onboarding surface otherwise.
   dashboard/contextual links on mobile
 - Top status strip with local Strava state, Apple Health import state, and
   last-sync context
+- App-shell auto-refresh that runs the local Strava freshness pass when the
+  latest successful sync is stale
 - Specialized dashboard cards and run-detail tiles
 - Local faux-map route treatment built from real polyline data only
 
@@ -137,7 +139,7 @@ data reality.
 ### `/connect`
 
 - Remains the Strava authority surface.
-- Exposes both summary sync and detail sync.
+- Exposes fresh sync, summary sync, and detail sync.
 - Surfaces local sync history.
 
 ### `/health`

@@ -66,7 +66,7 @@ export default async function HomePage() {
               />
               <OnboardingCard
                 title="Local-first"
-                body="FarSygil only talks to Strava when you explicitly connect or sync your own account. No map tiles, no geocoding, no telemetry."
+                body="FarSygil only talks to Strava after you connect your own account, either from sync controls or the local freshness check. No map tiles, no geocoding, no telemetry."
               />
             </div>
           </div>

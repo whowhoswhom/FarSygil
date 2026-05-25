@@ -217,6 +217,66 @@ describe("Strava detail sync", () => {
     }
   });
 
+  it("persists detail data when Strava has no stream resource for an activity", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse(detailFixture))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            message: "Resource Not Found",
+            errors: [{ resource: "Activity", field: "", code: "not found" }],
+          }),
+          {
+            status: 404,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        ),
+      );
+
+    try {
+      await insertStoredToken(database);
+      await insertSummaryActivity(database, 1001);
+
+      const result = await syncStravaActivityDetails({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        sleepImplementation: async () => undefined,
+      });
+
+      expect(result).toMatchObject({
+        activitiesSynced: 1,
+        detailsFetched: 1,
+        streamsFetched: 0,
+        splitsWritten: 2,
+        streamsWritten: 0,
+      });
+
+      const rawRows = await database
+        .select({
+          payloadType: testSchema.activityRawJson.payloadType,
+          rawJson: testSchema.activityRawJson.rawJson,
+        })
+        .from(testSchema.activityRawJson)
+        .where(eq(testSchema.activityRawJson.stravaId, 1001));
+      expect(rawRows).toEqual(
+        expect.arrayContaining([
+          { payloadType: "detailed_activity", rawJson: JSON.stringify(detailFixture) },
+          { payloadType: "streams", rawJson: "{}" },
+        ]),
+      );
+
+      const streamRows = await database.select().from(testSchema.activityStreams);
+      expect(streamRows).toHaveLength(0);
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("records an error when Strava streams return invalid JSON", async () => {
     const { database, sqlite } = createTestDatabase();
     const fetchMock = vi

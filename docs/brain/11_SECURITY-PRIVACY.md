@@ -9,7 +9,7 @@
 FarSygil is a single-user localhost application. Security is primarily about:
 1. protecting credentials from source control
 2. keeping SQLite-held activity and health data local
-3. being precise about the small set of user-triggered outbound requests
+3. being precise about the small set of user-enabled outbound requests
 4. never adding hidden telemetry, map providers, or cloud storage
 
 ---
@@ -45,7 +45,7 @@ ignored by Git.
 All user data stays local except for explicitly user-enabled provider traffic.
 
 Current outbound destinations:
-- Strava API for OAuth, summary sync, and detail sync
+- Strava API for OAuth, summary sync, detail sync, and the local freshness pass
 - Claude API in Phase 4 only, for grounded queries when that phase lands
 
 Explicitly not used in the visual reboot:
@@ -67,7 +67,7 @@ polyline. It does not contact any external map provider.
   health rows, and future analytics rows stay local.
 - Apple Health imports are parsed locally and stored locally.
 - User-facing privacy copy must distinguish local storage from direct Strava
-  requests triggered by the user.
+  requests triggered by sync controls or the stale-sync freshness check.
 
 Do not claim zero network traffic once a source integration is active. Do claim
 that FarSygil does not add hidden third-party traffic beyond those provider

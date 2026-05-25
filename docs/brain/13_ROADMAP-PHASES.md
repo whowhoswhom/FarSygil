@@ -25,6 +25,8 @@ Delivered:
 - [x] Strava OAuth and connection-status surface
 - [x] refresh-aware token access
 - [x] summary activity sync
+- [x] refresh-token handling without requiring reconnect when only the access
+  token expires
 - [x] sync-log viewer
 - [x] original activity archive
 - [x] compatibility redirects that keep old `/activities` URLs alive
@@ -44,6 +46,7 @@ Delivered or active in the reboot program:
 - [x] run detail (`/runs/[id]`)
 - [x] local data provenance route (`/archive`)
 - [x] Strava detail sync for splits and streams
+- [x] combined Strava fresh-sync route and stale app-shell auto-refresh
 - [x] connect management route (`/connect`) with detail-sync controls
 - [x] settings route (`/settings`)
 - [x] health scaffold route (`/health`)

@@ -689,6 +689,60 @@ describe("Strava OAuth", () => {
     }
   });
 
+  it("refreshes with Strava's refresh response shape when athlete is omitted", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const refreshPayload = {
+      token_type: "Bearer",
+      access_token: "access-token-refresh-no-athlete",
+      refresh_token: "refresh-token-refresh-no-athlete",
+      expires_at: tokenFixture.expires_at + 7200,
+      expires_in: 21600,
+    };
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(refreshPayload), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: "access-token-expired",
+        refreshToken: "refresh-token-expired",
+        expiresAt: tokenFixture.expires_at - 10,
+        scope: "read,activity:read_all",
+      });
+
+      const token = await getValidStravaAccessToken({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        nowUnix: tokenFixture.expires_at,
+      });
+
+      expect(token).toMatchObject({
+        accessToken: refreshPayload.access_token,
+        athleteId: tokenFixture.athlete.id,
+        expiresAt: refreshPayload.expires_at,
+        refreshed: true,
+      });
+
+      const [updatedRow] = await database.select().from(testSchema.stravaTokens);
+      expect(updatedRow).toMatchObject({
+        athleteId: tokenFixture.athlete.id,
+        accessToken: refreshPayload.access_token,
+        refreshToken: refreshPayload.refresh_token,
+        expiresAt: refreshPayload.expires_at,
+        scope: "read,activity:read_all",
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("surfaces refresh failures and keeps the stored row unchanged", async () => {
     const { database, sqlite } = createTestDatabase();
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(

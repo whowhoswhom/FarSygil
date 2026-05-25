@@ -92,15 +92,6 @@ export async function getDashboardHeaderSnapshot(
     };
   }
 
-  if (status.expired) {
-    return {
-      statusLabel: "Strava token expired",
-      statusState: "disconnected",
-      lastSyncedAt:
-        latestSuccessfulSync?.completedAt ?? latestSuccessfulSync?.startedAt ?? null,
-    };
-  }
-
   return {
     statusLabel: "Strava connected",
     statusState: "connected",

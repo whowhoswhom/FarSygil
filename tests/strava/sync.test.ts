@@ -182,6 +182,35 @@ describe("Strava sync", () => {
     }
   });
 
+  it("retries transient summary activity fetch failures", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const sleepMock = vi.fn(async () => undefined);
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValueOnce(new Error("temporary network failure"))
+      .mockResolvedValueOnce(jsonResponse(pageOneFixture))
+      .mockResolvedValueOnce(jsonResponse(emptyPageFixture));
+
+    try {
+      await insertStoredToken(database);
+
+      const result = await syncStravaActivities({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        sleepImplementation: sleepMock,
+        nowUnix: 1767222000,
+      });
+
+      expect(result.activitiesFetched).toBe(2);
+      expect(result.pagesFetched).toBe(1);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(sleepMock).toHaveBeenCalledTimes(1);
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("fails cleanly when no stored Strava connection exists", async () => {
     const { database, sqlite } = createTestDatabase();
     const fetchMock = vi.fn<typeof fetch>();
