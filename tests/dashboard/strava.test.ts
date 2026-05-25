@@ -55,6 +55,8 @@ describe("dashboard Strava snapshots", () => {
         statusLabel: "Strava connected",
         statusState: "connected",
         lastSyncedAt: "2026-05-13 14:20:00",
+        autoSyncBlockedUntil: null,
+        autoSyncBlockedReason: null,
       });
     } finally {
       sqlite.close();
@@ -78,6 +80,8 @@ describe("dashboard Strava snapshots", () => {
         statusLabel: "Strava not connected",
         statusState: "disconnected",
         lastSyncedAt: "2026-05-12 10:00:00",
+        autoSyncBlockedUntil: null,
+        autoSyncBlockedReason: null,
       });
     } finally {
       sqlite.close();
@@ -105,6 +109,53 @@ describe("dashboard Strava snapshots", () => {
         statusLabel: "Strava connected",
         statusState: "connected",
         lastSyncedAt: null,
+        autoSyncBlockedUntil: null,
+        autoSyncBlockedReason: null,
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
+  it("blocks app-shell auto sync after a newer Strava rate-limit error", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: 42,
+        accessToken: "access-token",
+        refreshToken: "refresh-token",
+        expiresAt: 1_900_000_000,
+        scope: "read,activity:read_all",
+      });
+
+      await database.insert(testSchema.dataImportLogs).values([
+        {
+          source: "strava",
+          eventType: "sync_complete",
+          message: "Completed",
+          completedAt: "2026-05-25 16:00:00",
+        },
+        {
+          source: "strava",
+          eventType: "sync_error",
+          message: "Strava activities fetch failed (HTTP 429): Rate Limit Exceeded",
+          errorsCount: 1,
+          completedAt: "2026-05-25 16:30:00",
+        },
+      ]);
+
+      const snapshot = await getDashboardHeaderSnapshot(
+        database,
+        Math.floor(Date.parse("2026-05-25T16:45:00Z") / 1000),
+      );
+
+      expect(snapshot).toMatchObject({
+        statusLabel: "Strava connected",
+        statusState: "connected",
+        lastSyncedAt: "2026-05-25 16:00:00",
+        autoSyncBlockedUntil: "2026-05-25T17:30:00.000Z",
+        autoSyncBlockedReason: "Recent Strava rate-limit response",
       });
     } finally {
       sqlite.close();

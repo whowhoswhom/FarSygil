@@ -19,6 +19,7 @@ import {
   STRAVA_DETAIL_STREAM_KEYS,
   STRAVA_DETAIL_SYNC_MAX_RETRIES,
   STRAVA_DETAIL_SYNC_RETRY_BASE_MS,
+  STRAVA_SYNC_MAX_RETRY_DELAY_MS,
   STRAVA_SYNC_REFRESH_LEEWAY_SECONDS,
 } from "@/server/strava/constants";
 import {
@@ -115,6 +116,7 @@ export async function syncStravaActivityDetails(options: {
   database: FarSygilDatabase;
   config: StravaOAuthConfig;
   mode?: StravaDetailSyncMode;
+  maxActivities?: number;
   fetchImplementation?: FetchImplementation;
   sleepImplementation?: SleepImplementation;
   nowUnix?: number;
@@ -124,6 +126,7 @@ export async function syncStravaActivityDetails(options: {
     database,
     config,
     mode = "incremental",
+    maxActivities,
     fetchImplementation = fetch,
     sleepImplementation = sleep,
     nowUnix = Math.floor(Date.now() / 1000),
@@ -151,7 +154,10 @@ export async function syncStravaActivityDetails(options: {
       errorLogger,
     });
 
-    const candidates = await getDetailSyncCandidates(database, mode);
+    const candidates = limitDetailSyncCandidates(
+      await getDetailSyncCandidates(database, mode),
+      maxActivities,
+    );
     result.activitiesScanned = candidates.length;
 
     await insertDetailSyncLog(database, {
@@ -232,6 +238,21 @@ export async function syncStravaActivityDetails(options: {
 
     throw detailSyncError;
   }
+}
+
+function limitDetailSyncCandidates(
+  candidates: DetailSyncCandidate[],
+  maxActivities: number | undefined,
+): DetailSyncCandidate[] {
+  if (
+    typeof maxActivities !== "number" ||
+    !Number.isFinite(maxActivities) ||
+    maxActivities <= 0
+  ) {
+    return candidates;
+  }
+
+  return candidates.slice(0, Math.trunc(maxActivities));
 }
 
 function buildStreamsUrl(stravaId: number): string {
@@ -690,10 +711,13 @@ function getRetryDelayMilliseconds(
   const parsedRetryAfter = parseRetryAfterHeader(retryAfterHeader);
 
   if (parsedRetryAfter != null) {
-    return parsedRetryAfter;
+    return Math.min(parsedRetryAfter, STRAVA_SYNC_MAX_RETRY_DELAY_MS);
   }
 
-  return STRAVA_DETAIL_SYNC_RETRY_BASE_MS * 2 ** attempt;
+  return Math.min(
+    STRAVA_DETAIL_SYNC_RETRY_BASE_MS * 2 ** attempt,
+    STRAVA_SYNC_MAX_RETRY_DELAY_MS,
+  );
 }
 
 function parseRetryAfterHeader(value: string | null): number | null {

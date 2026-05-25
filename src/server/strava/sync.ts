@@ -5,6 +5,7 @@ import {
   STRAVA_ACTIVITIES_URL,
   STRAVA_SUMMARY_SYNC_MAX_RETRIES,
   STRAVA_SUMMARY_SYNC_RETRY_BASE_MS,
+  STRAVA_SYNC_MAX_RETRY_DELAY_MS,
   STRAVA_SYNC_REFRESH_LEEWAY_SECONDS,
 } from "@/server/strava/constants";
 import {
@@ -270,10 +271,13 @@ function getRetryDelayMilliseconds(
   const retryAfterSeconds = parseRetryAfterHeader(retryAfterHeader);
 
   if (retryAfterSeconds !== null) {
-    return retryAfterSeconds * 1000;
+    return Math.min(retryAfterSeconds * 1000, STRAVA_SYNC_MAX_RETRY_DELAY_MS);
   }
 
-  return STRAVA_SUMMARY_SYNC_RETRY_BASE_MS * 2 ** attempt;
+  return Math.min(
+    STRAVA_SUMMARY_SYNC_RETRY_BASE_MS * 2 ** attempt,
+    STRAVA_SYNC_MAX_RETRY_DELAY_MS,
+  );
 }
 
 function parseRetryAfterHeader(value: string | null): number | null {

@@ -61,6 +61,7 @@ Relevant files:
 - `tests/strava/fresh-sync.test.ts`
 - `tests/strava/sync-fresh-route.test.ts`
 - `tests/strava/sync-logs.test.ts`
+- `tests/connect/sync-panel.test.tsx`
 - `tests/activities/format.test.ts`
 - `tests/activities/filters.test.ts`
 - `tests/activities/aggregates.test.ts`
@@ -77,6 +78,10 @@ Relevant files:
 - [x] Detail-sync rate-limit retry behavior
 - [x] Detail-sync route behavior
 - [x] Combined fresh-sync route behavior
+- [x] Fresh-sync overlap guard and fail-soft daily-stress recompute behavior
+- [x] Fresh-sync detail-backfill cap for automatic rate-limit protection
+- [x] App-shell auto-sync cooldown after recent Strava rate-limit errors
+- [x] `/connect` sync-status summary and visible rate-limit cooldown rendering
 - [x] Malformed stream degradation
 - [x] Apple Health XML import aggregation and route behavior
 - [x] Apple Health ZIP import extraction and unsafe-entry rejection

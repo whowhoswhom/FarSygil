@@ -116,12 +116,28 @@ It runs:
 3. local daily training-stress recompute
 
 Summary sync is the freshness gate. If detail backfill is temporarily blocked
-by Strava rate limits, the fresh-sync route still returns the summary result and
-daily-stress recompute result, with the detail error recorded for follow-up.
+by Strava rate limits, the fresh-sync route still returns the summary result,
+with the detail error recorded for follow-up. If local daily-stress recompute is
+temporarily blocked, fresh sync still returns the summary/detail results with a
+separate daily-stress error instead of hiding the successful activity pull.
 
 The app shell may trigger this endpoint automatically when the latest successful
 Strava sync is stale. The `/connect` page also exposes it as `Refresh latest`.
 This remains local-first polling, not Strava webhooks.
+
+The route rejects overlapping fresh-sync requests with `sync_already_running`.
+This prevents the app-shell freshness pass and a manual `/connect` refresh from
+starting duplicate Strava pulls against the same local database.
+
+Fresh sync caps its automatic detail-backfill step to a small batch per run so
+the app can keep daily summary data fresh without spending a full Strava read
+window on historical split/stream backfill. Manual detail controls on
+`/connect` remain available for explicit catch-up.
+
+The app-shell auto-refresh also reads recent Strava sync logs. If the newest
+relevant sync outcome is a rate-limit error, background freshness polling pauses
+for a server-backed cooldown window; the manual `/connect` controls remain
+visible and explicit.
 
 ---
 
@@ -134,11 +150,13 @@ Strava API limits remain:
 Detail sync now includes:
 - `Retry-After` handling
 - exponential backoff
+- capped retry waits so a single request does not hang through a full Strava
+  rate-limit window
 - fail-closed logging
 - surfaced sync errors
 
 Summary sync also retries transient network failures and retryable Strava
-statuses before surfacing an error.
+statuses before surfacing an error, with the same capped retry waits.
 
 All summary and detail sync work must keep writing meaningful log rows to
 `data_import_logs`.

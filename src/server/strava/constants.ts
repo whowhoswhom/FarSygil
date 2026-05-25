@@ -17,6 +17,8 @@ export const STRAVA_SYNC_REFRESH_LEEWAY_SECONDS = 3600;
 export const STRAVA_ACTIVITIES_PER_PAGE = 200;
 export const STRAVA_SUMMARY_SYNC_MAX_RETRIES = 4;
 export const STRAVA_SUMMARY_SYNC_RETRY_BASE_MS = 1000;
+export const STRAVA_SYNC_MAX_RETRY_DELAY_MS = 60_000;
+export const STRAVA_AUTO_SYNC_RATE_LIMIT_COOLDOWN_MS = 60 * 60 * 1000;
 export const STRAVA_DETAIL_STREAM_KEYS = [
   "time",
   "distance",
@@ -28,3 +30,6 @@ export const STRAVA_DETAIL_STREAM_KEYS = [
 ] as const;
 export const STRAVA_DETAIL_SYNC_MAX_RETRIES = 4;
 export const STRAVA_DETAIL_SYNC_RETRY_BASE_MS = 1000;
+// Fresh sync is allowed to backfill details opportunistically, but it must not
+// consume a full Strava read window. Manual "Sync all details" remains uncapped.
+export const STRAVA_FRESH_DETAIL_SYNC_MAX_ACTIVITIES = 20;

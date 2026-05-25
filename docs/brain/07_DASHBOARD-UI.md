@@ -60,7 +60,8 @@ renders a disconnected onboarding surface otherwise.
 - Top status strip with local Strava state, Apple Health import state, and
   last-sync context
 - App-shell auto-refresh that runs the local Strava freshness pass when the
-  latest successful sync is stale
+  latest successful sync is stale, unless recent local sync logs show a Strava
+  rate-limit cooldown is active
 - Specialized dashboard cards and run-detail tiles
 - Local faux-map route treatment built from real polyline data only
 
@@ -140,7 +141,10 @@ data reality.
 
 - Remains the Strava authority surface.
 - Exposes fresh sync, summary sync, and detail sync.
-- Surfaces local sync history.
+- Surfaces last successful sync, last sync error, local sync history, and the
+  next actionable sync step.
+- Shows when background Strava auto-refresh is paused by a recent rate-limit
+  response; manual sync controls remain visible.
 
 ### `/health`
 

@@ -1,4 +1,5 @@
 import { recomputeDailyTrainingStress } from "@/server/training-load/daily-stress";
+import { STRAVA_FRESH_DETAIL_SYNC_MAX_ACTIVITIES } from "@/server/strava/constants";
 import { syncStravaActivityDetails } from "@/server/strava/detail-sync";
 import type {
   FarSygilDatabase,
@@ -12,7 +13,8 @@ export interface StravaFreshSyncResult {
   summary: Awaited<ReturnType<typeof syncStravaActivities>>;
   details: Awaited<ReturnType<typeof syncStravaActivityDetails>> | null;
   detailError: string | null;
-  dailyStress: Awaited<ReturnType<typeof recomputeDailyTrainingStress>>;
+  dailyStress: Awaited<ReturnType<typeof recomputeDailyTrainingStress>> | null;
+  dailyStressError: string | null;
 }
 
 export async function syncStravaFreshData(options: {
@@ -39,12 +41,16 @@ export async function syncStravaFreshData(options: {
   let details: Awaited<ReturnType<typeof syncStravaActivityDetails>> | null =
     null;
   let detailError: string | null = null;
+  let dailyStress: Awaited<ReturnType<typeof recomputeDailyTrainingStress>> | null =
+    null;
+  let dailyStressError: string | null = null;
 
   try {
     details = await syncStravaActivityDetails({
       database,
       config,
       mode: "incremental",
+      maxActivities: STRAVA_FRESH_DETAIL_SYNC_MAX_ACTIVITIES,
       fetchImplementation,
       nowUnix,
       errorLogger,
@@ -54,13 +60,21 @@ export async function syncStravaFreshData(options: {
     errorLogger?.(`[strava-fresh-sync] detail backfill deferred: ${detailError}`);
   }
 
-  const dailyStress = await recomputeDailyTrainingStress(database);
+  try {
+    dailyStress = await recomputeDailyTrainingStress(database);
+  } catch (error) {
+    dailyStressError = getErrorMessage(error);
+    errorLogger?.(
+      `[strava-fresh-sync] daily stress recompute deferred: ${dailyStressError}`,
+    );
+  }
 
   return {
     summary,
     details,
     detailError,
     dailyStress,
+    dailyStressError,
   };
 }
 

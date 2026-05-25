@@ -26,6 +26,7 @@ interface AppShellProps {
   healthState: "connected" | "disconnected" | "pending" | "unavailable";
   lastSyncedLabel: string | null;
   lastSyncedAt: string | null;
+  stravaAutoSyncBlockedUntil: string | null;
   children: ReactNode;
 }
 
@@ -36,6 +37,7 @@ export function AppShell({
   healthState,
   lastSyncedLabel,
   lastSyncedAt,
+  stravaAutoSyncBlockedUntil,
   children,
 }: AppShellProps) {
   return (
@@ -43,6 +45,7 @@ export function AppShell({
       <AutoStravaFreshSync
         enabled={stravaState === "connected"}
         lastSyncedAt={lastSyncedAt}
+        blockedUntil={stravaAutoSyncBlockedUntil}
       />
       <div className="app-shell-frame">
         <DesktopSidebar items={DESKTOP_ITEMS} />

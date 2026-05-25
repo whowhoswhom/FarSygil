@@ -217,6 +217,52 @@ describe("Strava detail sync", () => {
     }
   });
 
+  it("limits incremental detail backfill when maxActivities is provided", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+
+      if (url.includes("/streams")) {
+        return jsonResponse(streamsFixture);
+      }
+
+      const stravaId = Number(url.split("/").pop());
+      return jsonResponse({
+        ...detailFixture,
+        id: stravaId,
+      });
+    });
+
+    try {
+      await insertStoredToken(database);
+      await insertSummaryActivity(database, 1001, 1);
+      await insertSummaryActivity(database, 1002, 2);
+      await insertSummaryActivity(database, 1003, 3);
+
+      const result = await syncStravaActivityDetails({
+        database,
+        config: TEST_CONFIG,
+        maxActivities: 2,
+        fetchImplementation: fetchMock,
+        sleepImplementation: async () => undefined,
+      });
+
+      expect(result.activitiesScanned).toBe(2);
+      expect(result.activitiesSynced).toBe(2);
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+
+      const rawRows = await database
+        .select()
+        .from(testSchema.activityRawJson)
+        .orderBy(testSchema.activityRawJson.stravaId);
+      expect(
+        rawRows.filter((row) => row.payloadType === "detailed_activity"),
+      ).toHaveLength(2);
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("persists detail data when Strava has no stream resource for an activity", async () => {
     const { database, sqlite } = createTestDatabase();
     const fetchMock = vi
@@ -350,9 +396,10 @@ async function insertStoredToken(database: FarSygilDatabase): Promise<void> {
 async function insertSummaryActivity(
   database: FarSygilDatabase,
   stravaId: number,
+  id: number = 1,
 ): Promise<void> {
   await database.insert(testSchema.activities).values({
-    id: 1,
+    id,
     stravaId,
     name: "Morning Run",
     sportType: "Run",

@@ -9,6 +9,8 @@ import { StravaSyncError } from "@/server/strava/sync";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+let inFlightFreshSync: Promise<unknown> | null = null;
+
 export async function POST(): Promise<NextResponse> {
   const config = getSyncConfigOrNull();
 
@@ -27,14 +29,34 @@ export async function POST(): Promise<NextResponse> {
     );
   }
 
+  if (inFlightFreshSync) {
+    return NextResponse.json(
+      {
+        error: "sync_already_running",
+        message:
+          "A Strava freshness sync is already running. Wait for it to finish, then refresh this page.",
+      },
+      {
+        status: 409,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    );
+  }
+
+  let currentFreshSync: Promise<unknown> | null = null;
+
   try {
-    const result = await syncStravaFreshData({
+    currentFreshSync = syncStravaFreshData({
       database: db,
       config,
       errorLogger: (message) => {
         console.error(message);
       },
     });
+    inFlightFreshSync = currentFreshSync;
+    const result = await currentFreshSync;
 
     return NextResponse.json(result, {
       headers: {
@@ -56,6 +78,10 @@ export async function POST(): Promise<NextResponse> {
         },
       },
     );
+  } finally {
+    if (inFlightFreshSync === currentFreshSync) {
+      inFlightFreshSync = null;
+    }
   }
 }
 
