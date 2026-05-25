@@ -90,6 +90,8 @@ Relevant files:
 
 Relevant files:
 - `tests/dashboard/strava.test.ts`
+- `tests/dashboard/week-selection.test.ts`
+- `tests/app/dashboard-page.test.tsx`
 - `tests/runs/queries.test.ts`
 - `tests/app/home-page.test.ts`
 - `tests/activities/redirects.test.ts`
@@ -106,7 +108,9 @@ Relevant files:
 
 Current Phase 2 assertions cover:
 - dashboard weekly running rollups, pace/cadence/HR weighting, recent-run and
-  longest-run selection, and empty-week behavior
+  longest-run selection, historical-week selection, and empty-week behavior
+- dashboard week selection defaults, future-week clamping, shareable
+  `/dashboard?week=YYYY-MM-DD` links, and URL-driven page rendering
 - run archive filtering and ordering
 - run-detail query reads from `activities`, `activity_splits`, and
   `activity_streams`

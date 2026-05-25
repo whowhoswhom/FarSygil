@@ -61,6 +61,8 @@ Delivered or active in the reboot program:
 - [x] archive-status dashboard card backed by local SQLite provenance
 - [x] current-week Avg Power dashboard tile from real Strava `averageWatts`
 - [x] dashboard Daily Stress card from persisted local training-load rows
+- [x] URL-driven dashboard historical week navigation for local Strava running
+  aggregates
 - [x] Daily Battery deferred checklist with no score placeholder
 
 Notes:

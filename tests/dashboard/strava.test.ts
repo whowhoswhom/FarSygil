@@ -314,6 +314,58 @@ describe("dashboard Strava snapshots", () => {
     }
   });
 
+  it("builds aggregates for a selected historical week", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.activities).values([
+        {
+          stravaId: 2501,
+          source: "strava",
+          sportType: "Run",
+          name: "Historical Monday",
+          startDate: "2026-05-18T12:00:00.000Z",
+          startDateLocal: "2026-05-18T08:00:00.000-04:00",
+          distanceMeters: 8_046.72,
+          movingTimeSeconds: 2_400,
+          totalElevationGain: 60.96,
+        },
+        {
+          stravaId: 2502,
+          source: "strava",
+          sportType: "Run",
+          name: "Current Monday",
+          startDate: "2026-05-25T12:00:00.000Z",
+          startDateLocal: "2026-05-25T08:00:00.000-04:00",
+          distanceMeters: 16_093.44,
+          movingTimeSeconds: 4_800,
+          totalElevationGain: 121.92,
+        },
+      ]);
+
+      const snapshot = await getDashboardRunningSnapshot(
+        database,
+        new Date("2026-05-20T12:00:00.000Z"),
+      );
+
+      expect(snapshot.weekStartDate).toBe("2026-05-18");
+      expect(snapshot.weekEndDate).toBe("2026-05-24");
+      expect(snapshot.runCount).toBe(1);
+      expect(snapshot.totalDistanceMeters).toBeCloseTo(8_046.72, 3);
+      expect(snapshot.totalMovingTimeSeconds).toBe(2_400);
+      expect(snapshot.totalElevationGain).toBeCloseTo(60.96, 3);
+      expect(snapshot.distanceSeriesMiles).toEqual([5, 0, 0, 0, 0, 0, 0]);
+      expect(snapshot.longestRun).toMatchObject({
+        name: "Historical Monday",
+      });
+      expect(snapshot.recentRun).toMatchObject({
+        name: "Current Monday",
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("weights weekly power only across runs with real watts", async () => {
     const { database, sqlite } = createTestDatabase();
 

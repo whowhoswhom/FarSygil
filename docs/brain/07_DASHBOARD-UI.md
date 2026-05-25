@@ -102,6 +102,10 @@ data reality.
 - Running renders from real local Strava-derived aggregates.
 - Default range is This Week, using the current Monday-to-Sunday aggregate
   window.
+- The weekly Running hero supports URL-driven historical week navigation with
+  `?week=YYYY-MM-DD`. Query values normalize to the Monday of that week,
+  previous/next links are server-rendered, and future weeks clamp to the
+  current week.
 - Wide layout order: weekly hero, Recent Run + Longest Run/Daily Stress,
   Power/Cadence/HR + Health, Training Load + Recovery, then Daily Battery +
   Archive Status.
