@@ -116,6 +116,7 @@ export async function syncStravaActivityDetails(options: {
   database: FarSygilDatabase;
   config: StravaOAuthConfig;
   mode?: StravaDetailSyncMode;
+  maxActivities?: number;
   fetchImplementation?: FetchImplementation;
   sleepImplementation?: SleepImplementation;
   nowUnix?: number;
@@ -125,6 +126,7 @@ export async function syncStravaActivityDetails(options: {
     database,
     config,
     mode = "incremental",
+    maxActivities,
     fetchImplementation = fetch,
     sleepImplementation = sleep,
     nowUnix = Math.floor(Date.now() / 1000),
@@ -152,7 +154,10 @@ export async function syncStravaActivityDetails(options: {
       errorLogger,
     });
 
-    const candidates = await getDetailSyncCandidates(database, mode);
+    const candidates = limitDetailSyncCandidates(
+      await getDetailSyncCandidates(database, mode),
+      maxActivities,
+    );
     result.activitiesScanned = candidates.length;
 
     await insertDetailSyncLog(database, {
@@ -233,6 +238,21 @@ export async function syncStravaActivityDetails(options: {
 
     throw detailSyncError;
   }
+}
+
+function limitDetailSyncCandidates(
+  candidates: DetailSyncCandidate[],
+  maxActivities: number | undefined,
+): DetailSyncCandidate[] {
+  if (
+    typeof maxActivities !== "number" ||
+    !Number.isFinite(maxActivities) ||
+    maxActivities <= 0
+  ) {
+    return candidates;
+  }
+
+  return candidates.slice(0, Math.trunc(maxActivities));
 }
 
 function buildStreamsUrl(stravaId: number): string {

@@ -1,4 +1,5 @@
 import { recomputeDailyTrainingStress } from "@/server/training-load/daily-stress";
+import { STRAVA_FRESH_DETAIL_SYNC_MAX_ACTIVITIES } from "@/server/strava/constants";
 import { syncStravaActivityDetails } from "@/server/strava/detail-sync";
 import type {
   FarSygilDatabase,
@@ -49,6 +50,7 @@ export async function syncStravaFreshData(options: {
       database,
       config,
       mode: "incremental",
+      maxActivities: STRAVA_FRESH_DETAIL_SYNC_MAX_ACTIVITIES,
       fetchImplementation,
       nowUnix,
       errorLogger,

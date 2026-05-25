@@ -96,6 +96,12 @@ describe("Strava fresh sync", () => {
     expect(errorLogger).toHaveBeenCalledWith(
       expect.stringContaining("detail backfill deferred"),
     );
+    expect(syncStravaActivityDetailsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: "incremental",
+        maxActivities: 20,
+      }),
+    );
   });
 
   it("keeps summary freshness when daily stress recompute fails", async () => {

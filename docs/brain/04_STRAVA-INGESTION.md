@@ -129,6 +129,11 @@ The route rejects overlapping fresh-sync requests with `sync_already_running`.
 This prevents the app-shell freshness pass and a manual `/connect` refresh from
 starting duplicate Strava pulls against the same local database.
 
+Fresh sync caps its automatic detail-backfill step to a small batch per run so
+the app can keep daily summary data fresh without spending a full Strava read
+window on historical split/stream backfill. Manual detail controls on
+`/connect` remain available for explicit catch-up.
+
 ---
 
 ## Rate limiting and retries

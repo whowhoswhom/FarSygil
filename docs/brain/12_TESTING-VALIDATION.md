@@ -79,6 +79,7 @@ Relevant files:
 - [x] Detail-sync route behavior
 - [x] Combined fresh-sync route behavior
 - [x] Fresh-sync overlap guard and fail-soft daily-stress recompute behavior
+- [x] Fresh-sync detail-backfill cap for automatic rate-limit protection
 - [x] `/connect` sync-status summary rendering
 - [x] Malformed stream degradation
 - [x] Apple Health XML import aggregation and route behavior
