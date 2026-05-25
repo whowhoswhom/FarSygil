@@ -19,6 +19,7 @@ import {
   STRAVA_DETAIL_STREAM_KEYS,
   STRAVA_DETAIL_SYNC_MAX_RETRIES,
   STRAVA_DETAIL_SYNC_RETRY_BASE_MS,
+  STRAVA_SYNC_MAX_RETRY_DELAY_MS,
   STRAVA_SYNC_REFRESH_LEEWAY_SECONDS,
 } from "@/server/strava/constants";
 import {
@@ -690,10 +691,13 @@ function getRetryDelayMilliseconds(
   const parsedRetryAfter = parseRetryAfterHeader(retryAfterHeader);
 
   if (parsedRetryAfter != null) {
-    return parsedRetryAfter;
+    return Math.min(parsedRetryAfter, STRAVA_SYNC_MAX_RETRY_DELAY_MS);
   }
 
-  return STRAVA_DETAIL_SYNC_RETRY_BASE_MS * 2 ** attempt;
+  return Math.min(
+    STRAVA_DETAIL_SYNC_RETRY_BASE_MS * 2 ** attempt,
+    STRAVA_SYNC_MAX_RETRY_DELAY_MS,
+  );
 }
 
 function parseRetryAfterHeader(value: string | null): number | null {

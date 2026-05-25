@@ -99,6 +99,7 @@ describe("Strava fresh sync route", () => {
         startDate: "2026-05-25",
         endDate: "2026-05-25",
       },
+      dailyStressError: null,
     });
 
     const { POST } = await import("../../src/app/api/strava/sync-fresh/route");
@@ -111,6 +112,59 @@ describe("Strava fresh sync route", () => {
     expect(payload.details.activitiesSynced).toBe(1);
     expect(payload.dailyStress.daysWritten).toBe(1);
     expect(syncStravaFreshDataMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects overlapping fresh sync requests instead of starting a duplicate Strava pull", async () => {
+    const getStravaOAuthConfigMock = vi.mocked(oauthModule.getStravaOAuthConfig);
+    const syncStravaFreshDataMock = vi.mocked(
+      freshSyncModule.syncStravaFreshData,
+    );
+    let resolveSync:
+      | ((value: Awaited<ReturnType<typeof freshSyncModule.syncStravaFreshData>>) => void)
+      | null = null;
+
+    getStravaOAuthConfigMock.mockReturnValue({
+      clientId: "12345",
+      clientSecret: "secret-value",
+      redirectUri: "http://localhost:3000/api/strava/callback",
+    });
+    syncStravaFreshDataMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSync = resolve;
+      }),
+    );
+
+    const { POST } = await import("../../src/app/api/strava/sync-fresh/route");
+    const firstResponsePromise = POST();
+    const secondResponse = await POST();
+    const secondPayload = await secondResponse.json();
+
+    expect(secondResponse.status).toBe(409);
+    expect(secondResponse.headers.get("cache-control")).toBe("no-store");
+    expect(secondPayload).toEqual({
+      error: "sync_already_running",
+      message:
+        "A Strava freshness sync is already running. Wait for it to finish, then refresh this page.",
+    });
+    expect(syncStravaFreshDataMock).toHaveBeenCalledTimes(1);
+
+    resolveSync?.({
+      summary: {
+        mode: "incremental",
+        afterUnix: null,
+        activitiesFetched: 0,
+        activitiesAdded: 0,
+        activitiesUpdated: 0,
+        pagesFetched: 0,
+      },
+      details: null,
+      detailError: null,
+      dailyStress: null,
+      dailyStressError: null,
+    });
+
+    const firstResponse = await firstResponsePromise;
+    expect(firstResponse.status).toBe(200);
   });
 
   it("maps helper connectivity failures to 401", async () => {

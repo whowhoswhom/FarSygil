@@ -12,7 +12,8 @@ export interface StravaFreshSyncResult {
   summary: Awaited<ReturnType<typeof syncStravaActivities>>;
   details: Awaited<ReturnType<typeof syncStravaActivityDetails>> | null;
   detailError: string | null;
-  dailyStress: Awaited<ReturnType<typeof recomputeDailyTrainingStress>>;
+  dailyStress: Awaited<ReturnType<typeof recomputeDailyTrainingStress>> | null;
+  dailyStressError: string | null;
 }
 
 export async function syncStravaFreshData(options: {
@@ -39,6 +40,9 @@ export async function syncStravaFreshData(options: {
   let details: Awaited<ReturnType<typeof syncStravaActivityDetails>> | null =
     null;
   let detailError: string | null = null;
+  let dailyStress: Awaited<ReturnType<typeof recomputeDailyTrainingStress>> | null =
+    null;
+  let dailyStressError: string | null = null;
 
   try {
     details = await syncStravaActivityDetails({
@@ -54,13 +58,21 @@ export async function syncStravaFreshData(options: {
     errorLogger?.(`[strava-fresh-sync] detail backfill deferred: ${detailError}`);
   }
 
-  const dailyStress = await recomputeDailyTrainingStress(database);
+  try {
+    dailyStress = await recomputeDailyTrainingStress(database);
+  } catch (error) {
+    dailyStressError = getErrorMessage(error);
+    errorLogger?.(
+      `[strava-fresh-sync] daily stress recompute deferred: ${dailyStressError}`,
+    );
+  }
 
   return {
     summary,
     details,
     detailError,
     dailyStress,
+    dailyStressError,
   };
 }
 

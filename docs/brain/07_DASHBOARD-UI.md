@@ -140,7 +140,8 @@ data reality.
 
 - Remains the Strava authority surface.
 - Exposes fresh sync, summary sync, and detail sync.
-- Surfaces local sync history.
+- Surfaces last successful sync, last sync error, local sync history, and the
+  next actionable sync step.
 
 ### `/health`
 

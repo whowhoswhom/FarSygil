@@ -211,6 +211,40 @@ describe("Strava sync", () => {
     }
   });
 
+  it("caps long Retry-After waits so a fresh sync does not hang for a full rate-limit window", async () => {
+    const { database, sqlite } = createTestDatabase();
+    const sleepMock = vi.fn(async () => undefined);
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: "rate limited" }), {
+          status: 429,
+          headers: {
+            "Retry-After": "3600",
+          },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse(emptyPageFixture));
+
+    try {
+      await insertStoredToken(database);
+
+      const result = await syncStravaActivities({
+        database,
+        config: TEST_CONFIG,
+        fetchImplementation: fetchMock,
+        sleepImplementation: sleepMock,
+        nowUnix: 1767222000,
+      });
+
+      expect(result.activitiesFetched).toBe(0);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(sleepMock).toHaveBeenCalledWith(60_000);
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("fails cleanly when no stored Strava connection exists", async () => {
     const { database, sqlite } = createTestDatabase();
     const fetchMock = vi.fn<typeof fetch>();

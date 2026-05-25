@@ -86,7 +86,8 @@ export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
             } | null;
             dailyStress?: {
               daysWritten?: number;
-            };
+            } | null;
+            dailyStressError?: string | null;
           }
         | null;
 
@@ -198,6 +199,12 @@ export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
               value={`${coverage.streamActivities}/${coverage.totalActivities}`}
             />
           </div>
+
+          <SyncStatusOverview
+            connected={connected}
+            logs={logs}
+            coverage={coverage}
+          />
 
           {!connected ? (
             <p className="rounded-[16px] border border-white/6 bg-white/[0.02] px-4 py-3 text-xs text-[var(--ink-3)]">
@@ -311,6 +318,46 @@ function EventBadge({ eventType }: { eventType: string }) {
   );
 }
 
+function SyncStatusOverview({
+  connected,
+  logs,
+  coverage,
+}: {
+  connected: boolean;
+  logs: StravaSyncLogEntry[];
+  coverage: SyncPanelProps["coverage"];
+}) {
+  const latestSuccess = logs.find((log) => log.eventType === "sync_complete");
+  const latestError = logs.find((log) => log.eventType === "sync_error");
+  const nextAction = getNextSyncAction({
+    connected,
+    latestSuccess,
+    latestError,
+    coverage,
+  });
+
+  return (
+    <div className="grid gap-2">
+      <MetricCell
+        label="Last success"
+        value={latestSuccess ? formatDateTime(latestSuccess.completedAt ?? latestSuccess.startedAt) : "--"}
+      />
+      <MetricCell
+        label="Last error"
+        value={latestError ? (latestError.message ?? "Sync error") : "--"}
+      />
+      <div className="rounded-[14px] border border-white/6 bg-black/10 px-3 py-3">
+        <p className="mb-1 truncate text-[0.55rem] font-semibold uppercase tracking-[0.18em] text-[var(--ink-3)]">
+          Next action
+        </p>
+        <p className="text-xs leading-relaxed text-[var(--ink-1)]">
+          {nextAction}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function MetricCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 rounded-[14px] border border-white/6 bg-black/10 px-2.5 py-2">
@@ -322,6 +369,55 @@ function MetricCell({ label, value }: { label: string; value: string }) {
       </p>
     </div>
   );
+}
+
+function getNextSyncAction({
+  connected,
+  latestSuccess,
+  latestError,
+  coverage,
+}: {
+  connected: boolean;
+  latestSuccess: StravaSyncLogEntry | undefined;
+  latestError: StravaSyncLogEntry | undefined;
+  coverage: SyncPanelProps["coverage"];
+}): string {
+  if (!connected) {
+    return "Connect Strava first.";
+  }
+
+  if (latestError && isLogNewerThan(latestError, latestSuccess)) {
+    return "Use Refresh latest. If the error repeats, wait for Strava's rate limit window and try again.";
+  }
+
+  if (!latestSuccess) {
+    return "Use Refresh latest to import your local Strava archive.";
+  }
+
+  if (
+    coverage.totalActivities > 0 &&
+    coverage.detailActivities < coverage.totalActivities
+  ) {
+    return "Use Missing details to backfill run splits and streams.";
+  }
+
+  return "Fresh sync runs automatically when stale; use Refresh latest after a new run.";
+}
+
+function isLogNewerThan(
+  candidate: StravaSyncLogEntry,
+  reference: StravaSyncLogEntry | undefined,
+): boolean {
+  if (!reference) {
+    return true;
+  }
+
+  return getLogTimestamp(candidate) > getLogTimestamp(reference);
+}
+
+function getLogTimestamp(log: StravaSyncLogEntry): number {
+  const value = Date.parse(log.completedAt ?? log.startedAt);
+  return Number.isFinite(value) ? value : log.id;
 }
 
 function formatEventLabel(eventType: string): string {
@@ -368,17 +464,21 @@ function formatFreshSyncSuccessMessage(payload: {
   } | null;
   dailyStress?: {
     daysWritten?: number;
-  };
+  } | null;
+  dailyStressError?: string | null;
 } | null): string {
   const activitiesAdded = payload?.summary?.activitiesAdded ?? 0;
   const activitiesUpdated = payload?.summary?.activitiesUpdated ?? 0;
   const detailsSynced = payload?.details?.activitiesSynced ?? 0;
-  const daysWritten = payload?.dailyStress?.daysWritten ?? 0;
+  const daysWritten = payload?.dailyStress?.daysWritten;
+  const stressText = payload?.dailyStressError
+    ? "daily stress recompute was deferred"
+    : `recomputed ${daysWritten ?? 0} daily stress days`;
 
   return (
     `Fresh sync complete. Added ${activitiesAdded} and updated ` +
     `${activitiesUpdated} activities, refreshed ${detailsSynced} detail rows, ` +
-    `and recomputed ${daysWritten} daily stress days.`
+    `and ${stressText}.`
   );
 }
 
