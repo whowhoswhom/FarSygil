@@ -84,6 +84,33 @@ describe("dashboard Strava snapshots", () => {
     }
   });
 
+  it("keeps an expired access token visually connected because sync can refresh it", async () => {
+    const { database, sqlite } = createTestDatabase();
+
+    try {
+      await database.insert(testSchema.stravaTokens).values({
+        athleteId: 42,
+        accessToken: "expired-access-token",
+        refreshToken: "refresh-token",
+        expiresAt: 1_700_000_000,
+        scope: "read,activity:read_all",
+      });
+
+      const snapshot = await getDashboardHeaderSnapshot(
+        database,
+        1_800_000_000,
+      );
+
+      expect(snapshot).toEqual({
+        statusLabel: "Strava connected",
+        statusState: "connected",
+        lastSyncedAt: null,
+      });
+    } finally {
+      sqlite.close();
+    }
+  });
+
   it("builds current-week running aggregates, trends, and recent-run summaries", async () => {
     const { database, sqlite } = createTestDatabase();
 

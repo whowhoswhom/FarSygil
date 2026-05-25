@@ -26,7 +26,7 @@ type SyncFeedback =
     }
   | null;
 
-type SyncAction = "summary" | "detail-incremental" | "detail-full";
+type SyncAction = "fresh" | "summary" | "detail-incremental" | "detail-full";
 
 export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
   const router = useRouter();
@@ -40,7 +40,12 @@ export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
 
     try {
       const request =
-        action === "summary"
+        action === "fresh"
+          ? {
+              url: "/api/strava/sync-fresh",
+              body: undefined,
+            }
+          : action === "summary"
           ? {
               url: "/api/strava/sync",
               body: undefined,
@@ -70,6 +75,18 @@ export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
             activitiesSynced?: number;
             detailsFetched?: number;
             streamsFetched?: number;
+            summary?: {
+              activitiesAdded?: number;
+              activitiesUpdated?: number;
+            };
+            details?: {
+              activitiesSynced?: number;
+              detailsFetched?: number;
+              streamsFetched?: number;
+            } | null;
+            dailyStress?: {
+              daysWritten?: number;
+            };
           }
         | null;
 
@@ -86,7 +103,9 @@ export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
       setFeedback({
         kind: "success",
         message:
-          action === "summary"
+          action === "fresh"
+            ? formatFreshSyncSuccessMessage(payload)
+            : action === "summary"
             ? formatSummarySyncSuccessMessage(
                 payload?.activitiesAdded ?? 0,
                 payload?.activitiesUpdated ?? 0,
@@ -118,17 +137,25 @@ export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
         <div>
           <p className="section-kicker mb-2">Sync control</p>
           <p className="max-w-2xl text-sm text-[var(--ink-2)]">
-            Summary sync builds the archive. Detail sync enriches runs with
-            split rows and stream series for route detail surfaces. Only direct
-            Strava requests leave this machine.
+            Fresh sync pulls new Strava activities, backfills missing detail
+            rows, and recomputes local daily stress. Only direct Strava
+            requests leave this machine.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => void runSync("summary")}
+            onClick={() => void runSync("fresh")}
             disabled={!connected || isPending}
             className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pendingAction === "fresh" ? "Refreshing..." : "Refresh latest"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void runSync("summary")}
+            disabled={!connected || isPending}
+            className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
           >
             {pendingAction === "summary" ? "Syncing..." : "Sync summary"}
           </button>
@@ -298,6 +325,32 @@ function formatSummarySyncSuccessMessage(
   }
 
   return `Summary sync complete. Added ${activitiesAdded} and updated ${activitiesUpdated} activities.`;
+}
+
+function formatFreshSyncSuccessMessage(payload: {
+  summary?: {
+    activitiesAdded?: number;
+    activitiesUpdated?: number;
+  };
+  details?: {
+    activitiesSynced?: number;
+    detailsFetched?: number;
+    streamsFetched?: number;
+  } | null;
+  dailyStress?: {
+    daysWritten?: number;
+  };
+} | null): string {
+  const activitiesAdded = payload?.summary?.activitiesAdded ?? 0;
+  const activitiesUpdated = payload?.summary?.activitiesUpdated ?? 0;
+  const detailsSynced = payload?.details?.activitiesSynced ?? 0;
+  const daysWritten = payload?.dailyStress?.daysWritten ?? 0;
+
+  return (
+    `Fresh sync complete. Added ${activitiesAdded} and updated ` +
+    `${activitiesUpdated} activities, refreshed ${detailsSynced} detail rows, ` +
+    `and recomputed ${daysWritten} daily stress days.`
+  );
 }
 
 function formatDetailSyncSuccessMessage(

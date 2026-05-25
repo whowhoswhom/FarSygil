@@ -47,6 +47,7 @@ records.
 - [x] Strava OAuth token exchange and storage
 - [x] Summary activity sync
 - [x] Token refresh logic
+- [x] Refresh-token responses that omit `athlete.id`
 - [x] Connection-status reads
 - [x] Sync-log reads
 - [x] Archive formatting, filtering, aggregation, and polyline helpers
@@ -57,6 +58,8 @@ Relevant files:
 - `tests/strava/callback-route.test.ts`
 - `tests/strava/sync.test.ts`
 - `tests/strava/sync-route.test.ts`
+- `tests/strava/fresh-sync.test.ts`
+- `tests/strava/sync-fresh-route.test.ts`
 - `tests/strava/sync-logs.test.ts`
 - `tests/activities/format.test.ts`
 - `tests/activities/filters.test.ts`
@@ -73,6 +76,7 @@ Relevant files:
 - [x] Strava detail sync writes
 - [x] Detail-sync rate-limit retry behavior
 - [x] Detail-sync route behavior
+- [x] Combined fresh-sync route behavior
 - [x] Malformed stream degradation
 - [x] Apple Health XML import aggregation and route behavior
 - [x] Apple Health ZIP import extraction and unsafe-entry rejection
@@ -109,6 +113,12 @@ Current Phase 2 assertions cover:
 - compatibility redirects from `/activities` to `/runs`
 - incremental and full detail sync, raw payload writes, split/stream writes,
   sync-log writes, and retry behavior on rate-limited detail requests
+- detail sync keeps detailed activity rows when Strava returns 404 for an
+  optional streams resource
+- combined fresh-sync route behavior for the preferred daily Strava refresh
+  path
+- fresh-sync fail-soft behavior when detail backfill is temporarily rate-limited
+- summary sync retry behavior for transient fetch failures
 - Apple Health extracted XML imports for daily steps, resting HR, HRV, VO2 Max,
   active energy, and sleep-hours rows, including upsert, source ownership,
   missing-file handling, invalid-XML handling, and error logging

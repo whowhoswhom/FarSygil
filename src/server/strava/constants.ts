@@ -15,6 +15,8 @@ export const STRAVA_REFRESH_LEEWAY_SECONDS = 300;
 // than a simple metadata request, so they use a wider refresh margin.
 export const STRAVA_SYNC_REFRESH_LEEWAY_SECONDS = 3600;
 export const STRAVA_ACTIVITIES_PER_PAGE = 200;
+export const STRAVA_SUMMARY_SYNC_MAX_RETRIES = 4;
+export const STRAVA_SUMMARY_SYNC_RETRY_BASE_MS = 1000;
 export const STRAVA_DETAIL_STREAM_KEYS = [
   "time",
   "distance",

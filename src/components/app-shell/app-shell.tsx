@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { AutoStravaFreshSync } from "@/components/app-shell/auto-strava-fresh-sync";
 import { DesktopSidebar } from "@/components/app-shell/desktop-sidebar";
 import { MobileBottomNav } from "@/components/app-shell/mobile-bottom-nav";
 import { TopStatusStrip } from "@/components/app-shell/top-status-strip";
@@ -24,6 +25,7 @@ interface AppShellProps {
   healthLabel: string;
   healthState: "connected" | "disconnected" | "pending" | "unavailable";
   lastSyncedLabel: string | null;
+  lastSyncedAt: string | null;
   children: ReactNode;
 }
 
@@ -33,10 +35,15 @@ export function AppShell({
   healthLabel,
   healthState,
   lastSyncedLabel,
+  lastSyncedAt,
   children,
 }: AppShellProps) {
   return (
     <div className="app-shell-root">
+      <AutoStravaFreshSync
+        enabled={stravaState === "connected"}
+        lastSyncedAt={lastSyncedAt}
+      />
       <div className="app-shell-frame">
         <DesktopSidebar items={DESKTOP_ITEMS} />
         <div className="app-shell-main">

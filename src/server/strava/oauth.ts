@@ -28,17 +28,27 @@ export interface StravaOAuthConfig {
   redirectUri: string;
 }
 
-export interface StravaTokenExchangeResponse {
+export interface StravaTokenResponse {
   token_type: string;
   access_token: string;
   refresh_token: string;
   expires_at: number;
   expires_in: number;
+}
+
+export interface StravaTokenExchangeResponse extends StravaTokenResponse {
   athlete: {
     id: number;
     [key: string]: unknown;
   };
   scope?: string;
+}
+
+export interface StravaTokenRefreshResponse extends StravaTokenResponse {
+  athlete?: {
+    id: number;
+    [key: string]: unknown;
+  };
 }
 
 export interface StravaConnectionStatus {
@@ -126,6 +136,7 @@ export async function exchangeCodeForToken(
     }),
     "token exchange",
     fetchImplementation,
+    true,
   );
 }
 
@@ -133,7 +144,7 @@ export async function refreshStravaAccessToken(
   refreshToken: string,
   config: StravaOAuthConfig,
   fetchImplementation: FetchImplementation = fetch,
-): Promise<StravaTokenExchangeResponse> {
+): Promise<StravaTokenRefreshResponse> {
   return requestStravaToken(
     new URLSearchParams({
       client_id: config.clientId,
@@ -143,6 +154,7 @@ export async function refreshStravaAccessToken(
     }),
     "token refresh",
     fetchImplementation,
+    false,
   );
 }
 
@@ -192,11 +204,15 @@ export async function getValidStravaAccessToken(options: {
       fetchImplementation,
     );
 
-    await upsertStravaToken(database, refreshedToken, token.scope);
+    await upsertStoredStravaToken(database, {
+      athleteId: token.athleteId,
+      token: refreshedToken,
+      acceptedScope: token.scope,
+    });
 
     return {
       accessToken: refreshedToken.access_token,
-      athleteId: refreshedToken.athlete.id,
+      athleteId: token.athleteId,
       scope: token.scope,
       expiresAt: refreshedToken.expires_at,
       refreshed: true,
@@ -215,7 +231,20 @@ async function requestStravaToken(
   body: URLSearchParams,
   operationName: string,
   fetchImplementation: FetchImplementation,
-): Promise<StravaTokenExchangeResponse> {
+  requireAthlete: true,
+): Promise<StravaTokenExchangeResponse>;
+async function requestStravaToken(
+  body: URLSearchParams,
+  operationName: string,
+  fetchImplementation: FetchImplementation,
+  requireAthlete: false,
+): Promise<StravaTokenRefreshResponse>;
+async function requestStravaToken(
+  body: URLSearchParams,
+  operationName: string,
+  fetchImplementation: FetchImplementation,
+  requireAthlete = true,
+): Promise<StravaTokenExchangeResponse | StravaTokenRefreshResponse> {
   let response: Response;
 
   try {
@@ -260,7 +289,9 @@ async function requestStravaToken(
     );
   }
 
-  return parseStravaTokenExchangeResponse(payload);
+  return requireAthlete
+    ? parseStravaTokenExchangeResponse(payload)
+    : parseStravaTokenRefreshResponse(payload);
 }
 
 export async function upsertStravaToken(
@@ -268,18 +299,37 @@ export async function upsertStravaToken(
   token: StravaTokenExchangeResponse,
   acceptedScope: string | null,
 ): Promise<void> {
+  return upsertStoredStravaToken(database, {
+    athleteId: token.athlete.id,
+    token,
+    acceptedScope,
+  });
+}
+
+async function upsertStoredStravaToken(
+  database: FarSygilDatabase,
+  {
+    athleteId,
+    token,
+    acceptedScope,
+  }: {
+    athleteId: number;
+    token: StravaTokenResponse;
+    acceptedScope: string | null;
+  },
+): Promise<void> {
   try {
     await database.transaction(async (transaction) => {
       // FarSygil models Strava as one local connection, so a different athlete
       // replacing the current account should evict any stale token row first.
       await transaction
         .delete(stravaTokens)
-        .where(ne(stravaTokens.athleteId, token.athlete.id));
+        .where(ne(stravaTokens.athleteId, athleteId));
 
       await transaction
         .insert(stravaTokens)
         .values({
-          athleteId: token.athlete.id,
+          athleteId,
           accessToken: token.access_token,
           refreshToken: token.refresh_token,
           expiresAt: token.expires_at,
@@ -455,7 +505,7 @@ function getErrorMessage(error: unknown): string {
 function parseStravaTokenExchangeResponse(
   payload: unknown,
 ): StravaTokenExchangeResponse {
-  if (!isStravaTokenExchangeResponse(payload)) {
+  if (!isStravaTokenResponse(payload) || !hasAthleteId(payload)) {
     throw new StravaOAuthError(
       "Strava token response missing required fields (access_token, refresh_token, expires_at, athlete.id)",
     );
@@ -464,23 +514,42 @@ function parseStravaTokenExchangeResponse(
   return payload;
 }
 
-function isStravaTokenExchangeResponse(
+function parseStravaTokenRefreshResponse(
   payload: unknown,
-): payload is StravaTokenExchangeResponse {
+): StravaTokenRefreshResponse {
+  if (!isStravaTokenResponse(payload)) {
+    throw new StravaOAuthError(
+      "Strava token response missing required fields (access_token, refresh_token, expires_at)",
+    );
+  }
+
+  return payload;
+}
+
+function isStravaTokenResponse(
+  payload: unknown,
+): payload is StravaTokenRefreshResponse {
   if (!payload || typeof payload !== "object") {
     return false;
   }
 
-  const candidate = payload as Partial<StravaTokenExchangeResponse>;
+  const candidate = payload as Partial<StravaTokenResponse>;
 
   return (
     typeof candidate.token_type === "string" &&
     typeof candidate.access_token === "string" &&
     typeof candidate.refresh_token === "string" &&
     typeof candidate.expires_at === "number" &&
-    typeof candidate.expires_in === "number" &&
-    !!candidate.athlete &&
-    typeof candidate.athlete === "object" &&
-    typeof candidate.athlete.id === "number"
+    typeof candidate.expires_in === "number"
+  );
+}
+
+function hasAthleteId(
+  payload: StravaTokenRefreshResponse,
+): payload is StravaTokenExchangeResponse {
+  return (
+    !!payload.athlete &&
+    typeof payload.athlete === "object" &&
+    typeof payload.athlete.id === "number"
   );
 }

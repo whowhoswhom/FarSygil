@@ -183,6 +183,7 @@ export async function syncStravaActivityDetails(options: {
         fetchImplementation,
         sleepImplementation,
         operationName: `activity streams ${candidate.stravaId}`,
+        notFoundPayload: {},
       });
 
       const upsertResult = await upsertDetailedActivityData(database, {
@@ -193,7 +194,7 @@ export async function syncStravaActivityDetails(options: {
 
       result.activitiesSynced += 1;
       result.detailsFetched += 1;
-      result.streamsFetched += 1;
+      result.streamsFetched += streamsResponse.found ? 1 : 0;
       result.splitsWritten += upsertResult.splitsWritten;
       result.streamsWritten += upsertResult.streamsWritten;
       result.rateLimitRetries += detailResponse.retryCount + streamsResponse.retryCount;
@@ -307,13 +308,15 @@ async function fetchJsonWithRetry(options: {
   fetchImplementation: FetchImplementation;
   sleepImplementation: SleepImplementation;
   operationName: string;
-}): Promise<{ payload: unknown; retryCount: number }> {
+  notFoundPayload?: unknown;
+}): Promise<{ payload: unknown; retryCount: number; found: boolean }> {
   const {
     url,
     accessToken,
     fetchImplementation,
     sleepImplementation,
     operationName,
+    notFoundPayload,
   } = options;
 
   let retryCount = 0;
@@ -344,6 +347,14 @@ async function fetchJsonWithRetry(options: {
     }
 
     if (!response.ok) {
+      if (response.status === 404 && notFoundPayload !== undefined) {
+        return {
+          payload: notFoundPayload,
+          retryCount,
+          found: false,
+        };
+      }
+
       const retryAfter = response.headers.get("Retry-After");
 
       if (isRetryableStatus(response.status) && attempt < STRAVA_DETAIL_SYNC_MAX_RETRIES - 1) {
@@ -372,6 +383,7 @@ async function fetchJsonWithRetry(options: {
       return {
         payload: await response.json(),
         retryCount,
+        found: true,
       };
     } catch (error) {
       throw new StravaDetailSyncError(

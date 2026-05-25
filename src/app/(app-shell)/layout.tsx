@@ -28,6 +28,7 @@ export default async function AppShellLayout({
       }
       healthState={hasAppleHealthMetrics ? "connected" : "unavailable"}
       lastSyncedLabel={formatRelativeLastSynced(shellSnapshot.lastSyncedAt)}
+      lastSyncedAt={shellSnapshot.lastSyncedAt}
     >
       {children}
     </AppShell>
