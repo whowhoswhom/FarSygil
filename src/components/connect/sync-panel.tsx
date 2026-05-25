@@ -132,139 +132,164 @@ export function SyncPanel({ connected, logs, coverage }: SyncPanelProps) {
   }
 
   return (
-    <section className="mt-6 rounded-[22px] border border-white/6 bg-black/10 px-5 py-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="section-kicker mb-2">Sync control</p>
-          <p className="max-w-2xl text-sm text-[var(--ink-2)]">
-            Fresh sync pulls new Strava activities, backfills missing detail
-            rows, and recomputes local daily stress. Only direct Strava
-            requests leave this machine.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => void runSync("fresh")}
-            disabled={!connected || isPending}
-            className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {pendingAction === "fresh" ? "Refreshing..." : "Refresh latest"}
-          </button>
-          <button
-            type="button"
-            onClick={() => void runSync("summary")}
-            disabled={!connected || isPending}
-            className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {pendingAction === "summary" ? "Syncing..." : "Sync summary"}
-          </button>
-          <button
-            type="button"
-            onClick={() => void runSync("detail-incremental")}
-            disabled={!connected || isPending}
-            className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {pendingAction === "detail-incremental"
-              ? "Syncing details..."
-              : "Sync missing details"}
-          </button>
-          <button
-            type="button"
-            onClick={() => void runSync("detail-full")}
-            disabled={!connected || isPending}
-            className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {pendingAction === "detail-full"
-              ? "Refreshing details..."
-              : "Sync all details"}
-          </button>
-        </div>
-      </div>
+    <section className="dashboard-shell-card p-4 md:p-5">
+      <div className="relative grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
+        <div className="flex flex-col gap-4">
+          <div>
+            <p className="section-kicker mb-1">Sync control</p>
+            <h2 className="text-[1.7rem] font-semibold tracking-[-0.05em] text-white md:text-[2.15rem]">
+              Local sync
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--ink-2)]">
+              Fresh sync pulls new Strava activities, backfills missing detail
+              rows, and recomputes local daily stress. Only direct Strava
+              requests leave this machine.
+            </p>
+          </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
-        <MetricCell
-          label="Archived runs"
-          value={String(coverage.totalActivities)}
-        />
-        <MetricCell
-          label="Detailed rows"
-          value={`${coverage.detailActivities}/${coverage.totalActivities}`}
-        />
-        <MetricCell
-          label="Stream rows"
-          value={`${coverage.streamActivities}/${coverage.totalActivities}`}
-        />
-      </div>
-
-      {!connected ? (
-        <p className="mt-4 rounded-[18px] border border-white/6 bg-white/[0.02] px-4 py-4 text-sm text-[var(--ink-3)]">
-          Connect Strava before starting a local sync.
-        </p>
-      ) : null}
-
-      {feedback ? (
-        <div
-          role={feedback.kind === "error" ? "alert" : "status"}
-          className={`mt-4 rounded-[18px] border px-4 py-4 text-sm ${
-            feedback.kind === "error"
-              ? "border-[var(--danger-soft)] bg-[rgba(229,102,74,0.08)] text-[var(--danger-ink)]"
-              : "border-[rgba(168,226,108,0.18)] bg-[rgba(123,194,65,0.08)] text-[var(--accent-bright)]"
-          }`}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
-
-      {logs.length > 0 ? (
-        <div className="mt-4 space-y-3">
-          {logs.map((log) => (
-            <article
-              key={log.id}
-              className="rounded-[18px] border border-white/6 bg-white/[0.02] px-4 py-4"
+          <div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-4">
+            <button
+              type="button"
+              onClick={() => void runSync("fresh")}
+              disabled={!connected || isPending}
+              className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <EventBadge eventType={log.eventType} />
-                  <p className="text-sm font-medium text-[var(--ink-1)]">
-                    {formatEventLabel(log.eventType)}
-                  </p>
-                </div>
-                <p className="text-xs text-[var(--ink-3)]">
-                  {formatDateTime(log.startedAt)}
-                </p>
-              </div>
+              {pendingAction === "fresh" ? "Refreshing..." : "Refresh latest"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void runSync("summary")}
+              disabled={!connected || isPending}
+              className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {pendingAction === "summary" ? "Syncing..." : "Sync summary"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void runSync("detail-incremental")}
+              disabled={!connected || isPending}
+              className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {pendingAction === "detail-incremental"
+                ? "Syncing..."
+                : "Missing details"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void runSync("detail-full")}
+              disabled={!connected || isPending}
+              className="ghost-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {pendingAction === "detail-full" ? "Refreshing..." : "All details"}
+            </button>
+          </div>
 
-              <p className="mt-3 text-sm text-[var(--ink-2)]">
-                {log.message ?? "No message recorded for this sync event."}
-              </p>
+          <div className="grid grid-cols-3 gap-2">
+            <MetricCell
+              label="Archived"
+              value={String(coverage.totalActivities)}
+            />
+            <MetricCell
+              label="Details"
+              value={`${coverage.detailActivities}/${coverage.totalActivities}`}
+            />
+            <MetricCell
+              label="Streams"
+              value={`${coverage.streamActivities}/${coverage.totalActivities}`}
+            />
+          </div>
 
-              <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                <MetricCell label="Source" value={log.source} />
-                <MetricCell label="Added" value={String(log.activitiesAdded)} />
-                <MetricCell
-                  label="Updated"
-                  value={String(log.activitiesUpdated)}
-                />
-                <MetricCell label="Errors" value={String(log.errorsCount)} />
-                <MetricCell
-                  label="Started"
-                  value={formatDateTime(log.startedAt)}
-                />
-                <MetricCell
-                  label="Completed"
-                  value={log.completedAt ? formatDateTime(log.completedAt) : "--"}
-                />
-              </dl>
-            </article>
-          ))}
+          {!connected ? (
+            <p className="rounded-[16px] border border-white/6 bg-white/[0.02] px-4 py-3 text-xs text-[var(--ink-3)]">
+              Connect Strava before starting a local sync.
+            </p>
+          ) : null}
+
+          {feedback ? (
+            <div
+              role={feedback.kind === "error" ? "alert" : "status"}
+              className={`rounded-[16px] border px-4 py-3 text-xs ${
+                feedback.kind === "error"
+                  ? "border-[var(--danger-soft)] bg-[rgba(229,102,74,0.08)] text-[var(--danger-ink)]"
+                  : "border-[rgba(168,226,108,0.18)] bg-[rgba(123,194,65,0.08)] text-[var(--accent-bright)]"
+              }`}
+            >
+              {feedback.message}
+            </div>
+          ) : null}
         </div>
-      ) : connected ? (
-        <p className="mt-4 rounded-[18px] border border-white/6 bg-white/[0.02] px-4 py-4 text-sm text-[var(--ink-3)]">
-          No local sync events yet. Run your first Strava sync to populate this
-          log.
-        </p>
-      ) : null}
+
+        <div className="rounded-[20px] border border-white/6 bg-black/10 p-3">
+          <div className="mb-3 flex items-end justify-between gap-3 px-1">
+            <div>
+              <p className="section-kicker mb-1">Sync log</p>
+              <h3 className="text-lg font-semibold tracking-[-0.04em] text-white">
+                Recent events
+              </h3>
+            </div>
+            <span className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1 text-[11px] text-[var(--ink-3)]">
+              {logs.length} rows
+            </span>
+          </div>
+
+          {logs.length > 0 ? (
+            <div className="max-h-[25rem] space-y-2 overflow-y-auto pr-1">
+              {logs.map((log) => (
+                <article
+                  key={log.id}
+                  className="rounded-[16px] border border-white/6 bg-white/[0.02] px-3 py-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <EventBadge eventType={log.eventType} />
+                      <p className="truncate text-sm font-medium text-[var(--ink-1)]">
+                        {formatEventLabel(log.eventType)}
+                      </p>
+                    </div>
+                    <p className="text-[11px] text-[var(--ink-3)]">
+                      {formatDateTime(log.startedAt)}
+                    </p>
+                  </div>
+
+                  <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--ink-2)]">
+                    {log.message ?? "No message recorded for this sync event."}
+                  </p>
+
+                  <dl className="mt-3 grid grid-cols-3 gap-2 md:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
+                    <MetricCell label="Source" value={log.source} />
+                    <MetricCell
+                      label="Added"
+                      value={String(log.activitiesAdded)}
+                    />
+                    <MetricCell
+                      label="Updated"
+                      value={String(log.activitiesUpdated)}
+                    />
+                    <MetricCell label="Errors" value={String(log.errorsCount)} />
+                    <MetricCell
+                      label="Start"
+                      value={formatDateTime(log.startedAt)}
+                    />
+                    <MetricCell
+                      label="Done"
+                      value={log.completedAt ? formatDateTime(log.completedAt) : "--"}
+                    />
+                  </dl>
+                </article>
+              ))}
+            </div>
+          ) : connected ? (
+            <p className="rounded-[16px] border border-white/6 bg-white/[0.02] px-4 py-4 text-sm text-[var(--ink-3)]">
+              No local sync events yet. Run your first Strava sync to populate
+              this log.
+            </p>
+          ) : (
+            <p className="rounded-[16px] border border-white/6 bg-white/[0.02] px-4 py-4 text-sm text-[var(--ink-3)]">
+              Sync events appear here after Strava is connected.
+            </p>
+          )}
+        </div>
+      </div>
     </section>
   );
 }
@@ -279,7 +304,7 @@ function EventBadge({ eventType }: { eventType: string }) {
 
   return (
     <span
-      className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${className}`}
+      className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${className}`}
     >
       {formatEventLabel(eventType)}
     </span>
@@ -288,9 +313,13 @@ function EventBadge({ eventType }: { eventType: string }) {
 
 function MetricCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[16px] border border-white/6 bg-black/10 px-3 py-3">
-      <p className="section-kicker mb-2">{label}</p>
-      <p className="text-sm text-[var(--ink-1)]">{value}</p>
+    <div className="min-w-0 rounded-[14px] border border-white/6 bg-black/10 px-2.5 py-2">
+      <p className="mb-1 truncate text-[0.55rem] font-semibold uppercase tracking-[0.18em] text-[var(--ink-3)]">
+        {label}
+      </p>
+      <p className="truncate text-xs text-[var(--ink-1)]" title={value}>
+        {value}
+      </p>
     </div>
   );
 }

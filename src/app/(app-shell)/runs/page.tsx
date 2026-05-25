@@ -69,23 +69,28 @@ export default async function RunsPage() {
   const featuredPace = formatRunPaceFromActivity(featuredRun);
 
   return (
-    <main className="page-shell flex flex-col gap-6 pb-6 text-[var(--ink-1)]">
-      <section className="px-1 pt-1">
-        <p className="section-kicker mb-3">Runs</p>
-        <h1 className="text-[2.9rem] font-semibold tracking-[-0.07em] text-white md:text-[4rem]">
-          Runs
-        </h1>
+    <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
+      <section className="grid items-end gap-4 px-1 pt-1 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div>
+          <p className="section-kicker mb-2">Runs</p>
+          <h1 className="text-[2.35rem] font-semibold tracking-[-0.07em] text-white md:text-[3.35rem]">
+            Runs
+          </h1>
+        </div>
+        <p className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-2)]">
+          {totalRuns} {totalRuns === 1 ? "run" : "runs"} stored locally
+        </p>
       </section>
 
-      <section className="dashboard-shell-card p-5 md:p-6">
-        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_480px] xl:items-center">
-          <div className="flex min-w-0 flex-col gap-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-4">
-                <MetricIconBadge tone="exercise" icon="run" size="lg" />
+      <section className="dashboard-shell-card p-4 md:p-5">
+        <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_380px] xl:items-center">
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <MetricIconBadge tone="exercise" icon="run" />
                 <div className="min-w-0">
-                  <p className="section-kicker mb-2">Latest Run</p>
-                  <h2 className="line-clamp-2 text-[2.8rem] font-semibold leading-[0.92] tracking-[-0.06em] text-white md:text-[4rem]">
+                  <p className="section-kicker mb-1">Latest Run</p>
+                  <h2 className="line-clamp-2 text-[2rem] font-semibold leading-[0.92] tracking-[-0.06em] text-white md:text-[2.9rem]">
                     {featuredRun.name ?? "Untitled run"}
                   </h2>
                 </div>
@@ -93,7 +98,7 @@ export default async function RunsPage() {
               <SourceLabel source="Strava" tone="exercise" />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <ArchiveHeroMetric
                 label="Distance"
                 value={formatRunDistanceValue(featuredRun.distanceMeters) ?? "--"}
@@ -119,15 +124,15 @@ export default async function RunsPage() {
               />
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <p className="text-base text-[var(--ink-2)]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-[var(--ink-2)]">
                 {formatRunDateTime(
                   featuredRun.startDateLocal ?? featuredRun.startDate,
                 ) ?? "Date not available"}
               </p>
               <Link
                 href={`/runs/${featuredRun.id}`}
-                className="accent-button inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
+                className="accent-button inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold md:px-5 md:py-3 md:text-sm"
               >
                 Open run detail
               </Link>
@@ -137,7 +142,7 @@ export default async function RunsPage() {
           <RoutePreview
             activityId={featuredRun.id}
             pathData={featuredRun.routePathData}
-            className="min-h-[320px] w-full rounded-[28px]"
+            className="min-h-[190px] w-full rounded-[24px] md:min-h-[240px]"
             chipLabel={
               featuredRun.distanceMeters
                 ? `${formatRunDistanceValue(featuredRun.distanceMeters)} mi`
@@ -147,11 +152,11 @@ export default async function RunsPage() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-5">
-        <div className="flex flex-wrap items-end justify-between gap-4 px-1">
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-end justify-between gap-3 px-1">
           <div>
-            <p className="section-kicker mb-2">Archive</p>
-            <h2 className="text-[2rem] font-semibold tracking-[-0.05em] text-white">
+            <p className="section-kicker mb-1">Archive</p>
+            <h2 className="text-[1.75rem] font-semibold tracking-[-0.05em] text-white">
               All runs
             </h2>
           </div>
@@ -160,7 +165,7 @@ export default async function RunsPage() {
           </p>
         </div>
 
-        <div className="grid gap-5">
+        <div className="grid gap-3">
           {remainingRuns.length > 0 ? (
             remainingRuns.map((run) => (
               <ActivitySessionCard key={run.id} activity={run} />
@@ -193,17 +198,17 @@ function ArchiveHeroMetric({
   tone: string;
 }) {
   return (
-    <div className="rounded-[20px] border border-white/6 bg-black/10 px-4 py-4">
-      <p className="text-sm font-medium text-[var(--ink-2)]">{label}</p>
-      <div className="mt-2 flex items-end gap-2">
+    <div className="rounded-[16px] border border-white/6 bg-black/10 px-3 py-3">
+      <p className="text-xs font-medium text-[var(--ink-2)]">{label}</p>
+      <div className="mt-1 flex items-end gap-1.5">
         <span
-          className="dashboard-tile-value text-[2.4rem] font-semibold"
+          className="dashboard-tile-value text-[1.7rem] font-semibold md:text-[2rem]"
           style={{ color: tone }}
         >
           {value}
         </span>
         {unit ? (
-          <span className="pb-1 text-sm font-medium text-[var(--ink-2)]">
+          <span className="pb-0.5 text-xs font-medium text-[var(--ink-2)]">
             {unit}
           </span>
         ) : null}

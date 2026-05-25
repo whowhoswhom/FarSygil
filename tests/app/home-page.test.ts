@@ -28,6 +28,8 @@ vi.mock("@/db/client", () => ({
 }));
 
 vi.mock("@/components/app-shell", () => ({
+  AppIcon: ({ name }: { name: string }) =>
+    createElement("span", { "data-icon": name }),
   AppLogoMark: (props: Record<string, unknown>) => createElement("svg", props),
 }));
 
