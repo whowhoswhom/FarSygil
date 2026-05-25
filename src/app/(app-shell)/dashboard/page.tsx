@@ -15,6 +15,11 @@ import {
   formatWeekRangeLabel,
 } from "@/lib/dashboard/format";
 import {
+  dashboardWeekDateFromDateOnly,
+  getDashboardWeekHref,
+  resolveDashboardWeekSelection,
+} from "@/lib/dashboard/week-selection";
+import {
   ArchiveStatusCard,
   DailyBatteryDeferredCard,
   type DailyBatteryInput,
@@ -48,7 +53,13 @@ export const metadata: Metadata = {
     "FarSygil command center with real Strava, Apple Health, daily stress, and local archive provenance surfaces.",
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const weekSelection = resolveDashboardWeekSelection(resolvedSearchParams.week);
   const healthMetricTypes = getAppleHealthDashboardMetricTypes();
   const [
     runningSnapshot,
@@ -58,7 +69,10 @@ export default async function DashboardPage() {
     dailyStress,
     archiveStatus,
   ] = await Promise.all([
-    getDashboardRunningSnapshot(db),
+    getDashboardRunningSnapshot(
+      db,
+      dashboardWeekDateFromDateOnly(weekSelection.selectedWeekStartDate),
+    ),
     getLatestAppleHealthMetrics(db, healthMetricTypes),
     getAppleHealthMetricTrendSeries(db, healthMetricTypes),
     getAppleHealthImportSummary(db),
@@ -81,12 +95,26 @@ export default async function DashboardPage() {
       </section>
 
       <DashboardWeeklySummaryCard
-        title="This Week"
+        title={weekSelection.isCurrentWeek ? "This Week" : "Selected Week"}
         subtitle={formatWeekRangeLabel(
           runningSnapshot.weekStartDate,
           runningSnapshot.weekEndDate,
         )}
         href="/runs"
+        weekNavigation={{
+          previousHref: getDashboardWeekHref(
+            weekSelection.previousWeekStartDate,
+            weekSelection.currentWeekStartDate,
+          ),
+          nextHref: weekSelection.nextWeekStartDate
+            ? getDashboardWeekHref(
+                weekSelection.nextWeekStartDate,
+                weekSelection.currentWeekStartDate,
+              )
+            : null,
+          currentHref: "/dashboard",
+          isCurrentWeek: weekSelection.isCurrentWeek,
+        }}
         items={[
           {
             label: "Distance",
@@ -117,7 +145,7 @@ export default async function DashboardPage() {
             chartType: "line",
             chartValues: runningSnapshot.paceSeriesSecondsPerMile,
             emptyHint:
-              "Requires at least one real run with distance and moving time in the current week.",
+              "Requires at least one real run with distance and moving time in the selected week.",
           },
           {
             label: "Elevation",
@@ -203,7 +231,7 @@ export default async function DashboardPage() {
             source="Strava"
             value={formatRoundedMetric(runningSnapshot.averagePowerWatts)}
             unit={runningSnapshot.averagePowerWatts != null ? "W" : undefined}
-            hint="Data not available until the current week has real Strava runs with average watts and moving time."
+            hint="Data not available until the selected week has real Strava runs with average watts and moving time."
             chartValues={runningSnapshot.powerSeries}
           />
         </div>

@@ -25,11 +25,18 @@ export function DashboardWeeklySummaryCard({
   subtitle,
   href,
   items,
+  weekNavigation,
 }: {
   title: string;
   subtitle: string;
   href?: string;
   items: WeeklySummaryItem[];
+  weekNavigation?: {
+    previousHref: string;
+    nextHref: string | null;
+    currentHref: string;
+    isCurrentWeek: boolean;
+  };
 }) {
   return (
     <article className="dashboard-shell-card p-4 md:p-5">
@@ -41,15 +48,59 @@ export function DashboardWeeklySummaryCard({
             </h2>
             <p className="mt-1 text-sm text-[var(--ink-2)]">{subtitle}</p>
           </div>
-          {href ? (
-            <Link
-              href={href}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[var(--ink-2)] hover:text-white"
-              aria-label={`Open ${title}`}
-            >
-              <AppIcon name="arrow-right" className="text-lg" />
-            </Link>
-          ) : null}
+          <div className="flex shrink-0 items-center gap-2">
+            {weekNavigation ? (
+              <nav
+                className="flex items-center gap-1 rounded-full border border-white/8 bg-black/15 p-1"
+                aria-label="Dashboard week navigation"
+              >
+                <Link
+                  href={weekNavigation.previousHref}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--ink-2)] hover:bg-white/[0.07] hover:text-white"
+                  aria-label="Previous week"
+                >
+                  <AppIcon name="arrow-right" className="rotate-180 text-sm" />
+                </Link>
+                <Link
+                  href={weekNavigation.currentHref}
+                  className={`hidden rounded-full px-3 py-1.5 text-xs font-semibold sm:inline-flex ${
+                    weekNavigation.isCurrentWeek
+                      ? "bg-[var(--accent-core)] text-black"
+                      : "text-[var(--ink-2)] hover:bg-white/[0.07] hover:text-white"
+                  }`}
+                  aria-current={weekNavigation.isCurrentWeek ? "date" : undefined}
+                >
+                  Current
+                </Link>
+                {weekNavigation.nextHref ? (
+                  <Link
+                    href={weekNavigation.nextHref}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--ink-2)] hover:bg-white/[0.07] hover:text-white"
+                    aria-label="Next week"
+                  >
+                    <AppIcon name="arrow-right" className="text-sm" />
+                  </Link>
+                ) : (
+                  <span
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/20"
+                    aria-label="Next week unavailable"
+                    aria-disabled="true"
+                  >
+                    <AppIcon name="arrow-right" className="text-sm" />
+                  </span>
+                )}
+              </nav>
+            ) : null}
+            {href ? (
+              <Link
+                href={href}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[var(--ink-2)] hover:text-white"
+                aria-label={`Open ${title}`}
+              >
+                <AppIcon name="arrow-right" className="text-lg" />
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <div className="grid grid-cols-4 gap-0">
