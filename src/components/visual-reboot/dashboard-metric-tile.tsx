@@ -70,7 +70,7 @@ export function DashboardMetricTile({
                 </span>
               ) : null}
             </div>
-            {chartValues.length > 0 ? (
+            {chartValues.length >= 2 ? (
               <div className="mt-auto h-11 rounded-[12px] border border-white/6 bg-black/10 px-1.5 py-1.5">
                 <MiniLineChart values={chartValues} tone={tone} />
               </div>

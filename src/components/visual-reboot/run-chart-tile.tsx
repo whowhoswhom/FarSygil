@@ -52,7 +52,7 @@ export function RunChartTile({
             </div>
             <div className="grid min-h-[5.2rem] gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
               <div className="rounded-[16px] border border-white/6 bg-black/10 px-2 py-2">
-                {chartValues.length > 0 ? (
+                {chartValues.length >= 2 ? (
                   <MiniLineChart values={chartValues} tone={tone} />
                 ) : (
                   <div className="h-[3.5rem]" />

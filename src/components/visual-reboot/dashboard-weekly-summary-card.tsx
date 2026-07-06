@@ -109,7 +109,9 @@ export function DashboardWeeklySummaryCard({
               item.chartValues && item.chartValues.length > 0
                 ? item.chartType === "bar"
                   ? <MiniBarChart values={item.chartValues} tone={item.tone} />
-                  : <MiniLineChart values={item.chartValues} tone={item.tone} />
+                  : item.chartValues.length >= 2
+                    ? <MiniLineChart values={item.chartValues} tone={item.tone} />
+                    : null
                 : null;
 
             return (
