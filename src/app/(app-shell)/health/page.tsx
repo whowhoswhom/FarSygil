@@ -2,7 +2,9 @@ import { DashboardHealthClusterCard } from "@/components/visual-reboot";
 import { AppleHealthImportPanel } from "@/components/health/apple-health-import-panel";
 import { db } from "@/db/client";
 import {
-  buildAppleHealthDashboardMetrics,
+  APPLE_HEALTH_DAILY_SIGNAL_METRIC_TYPES,
+  APPLE_HEALTH_VITALS_METRIC_TYPES,
+  buildAppleHealthMetricGroup,
   getAppleHealthDashboardMetricTypes,
 } from "@/lib/apple-health/display";
 import {
@@ -21,12 +23,16 @@ export default async function HealthPage() {
     getLatestAppleHealthMetrics(db, metricTypes),
     getAppleHealthMetricTrendSeries(db, metricTypes),
   ]);
-  const healthMetrics = buildAppleHealthDashboardMetrics(
+  const vitalsMetrics = buildAppleHealthMetricGroup(
     latestMetrics,
     trendSeries,
+    APPLE_HEALTH_VITALS_METRIC_TYPES,
   );
-  const vitalsMetrics = healthMetrics.slice(0, 3);
-  const dailySignalMetrics = healthMetrics.slice(3);
+  const dailySignalMetrics = buildAppleHealthMetricGroup(
+    latestMetrics,
+    trendSeries,
+    APPLE_HEALTH_DAILY_SIGNAL_METRIC_TYPES,
+  );
 
   return (
     <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
