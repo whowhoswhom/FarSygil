@@ -16,7 +16,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="page-shell min-h-screen px-4 py-4 text-[var(--ink-1)] md:px-8 md:py-6 lg:px-10">
+    <main className="page-shell fs-view min-h-screen px-4 py-4 text-[var(--ink-1)] md:px-8 md:py-6 lg:px-10">
       <div className="mx-auto flex min-h-[calc(100svh-2rem)] max-w-[1180px] items-center md:min-h-[calc(100svh-3rem)]">
         <section className="dashboard-shell-card w-full p-4 md:p-6">
           <div className="relative grid gap-4 lg:grid-cols-[1.02fr_0.98fr]">

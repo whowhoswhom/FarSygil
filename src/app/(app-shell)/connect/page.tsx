@@ -4,7 +4,7 @@ import { desc, eq, sql } from "drizzle-orm";
 import { SyncPanel } from "@/components/connect/sync-panel";
 import { db } from "@/db/client";
 import { activities, activityRawJson } from "@/db/schema";
-import { MetricIconBadge } from "@/components/visual-reboot";
+import { MetricIconBadge, PageMasthead } from "@/components/visual-reboot";
 import { getStravaConnectionStatus } from "@/server/strava/oauth";
 import { getRecentStravaSyncLogs } from "@/server/strava/sync-logs";
 
@@ -49,19 +49,12 @@ export default async function ConnectPage() {
     ]);
 
   return (
-    <main className="page-shell flex flex-col gap-4 pb-6 text-[var(--ink-1)]">
-      <section className="flex flex-col gap-2 px-1 pt-1 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="section-kicker mb-2">Connect</p>
-          <h1 className="text-[2.3rem] font-semibold tracking-[-0.07em] text-white md:text-[2.95rem]">
-            Connect
-          </h1>
-        </div>
-        <p className="max-w-xl text-sm leading-relaxed text-[var(--ink-3)] md:text-right">
-          OAuth, sync controls, and import provenance for the local Strava
-          archive.
-        </p>
-      </section>
+    <main className="page-shell fs-view flex flex-col gap-8 pb-6 text-[var(--ink-1)]">
+      <PageMasthead
+        eyebrow="Strava"
+        title="Connect"
+        sub="OAuth, sync controls, and import provenance for the local Strava archive."
+      />
 
       <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
         <article className="dashboard-shell-card p-4 md:p-5">

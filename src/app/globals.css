@@ -54,6 +54,17 @@
   --faux-map-line: rgba(120, 165, 255, 0.08);
   --faux-map-contour: rgba(255, 255, 255, 0.04);
   --faux-map-floor: rgba(4, 9, 13, 0.86);
+
+  /* Editorial "instrument" layer — quiet grounds, hairlines, dim ink.
+     Grounds carry a slight green bias toward the brand rather than a
+     neutral grey, so the neutral reads as chosen. */
+  --fs-ground: #060806;
+  --fs-ground-2: #080b08;
+  --fs-panel: #0d110d;
+  --fs-line: rgba(233, 240, 228, 0.08);
+  --fs-line-strong: rgba(233, 240, 228, 0.14);
+  --fs-ink-4: rgba(206, 218, 200, 0.24);
+  --fs-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 html {
@@ -63,10 +74,9 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(72% 42% at 88% -8%, rgba(141, 99, 255, 0.14) 0%, transparent 58%),
-    radial-gradient(54% 32% at 0% 100%, rgba(34, 220, 255, 0.12) 0%, transparent 56%),
-    radial-gradient(36% 28% at 18% 0%, rgba(167, 244, 61, 0.09) 0%, transparent 48%),
-    linear-gradient(180deg, var(--field-deep) 0%, #030403 100%);
+    radial-gradient(60% 40% at 92% -10%, rgba(123, 194, 65, 0.05) 0%, transparent 55%),
+    radial-gradient(50% 34% at 0% 100%, rgba(34, 220, 255, 0.03) 0%, transparent 55%),
+    linear-gradient(180deg, var(--fs-ground) 0%, #030503 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -127,21 +137,9 @@ select {
 .surface-slab {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--glass-border);
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.065) 0%,
-      rgba(255, 255, 255, 0.018) 36%,
-      rgba(255, 255, 255, 0.006) 100%
-    ),
-    var(--glass-bg);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
-    var(--shadow-slab);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid var(--fs-line);
+  background: var(--fs-panel);
+  box-shadow: 0 20px 52px -48px rgba(0, 0, 0, 0.9);
 }
 
 .surface-slab::before {
@@ -182,8 +180,7 @@ select {
 }
 
 .surface-slab:hover {
-  border-color: var(--glass-border-strong);
-  transform: translateY(-2px);
+  border-color: var(--fs-line-strong);
 }
 
 .surface-slab[data-depth="hero"] {
@@ -413,15 +410,11 @@ select:focus-visible {
 }
 
 .app-rail-panel {
-  border: 1px solid var(--shell-rail-border);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%),
-    var(--shell-rail-bg);
-  border-radius: 24px;
-  padding: 0.9rem 0.65rem 0.7rem;
-  box-shadow: var(--shell-panel-shadow);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--fs-line);
+  background: var(--fs-panel);
+  border-radius: 18px;
+  padding: 1rem 0.7rem 0.75rem;
+  box-shadow: 0 24px 64px -54px rgba(0, 0, 0, 0.95);
 }
 
 .app-brand-lockup {
@@ -445,28 +438,45 @@ select:focus-visible {
 }
 
 .app-rail-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  border-radius: 16px;
-  padding: 0.58rem 0.72rem;
-  color: var(--shell-nav-ink);
+  border-radius: 11px;
+  padding: 0.55rem 0.7rem;
+  color: var(--ink-3);
   background: transparent;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 500;
+  letter-spacing: -0.005em;
 }
 
 .app-rail-link:hover {
-  background: var(--shell-nav-hover);
+  background: rgba(233, 240, 228, 0.035);
+  color: var(--ink-1);
 }
 
-.app-rail-link-active {
-  background:
-    linear-gradient(180deg, rgba(167, 244, 61, 0.18), rgba(167, 244, 61, 0.08)),
-    var(--shell-nav-active);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 18px 40px -32px rgba(167, 244, 61, 0.6);
+/* Refined active state: no glowing pill — ink-1 text, a brand-tinted icon,
+   and a small brand tick anchored to the rail edge. */
+.app-rail-link-active,
+.app-rail-link-active:hover {
+  background: rgba(233, 240, 228, 0.045);
+  color: var(--ink-1);
+}
+
+.app-rail-link-active::before {
+  content: "";
+  position: absolute;
+  left: -0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 1.05rem;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent-core));
+}
+
+.app-rail-link-active .app-rail-icon {
   color: var(--accent-bright);
 }
 
@@ -474,6 +484,7 @@ select:focus-visible {
   display: inline-flex;
   font-size: 0.92rem;
   color: currentColor;
+  opacity: 0.9;
 }
 
 .app-rail-footer {
@@ -529,36 +540,32 @@ select:focus-visible {
 .dashboard-shell-card {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 24px;
+  border: 1px solid var(--fs-line);
+  border-radius: 16px;
   background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01) 50%, rgba(255, 255, 255, 0.02)),
-    rgba(11, 15, 19, 0.82);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 34px 80px -52px rgba(0, 0, 0, 0.98);
-  backdrop-filter: blur(28px) saturate(165%);
-  -webkit-backdrop-filter: blur(28px) saturate(165%);
+    linear-gradient(180deg, rgba(233, 240, 228, 0.02), transparent 55%),
+    var(--fs-panel);
+  box-shadow: 0 24px 60px -50px rgba(0, 0, 0, 0.95);
 }
 
+/* Color is a whisper, not a wash — a faint tone breath in the top-left only,
+   so the editorial ground stays quiet and type carries the page. */
 .dashboard-shell-card::before {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(120% 100% at 0% 0%, var(--dashboard-tone-wash) 0%, transparent 46%),
-    radial-gradient(120% 100% at 100% 100%, rgba(255, 255, 255, 0.035) 0%, transparent 50%);
-  opacity: 0.95;
+  background: radial-gradient(80% 60% at 0% 0%, var(--dashboard-tone-wash) 0%, transparent 60%);
+  opacity: 0.4;
 }
 
 .dashboard-shell-card::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
+  height: 1px;
   pointer-events: none;
-  border-radius: inherit;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(90deg, transparent, rgba(233, 240, 228, 0.09) 30%, rgba(233, 240, 228, 0.09) 70%, transparent);
 }
 
 .dashboard-stat-divider {
@@ -672,10 +679,91 @@ select:focus-visible {
   .app-shell-content {
     gap: 0.8rem;
   }
+}
 
-  .app-top-strip {
-    align-self: flex-end;
-    width: fit-content;
-    max-width: calc(100% - 18rem);
+/* =========================================================================
+   Editorial layer — shared masthead / section / quiet-data utilities
+   ========================================================================= */
+
+.fs-eyebrow {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.fs-rule {
+  height: 1px;
+  background: var(--fs-line);
+}
+
+.fs-tone-dot {
+  width: 0.44rem;
+  height: 0.44rem;
+  border-radius: 999px;
+  flex: none;
+  display: inline-block;
+  background: var(--dashboard-tone, var(--ink-3));
+}
+
+/* Elegant honest-empty note: a thin lead-in rule + dim ink, never a loud box. */
+.fs-emptyline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink-3);
+  font-size: 0.8rem;
+}
+
+.fs-emptyline::before {
+  content: "";
+  width: 0.9rem;
+  height: 1px;
+  background: var(--fs-ink-4);
+  flex: none;
+}
+
+.fs-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.fs-section-title {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+
+.fs-section-meta {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* Restrained page-load rise, applied per shell route. */
+.fs-view {
+  animation: fs-rise 0.5s var(--fs-ease) both;
+}
+
+@keyframes fs-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-view {
+    animation: none;
   }
 }

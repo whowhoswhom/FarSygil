@@ -31,6 +31,10 @@ import {
   DashboardTrainingLoadCard,
   DashboardWeeklySummaryCard,
 } from "@/components/visual-reboot";
+// Imported via direct paths (not the "@/components/visual-reboot" barrel) so
+// they render for real under tests that mock the barrel's data cards.
+import { PageMasthead } from "@/components/visual-reboot/page-masthead";
+import { SectionHeader } from "@/components/visual-reboot/section-header";
 import {
   getAppleHealthImportSummary,
   getAppleHealthMetricTrendSeries,
@@ -87,13 +91,18 @@ export default async function DashboardPage({
   );
 
   return (
-    <main className="page-shell flex flex-col gap-3 pb-5 text-[var(--ink-1)]">
-      <section className="px-1 lg:-mt-[3.55rem] lg:max-w-[20rem]">
-        <h1 className="text-[2rem] font-semibold tracking-[-0.065em] text-white md:text-[2.45rem]">
-          Dashboard
-        </h1>
-      </section>
+    <main className="page-shell fs-view flex flex-col gap-8 pb-6 text-[var(--ink-1)]">
+      <PageMasthead
+        eyebrow={
+          weekSelection.isCurrentWeek
+            ? "This week · Mon–Sun"
+            : "Selected week · Mon–Sun"
+        }
+        title="Dashboard"
+        sub="Your real local training week, read at a glance."
+      />
 
+      {/* Weekly lede */}
       <DashboardWeeklySummaryCard
         title={weekSelection.isCurrentWeek ? "This Week" : "Selected Week"}
         subtitle={formatWeekRangeLabel(
@@ -159,29 +168,32 @@ export default async function DashboardPage({
         ]}
       />
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-        <DashboardRecentRunCard
-          title="Recent Run"
-          href={
-            runningSnapshot.recentRun
-              ? `/runs/${runningSnapshot.recentRun.id}`
-              : undefined
-          }
-          sportLabel={resolveRunSurfaceLabel(runningSnapshot.recentRun?.sportType)}
-          value={recentRunMetric.value}
-          unit={recentRunMetric.unit}
-          detail={
-            formatRunDayDate(
-              runningSnapshot.recentRun?.startDateLocal ??
-                runningSnapshot.recentRun?.startDate ??
-                null,
-            ) ?? undefined
-          }
-          source="Strava"
-          hint={recentRunMetric.hint}
-        />
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+      {/* Running */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader title="Running" meta="Strava · selected week" />
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,1fr)]">
+          <DashboardRecentRunCard
+            title="Recent Run"
+            href={
+              runningSnapshot.recentRun
+                ? `/runs/${runningSnapshot.recentRun.id}`
+                : undefined
+            }
+            sportLabel={resolveRunSurfaceLabel(
+              runningSnapshot.recentRun?.sportType,
+            )}
+            value={recentRunMetric.value}
+            unit={recentRunMetric.unit}
+            detail={
+              formatRunDayDate(
+                runningSnapshot.recentRun?.startDateLocal ??
+                  runningSnapshot.recentRun?.startDate ??
+                  null,
+              ) ?? undefined
+            }
+            source="Strava"
+            hint={recentRunMetric.hint}
+          />
           <DashboardMetricTile
             title="Longest Run"
             tone="exercise"
@@ -196,16 +208,8 @@ export default async function DashboardPage({
             }
             chartValues={runningSnapshot.distanceSeriesMiles}
           />
-
-          <DashboardDailyStressCard
-            latest={dailyStress.latest}
-            series={dailyStress.series}
-          />
         </div>
-      </div>
-
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(360px,0.8fr)_minmax(0,1.55fr)]">
-        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-3">
           <DashboardMetricTile
             title="Avg Cadence"
             tone="distance"
@@ -216,7 +220,7 @@ export default async function DashboardPage({
             chartValues={runningSnapshot.cadenceSeries}
           />
           <DashboardMetricTile
-            title="Avg HR"
+            title="Avg Run HR"
             tone="cardio"
             icon="heartrate"
             source="Strava"
@@ -226,7 +230,7 @@ export default async function DashboardPage({
           />
           <DashboardMetricTile
             title="Avg Power"
-            tone="recovery"
+            tone="move"
             icon="spark"
             source="Strava"
             value={formatRoundedMetric(runningSnapshot.averagePowerWatts)}
@@ -235,7 +239,11 @@ export default async function DashboardPage({
             chartValues={runningSnapshot.powerSeries}
           />
         </div>
+      </section>
 
+      {/* Physiology */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader title="Physiology" meta="Apple Health · latest local" />
         <DashboardHealthClusterCard
           title="Health & Wellness"
           sourceLabel="Apple Health"
@@ -251,24 +259,27 @@ export default async function DashboardPage({
               : "Data not available until the Apple Health importer writes real physiology rows into local SQLite."
           }
         />
-      </div>
+      </section>
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <DashboardTrainingLoadCard
-          hint="Data not available until FarSygil computes ATL, CTL, TSB, and related load metrics from daily stress history."
-        />
-        <DashboardRecoveryCard
-          hint="Data not available until recovery can be derived from imported health signals and computed load values."
-        />
-      </div>
+      {/* Derived — real daily stress leads, deferred analytics quarantined */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader title="Derived" meta="Deterministic · real inputs only" />
+        <div className="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1.1fr)_repeat(3,minmax(0,1fr))]">
+          <DashboardDailyStressCard
+            latest={dailyStress.latest}
+            series={dailyStress.series}
+          />
+          <DashboardTrainingLoadCard hint="Data not available until FarSygil computes ATL, CTL, TSB, and related load metrics from daily stress history." />
+          <DashboardRecoveryCard hint="Data not available until recovery can be derived from imported health signals and computed load values." />
+          <DailyBatteryDeferredCard inputs={batteryInputs} href="/training-load" />
+        </div>
+      </section>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.75fr)]">
-        <DailyBatteryDeferredCard
-          inputs={batteryInputs}
-          href="/training-load"
-        />
+      {/* Local archive */}
+      <section className="flex flex-col gap-4">
+        <SectionHeader title="Local archive" meta="read-only provenance" />
         <ArchiveStatusCard snapshot={archiveStatus} href="/archive" compact />
-      </div>
+      </section>
     </main>
   );
 }

@@ -73,7 +73,7 @@ export default async function RunDetailPage({
     dashboardSnapshot.longestRun?.id === detail.activity.id;
 
   return (
-    <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
+    <main className="page-shell fs-view flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
       <div className="flex flex-wrap items-center justify-between gap-3 px-1 pt-1">
         <Link
           href="/runs"
