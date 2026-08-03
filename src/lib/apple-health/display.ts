@@ -52,6 +52,29 @@ export const APPLE_HEALTH_DASHBOARD_METRICS: AppleHealthDisplayMetricDefinition[
     },
   ];
 
+// Explicit `/health` clustering. These sets — not array-index slices — decide
+// which metrics render under Vitals vs Daily Signals, so reordering
+// APPLE_HEALTH_DASHBOARD_METRICS can never silently re-bucket a metric.
+export const APPLE_HEALTH_VITALS_METRIC_TYPES = [
+  "vo2_max",
+  "resting_hr",
+  "hrv",
+] as const;
+
+export const APPLE_HEALTH_DAILY_SIGNAL_METRIC_TYPES = [
+  "sleep_hours",
+  "steps",
+] as const;
+
+export interface AppleHealthDisplayMetric {
+  label: string;
+  tone: DashboardMetricTone;
+  icon: AppIconName;
+  value?: string;
+  unit?: string;
+  chartValues?: number[];
+}
+
 export function getAppleHealthDashboardMetricTypes(): string[] {
   return APPLE_HEALTH_DASHBOARD_METRICS.map((metric) => metric.metricType);
 }
@@ -59,22 +82,36 @@ export function getAppleHealthDashboardMetricTypes(): string[] {
 export function buildAppleHealthDashboardMetrics(
   latestMetrics: AppleHealthMetricSnapshot[],
   trendSeries: AppleHealthMetricTrendSeries[] = [],
-): Array<{
-  label: string;
-  tone: DashboardMetricTone;
-  icon: AppIconName;
-  value?: string;
-  unit?: string;
-  chartValues?: number[];
-}> {
+): AppleHealthDisplayMetric[] {
+  return buildAppleHealthMetricGroup(
+    latestMetrics,
+    trendSeries,
+    getAppleHealthDashboardMetricTypes(),
+  );
+}
+
+/**
+ * Builds display metrics for an explicit set of metric types, preserving the
+ * canonical `APPLE_HEALTH_DASHBOARD_METRICS` order. Unknown metric types are
+ * ignored. This is the shared builder behind both the dashboard cluster (full
+ * set) and the `/health` Vitals / Daily Signals clusters.
+ */
+export function buildAppleHealthMetricGroup(
+  latestMetrics: AppleHealthMetricSnapshot[],
+  trendSeries: AppleHealthMetricTrendSeries[],
+  metricTypes: readonly string[],
+): AppleHealthDisplayMetric[] {
   const latestMetricsByType = new Map(
     latestMetrics.map((metric) => [metric.metricType, metric]),
   );
   const trendSeriesByType = new Map(
     trendSeries.map((series) => [series.metricType, series]),
   );
+  const requested = new Set(metricTypes);
 
-  return APPLE_HEALTH_DASHBOARD_METRICS.map((definition) => {
+  return APPLE_HEALTH_DASHBOARD_METRICS.filter((definition) =>
+    requested.has(definition.metricType),
+  ).map((definition) => {
     const metric = latestMetricsByType.get(definition.metricType);
     const trend = trendSeriesByType.get(definition.metricType);
     const value = metric
@@ -85,7 +122,7 @@ export function buildAppleHealthDashboardMetrics(
         ? trend.points.map((point) => point.value)
         : undefined;
 
-    const displayMetric = {
+    const displayMetric: AppleHealthDisplayMetric = {
       label: definition.label,
       tone: definition.tone,
       icon: definition.icon,

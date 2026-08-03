@@ -1,12 +1,42 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  APPLE_HEALTH_DAILY_SIGNAL_METRIC_TYPES,
+  APPLE_HEALTH_VITALS_METRIC_TYPES,
   buildAppleHealthDashboardMetrics,
+  buildAppleHealthMetricGroup,
   getAppleHealthDashboardMetricTypes,
 } from "../../src/lib/apple-health/display";
 import type { AppleHealthMetricSnapshot } from "../../src/server/apple-health/queries";
 
 describe("Apple Health display helpers", () => {
+  it("splits Vitals and Daily Signals by explicit metric type, not array index", () => {
+    const vitals = buildAppleHealthMetricGroup(
+      [],
+      [],
+      APPLE_HEALTH_VITALS_METRIC_TYPES,
+    );
+    const signals = buildAppleHealthMetricGroup(
+      [],
+      [],
+      APPLE_HEALTH_DAILY_SIGNAL_METRIC_TYPES,
+    );
+
+    expect(vitals.map((metric) => metric.label)).toEqual([
+      "VO₂ Max",
+      "Resting HR",
+      "HRV",
+    ]);
+    expect(signals.map((metric) => metric.label)).toEqual(["Sleep", "Steps"]);
+
+    // The two clusters together must cover the full dashboard set with no
+    // overlap, so no metric is dropped or double-counted by the split.
+    expect([
+      ...APPLE_HEALTH_VITALS_METRIC_TYPES,
+      ...APPLE_HEALTH_DAILY_SIGNAL_METRIC_TYPES,
+    ].sort()).toEqual([...getAppleHealthDashboardMetricTypes()].sort());
+  });
+
   it("uses the shared dashboard metric order and VO2 label", () => {
     expect(getAppleHealthDashboardMetricTypes()).toEqual([
       "vo2_max",

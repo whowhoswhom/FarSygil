@@ -1,3 +1,4 @@
+import { DASHBOARD_EMPTY_STATE_TEXT } from "@/components/dashboard/dashboard-types";
 import { MetricIconBadge } from "@/components/visual-reboot/icon-badge";
 
 export function DashboardRecoveryCard({
@@ -19,9 +20,9 @@ export function DashboardRecoveryCard({
         </div>
 
         <div className="dashboard-mock-empty grid flex-1 gap-4 p-4 md:grid-cols-[130px_minmax(0,1fr)] md:items-center">
-          <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border border-dashed border-[rgba(185,112,255,0.38)] bg-[rgba(185,112,255,0.05)] shadow-[0_0_40px_-24px_var(--metric-recovery)] md:h-32 md:w-32">
+          <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border border-dashed border-[rgba(187,132,255,0.38)] bg-[rgba(187,132,255,0.05)] shadow-[0_0_40px_-24px_var(--metric-recovery)] md:h-32 md:w-32">
             <span className="dashboard-tile-value text-center text-[1.05rem] font-semibold leading-tight text-white/80">
-              Data not available
+              {DASHBOARD_EMPTY_STATE_TEXT}
             </span>
           </div>
           <p className="text-xs leading-relaxed text-[var(--ink-3)] md:text-sm">{hint}</p>

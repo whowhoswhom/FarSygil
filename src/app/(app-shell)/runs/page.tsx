@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { RoutePreview } from "@/components/activities/route-preview";
 import { SourceLabel } from "@/components/dashboard";
 import { ActivitySessionCard } from "@/components/runs/activity-session-card";
-import { MetricIconBadge } from "@/components/visual-reboot";
+import { MetricIconBadge, PageMasthead } from "@/components/visual-reboot";
 import { db } from "@/db/client";
 import {
   formatRunDateTime,
@@ -33,11 +33,11 @@ export default async function RunsPage() {
 
   if (!featuredRun) {
     return (
-      <main className="page-shell flex flex-col gap-6 pb-6 text-[var(--ink-1)]">
+      <main className="page-shell fs-view flex flex-col gap-6 pb-6 text-[var(--ink-1)]">
         <section className="dashboard-shell-card p-6 md:p-8">
           <div className="relative flex flex-col gap-6">
             <div>
-              <p className="section-kicker mb-3">Runs</p>
+              <p className="fs-eyebrow mb-3">Runs</p>
               <h1 className="text-[3rem] font-semibold tracking-[-0.07em] text-white md:text-[4rem]">
                 No runs have been archived yet.
               </h1>
@@ -69,18 +69,17 @@ export default async function RunsPage() {
   const featuredPace = formatRunPaceFromActivity(featuredRun);
 
   return (
-    <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
-      <section className="grid items-end gap-4 px-1 pt-1 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <div>
-          <p className="section-kicker mb-2">Runs</p>
-          <h1 className="text-[2.35rem] font-semibold tracking-[-0.07em] text-white md:text-[3.35rem]">
-            Runs
-          </h1>
-        </div>
-        <p className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-2)]">
-          {totalRuns} {totalRuns === 1 ? "run" : "runs"} stored locally
-        </p>
-      </section>
+    <main className="page-shell fs-view flex flex-col gap-8 pb-5 text-[var(--ink-1)]">
+      <PageMasthead
+        eyebrow="Local archive"
+        title="Runs"
+        sub="Every real effort, newest first. Strava stays the authority for run data."
+        actions={
+          <p className="rounded-full border border-[var(--fs-line)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-2)]">
+            {totalRuns} {totalRuns === 1 ? "run" : "runs"} stored locally
+          </p>
+        }
+      />
 
       <section className="dashboard-shell-card p-4 md:p-5">
         <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_380px] xl:items-center">

@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import type { DashboardMetricTone } from "@/components/dashboard/dashboard-types";
+import {
+  DASHBOARD_EMPTY_STATE_TEXT,
+  type DashboardMetricTone,
+} from "@/components/dashboard/dashboard-types";
 import { SourceLabel } from "@/components/dashboard";
 import { AppIcon } from "@/components/app-shell/app-icons";
 
@@ -68,8 +71,8 @@ export function DashboardRecentRunCard({
                 ) : null}
               </div>
             ) : (
-              <p className="mt-2 text-base font-semibold text-white">
-                Data not available
+              <p className="mt-2 text-base font-semibold text-[var(--ink-1)]">
+                {DASHBOARD_EMPTY_STATE_TEXT}
               </p>
             )}
             {hint ? (

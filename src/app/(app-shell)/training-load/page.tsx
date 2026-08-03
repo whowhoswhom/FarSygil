@@ -2,6 +2,7 @@ import {
   DashboardRecoveryCard,
   DashboardTrainingLoadCard,
   MetricIconBadge,
+  PageMasthead,
 } from "@/components/visual-reboot";
 import { DailyStressPanel } from "@/components/training-load/daily-stress-panel";
 import { db } from "@/db/client";
@@ -14,43 +15,37 @@ export default async function TrainingLoadPage() {
   const dailyStress = await getDailyTrainingStressSnapshot(db);
 
   return (
-    <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
-      <section className="grid items-end gap-4 px-1 pt-1 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.42fr)]">
-        <div>
-          <p className="section-kicker mb-2">Training Load</p>
-          <h1 className="text-[2.35rem] font-semibold tracking-[-0.07em] text-white md:text-[3.35rem]">
-            Training Load
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--ink-2)] md:text-base">
-            Daily stress is real local input. ATL, CTL, TSB, recovery, and
-            readiness stay empty until analytics compute them from that history.
-          </p>
-        </div>
-
-        <div className="dashboard-shell-card p-4">
-          <div className="mb-3 flex items-center gap-3">
-            <MetricIconBadge tone="trend" icon="load" />
-            <div>
-              <p className="section-kicker mb-1">Local input</p>
-              <p className="text-sm text-[var(--ink-2)]">Daily stress history</p>
+    <main className="page-shell fs-view flex flex-col gap-8 pb-5 text-[var(--ink-1)]">
+      <PageMasthead
+        eyebrow="Derived"
+        title="Training Load"
+        sub="Daily stress is real local input. ATL, CTL, TSB, recovery, and readiness stay empty until analytics compute them from that history."
+        actions={
+          <div className="dashboard-shell-card w-full p-4 sm:w-80">
+            <div className="mb-3 flex items-center gap-3">
+              <MetricIconBadge tone="trend" icon="load" />
+              <div>
+                <p className="fs-eyebrow mb-1">Local input</p>
+                <p className="text-sm text-[var(--ink-2)]">Daily stress history</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <LoadStatusCell
+                label="Latest stress"
+                value={
+                  dailyStress.latest
+                    ? formatStress(dailyStress.latest.dailyTrainingStress)
+                    : "--"
+                }
+              />
+              <LoadStatusCell
+                label="Computed days"
+                value={String(dailyStress.series.length)}
+              />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <LoadStatusCell
-              label="Latest stress"
-              value={
-                dailyStress.latest
-                  ? formatStress(dailyStress.latest.dailyTrainingStress)
-                  : "--"
-              }
-            />
-            <LoadStatusCell
-              label="Computed days"
-              value={String(dailyStress.series.length)}
-            />
-          </div>
-        </div>
-      </section>
+        }
+      />
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
         <DailyStressPanel latest={dailyStress.latest} series={dailyStress.series} />

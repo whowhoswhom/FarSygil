@@ -73,7 +73,7 @@ export default async function RunDetailPage({
     dashboardSnapshot.longestRun?.id === detail.activity.id;
 
   return (
-    <main className="page-shell flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
+    <main className="page-shell fs-view flex flex-col gap-4 pb-5 text-[var(--ink-1)]">
       <div className="flex flex-wrap items-center justify-between gap-3 px-1 pt-1">
         <Link
           href="/runs"
@@ -126,7 +126,7 @@ export default async function RunDetailPage({
             toneVar: "var(--metric-distance)",
           },
           {
-            label: "Elevation",
+            label: "Elev Gain",
             value: formatRunElevationFeet(detail.activity.totalElevationGain),
             unit: detail.activity.totalElevationGain != null ? "ft" : undefined,
             toneVar: "var(--metric-time)",
@@ -178,18 +178,18 @@ export default async function RunDetailPage({
           hint="Data not available until Strava detail sync writes cadence stream rows locally."
         />
         <RunChartTile
-          title="Elevation"
+          title="Altitude"
           tone="time"
           icon="elevation"
           value={
-            detail.activity.totalElevationGain != null
-              ? formatRunElevationFeet(detail.activity.totalElevationGain)
+            detail.elevationSeriesFeet.length > 0
+              ? Math.max(...detail.elevationSeriesFeet).toLocaleString()
               : null
           }
-          unit={detail.activity.totalElevationGain != null ? "ft" : undefined}
+          unit={detail.elevationSeriesFeet.length > 0 ? "ft peak" : undefined}
           chartValues={detail.elevationSeriesFeet}
           guideLabels={buildRangeLabels(detail.elevationSeriesFeet)}
-          hint="Data not available until FarSygil has a real local elevation profile for this run."
+          hint="Data not available until FarSygil has a real local altitude profile from synced elevation streams."
         />
       </div>
 

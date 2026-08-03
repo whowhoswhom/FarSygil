@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { ArchiveStatusCard } from "@/components/visual-reboot";
+import {
+  ArchiveStatusCard,
+  PageMasthead,
+  SectionHeader,
+} from "@/components/visual-reboot";
 import { databasePath, db } from "@/db/client";
 import { getArchiveStatusSnapshot } from "@/server/archive/status";
 
@@ -18,39 +22,38 @@ export default async function ArchivePage() {
   const snapshot = await getArchiveStatusSnapshot(db, { databasePath });
 
   return (
-    <main className="page-shell flex flex-col gap-4 pb-6 text-[var(--ink-1)]">
-      <section className="flex flex-col gap-2 px-1 pt-1 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="section-kicker mb-2">Archive</p>
-          <h1 className="text-[2.3rem] font-semibold tracking-[-0.07em] text-white md:text-[2.95rem]">
-            Local Data
-          </h1>
+    <main className="page-shell fs-view flex flex-col gap-8 pb-6 text-[var(--ink-1)]">
+      <PageMasthead
+        eyebrow="Archive"
+        title="Local Data"
+        sub="Read-only provenance for the local SQLite archive. Sync, import, and recompute stay on their source routes."
+      />
+
+      <section className="flex flex-col gap-4">
+        <SectionHeader title="Where things live" meta="read-only" />
+        <div className="grid gap-3 md:grid-cols-3">
+          <ArchiveRouteNote
+            title="Strava sync"
+            body="Summary and detail sync controls stay on Connect."
+            href="/connect"
+          />
+          <ArchiveRouteNote
+            title="Health import"
+            body="Apple Health XML and ZIP import controls stay on Health."
+            href="/health"
+          />
+          <ArchiveRouteNote
+            title="Load input"
+            body="Daily stress recompute stays on Training Load."
+            href="/training-load"
+          />
         </div>
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--ink-3)] md:text-right">
-          Read-only provenance for local SQLite. Mutations stay on source
-          routes.
-        </p>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-3">
-        <ArchiveRouteNote
-          title="Strava sync"
-          body="Summary and detail sync controls stay on Connect."
-          href="/connect"
-        />
-        <ArchiveRouteNote
-          title="Health import"
-          body="Apple Health XML and ZIP import controls stay on Health."
-          href="/health"
-        />
-        <ArchiveRouteNote
-          title="Load input"
-          body="Daily stress recompute stays on Training Load."
-          href="/training-load"
-        />
+      <section className="flex flex-col gap-4">
+        <SectionHeader title="Provenance" meta="local SQLite" />
+        <ArchiveStatusCard snapshot={snapshot} />
       </section>
-
-      <ArchiveStatusCard snapshot={snapshot} />
     </main>
   );
 }

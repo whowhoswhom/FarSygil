@@ -50,22 +50,20 @@ export function RunChartTile({
                 </span>
               ) : null}
             </div>
-            <div className="grid min-h-[5.2rem] gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-              <div className="rounded-[16px] border border-white/6 bg-black/10 px-2 py-2">
-                {chartValues.length > 0 ? (
+            {chartValues.length >= 2 ? (
+              <div className="grid min-h-[5.2rem] gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                <div className="rounded-[16px] border border-white/6 bg-black/10 px-2 py-2">
                   <MiniLineChart values={chartValues} tone={tone} />
-                ) : (
-                  <div className="h-[3.5rem]" />
-                )}
-              </div>
-              {guideLabels.length > 0 ? (
-                <div className="flex flex-row gap-3 text-sm text-[var(--ink-3)] sm:flex-col sm:items-end">
-                  {guideLabels.map((label) => (
-                    <span key={label}>{label}</span>
-                  ))}
                 </div>
-              ) : null}
-            </div>
+                {guideLabels.length > 0 ? (
+                  <div className="flex flex-row gap-3 text-sm text-[var(--ink-3)] sm:flex-col sm:items-end">
+                    {guideLabels.map((label) => (
+                      <span key={label}>{label}</span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="my-auto">

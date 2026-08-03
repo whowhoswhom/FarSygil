@@ -79,14 +79,19 @@ Notes:
 
 Goal: compute deterministic analytics from real local history.
 
-Planned deliverables:
+Planned deliverables (see the prerequisite ladder in [[08_TRAINING-ANALYTICS]]):
 - [x] daily training-stress foundation from Strava suffer score or HR-duration fallback
-- [ ] ATL / CTL / TSB
-- [ ] ACWR and related warnings
+- [ ] P0: persist a real user threshold HR in `user_settings` (blocks a defensible TSS)
+- [ ] P1: ATL / CTL / TSB from the daily stress series, with an honest "needs N days" gate
+- [ ] P2: ACWR and related warnings
 - [ ] training-load charts
-- [ ] recovery/readiness derivations grounded in real inputs only
+- [ ] P3: recovery/readiness derivations grounded in real inputs only
 - [x] first real data inside `/training-load`
-- [ ] Daily Battery formula
+- [ ] P4: Daily Battery formula (all four inputs present for aligned dates)
+
+Note: the `user_settings` table exists but is an empty key/value scaffold today —
+nothing reads or writes it, and daily stress uses a fixed reference HR of 180 as a
+labeled default. P0 removes that gap without a schema migration.
 
 ---
 

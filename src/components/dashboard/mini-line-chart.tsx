@@ -32,7 +32,10 @@ export function MiniLineChart({
   tone,
   className = "",
 }: MiniLineChartProps) {
-  if (values.length === 0) {
+  // A single data point cannot form a trend line; requiring >= 2 points keeps
+  // the chart honest and prevents a degenerate one-point line from implying a
+  // trend that does not exist.
+  if (values.length < 2) {
     return null;
   }
 

@@ -78,7 +78,7 @@ data reality.
 | Surface | Data status | Rendering policy | Unlock condition |
 |---|---|---|---|
 | Dashboard weekly distance, time, pace, elevation, cadence, HR, recent run, longest run | real today from Strava archive rows | render fully with real values and charts | none |
-| Dashboard power tile | partially available; depends on real `averageWatts` data | render time-weighted average across current-week runs with real `averageWatts` and positive moving time; empty body when zero qualifying runs | real power values on current-week local Strava runs |
+| Dashboard power tile | partially available; depends on real `averageWatts` data | render time-weighted average across the selected week's runs with real `averageWatts` and positive moving time; empty body when zero qualifying runs | real power values on the selected week's local Strava runs |
 | Dashboard daily stress card | partial | render latest persisted daily stress and trend only from real local `training_load.daily_training_stress` rows | `/training-load` recompute writes daily stress |
 | Dashboard health cluster | real today when imported rows exist | render latest values and trend sparklines where Apple Health-sourced `health_metrics` rows exist; missing values remain `--`; trend lines require at least two real points | Apple Health importer writes local metric rows |
 | Dashboard archive-status card | real today | render local SQLite path when known, counts, latest source writes, and detail/stream coverage; no action buttons | none |
